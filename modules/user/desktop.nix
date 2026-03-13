@@ -1,4 +1,3 @@
-# filepath: ~/nixos-config/modules/user/desktop.nix
 {
   config,
   pkgs,
@@ -9,8 +8,10 @@
 {
   imports = [
     inputs.niri.homeModules.niri
-    inputs.walker.homeManagerModules.default
+    inputs.noctalia.homeModules.default
   ];
+
+  programs.noctalia-shell.enable = true;
 
   home.packages = with pkgs; [
     kooha
@@ -18,8 +19,6 @@
     slurp
     satty
     wl-clipboard
-    inputs.elephant.packages.${stdenv.hostPlatform.system}.default
-    inputs.noctalia.packages.${stdenv.hostPlatform.system}.default
     inputs.zen-browser.packages.${stdenv.hostPlatform.system}.default
   ];
 
@@ -102,7 +101,7 @@
         "Mod+V".action = toggle-window-floating;
         "Mod+Shift+V".action = switch-focus-between-floating-and-tiling;
 
-        "Mod+D".action = spawn "walker";
+        "Mod+D".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
         "Mod+W".action = spawn "zen";
         "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp)\" - | satty --filename -";
         "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
@@ -141,37 +140,29 @@
     "Xft.dpi" = 144;
   };
 
-  xdg.configFile."noctalia/settings.json".text = builtins.toJSON {
-    settingsVersion = 0;
-    bar = {
-      position = "top";
-      floating = true;
-      marginVertical = 8;
-      marginHorizontal = 12;
-      outerCorners = true;
-      showCapsule = true;
-    };
-  };
-
-  programs.walker = {
+  i18n.inputMethod = {
     enable = true;
-    runAsService = true;
-    config = {
-      theme = "default";
-      placeholders.default = {
-        input = "Search...";
-        list = "No Results";
+    type = "fcitx5";
+    fcitx5.waylandFrontend = true;
+    fcitx5.addons = with pkgs; [
+      qt6Packages.fcitx5-chinese-addons
+      fcitx5-gtk
+      fcitx5-pinyin-zhwiki
+    ];
+    fcitx5.settings = {
+      globalOptions = {
+        "Hotkey/TriggerKeys"."0" = "Shift_L";
       };
-      providers.prefixed = [
-        {
-          provider = "calculator";
-          prefix = "=";
-        }
-        {
-          provider = "websearch";
-          prefix = "?";
-        }
-      ];
+      inputMethod = {
+        "Groups/0" = {
+          Name = "Default";
+          "Default Layout" = "us";
+          DefaultIM = "keyboard-us";
+        };
+        "Groups/0/Items/0".Name = "keyboard-us";
+        "Groups/0/Items/1".Name = "pinyin";
+        GroupOrder."0" = "Default";
+      };
     };
   };
 }
