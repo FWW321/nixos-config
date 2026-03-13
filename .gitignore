@@ -1,0 +1,9 @@
+# Age key file
+*.agekey
+
+# Backup files
+*.backup
+
+# Result symlinks
+result
+result-*
