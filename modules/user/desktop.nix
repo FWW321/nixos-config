@@ -16,6 +16,7 @@
     settings = {
       general.language = "zh-CN";
       location.name = "Chongqing";
+      brightness.enableDdcSupport = true;
     };
     plugins = {
       sources = [
@@ -47,10 +48,21 @@
     gpu-screen-recorder
     grim
     slurp
-    satty
     wl-clipboard
     cliphist
   ];
+
+  programs.satty = {
+    enable = true;
+    settings = {
+      general = {
+        fullscreen = true;
+        early-exit = true;
+        initial-tool = "arrow";
+        copy-command = "wl-copy";
+      };
+    };
+  };
 
   programs.niri = {
     enable = true;
@@ -149,8 +161,9 @@
 
         "Mod+D".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
         "Mod+W".action = spawn "zen";
-        "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp)\" - | satty --filename -";
+        "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp -d)\" - | satty --filename -";
         "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
+        "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";
       };
     };
   };
