@@ -2,12 +2,29 @@
 { config, pkgs, ... }:
 
 {
-  programs.ghostty = {
+  programs.foot = {
     enable = true;
-    enableBashIntegration = true;
+    server.enable = true;
     settings = {
-      window-decoration = false;
-      command = "nu";
+      main = {
+        term = "xterm-256color";
+        shell = "nu";
+        pad = "12x12";
+      };
+      mouse = {
+        hide-when-typing = "yes";
+      };
+      csd = {
+        preferred = "none";
+      };
+      url = {
+        launch = "\${BROWSER:-zen} \${url}";
+        osc8-underline = "url-mode";
+      };
+      bell = {
+        urgent = "yes";
+        notify = "yes";
+      };
     };
   };
 

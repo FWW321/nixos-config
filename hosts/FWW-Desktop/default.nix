@@ -5,6 +5,17 @@
   networking.hostName = "FWW-Desktop";
 
   nixpkgs.config.allowUnfree = true;
+
+  boot.kernelModules = [ "i2c-dev" ];
+
+  hardware.i2c.enable = true;
+
+  users.groups.i2c = { };
+  users.users.fww.extraGroups = [ "i2c" ];
+
+  environment.systemPackages = with pkgs; [
+    ddcutil
+  ];
   services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {

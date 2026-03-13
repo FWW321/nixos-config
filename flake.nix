@@ -17,6 +17,10 @@
     noctalia.url = "github:noctalia-dev/noctalia-shell";
     stylix.url = "github:danth/stylix";
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixvim = {
       url = "github:nix-community/nixvim";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,6 +45,7 @@
       noctalia,
       stylix,
       zen-browser,
+      firefox-addons,
       sops-nix,
       ...
     }@inputs:

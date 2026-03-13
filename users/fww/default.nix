@@ -17,11 +17,30 @@
   };
 
   imports = [
+    inputs.zen-browser.homeModules.default
     ./ai/opencode.nix
     ../../modules/user/desktop.nix
     ../../modules/user/terminal.nix
     ../../modules/user/editor.nix
   ];
+
+  stylix.targets.zen-browser.profileNames = [ "default" ];
+
+  programs.zen-browser = {
+    enable = true;
+    policies = {
+      RequestedLocales = [ "zh-CN" "en-US" ];
+    };
+    profiles.default = {
+      search = {
+        force = true;
+        default = "bing";
+      };
+      extensions.packages = with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
+        ublock-origin
+      ];
+    };
+  };
 
   home.packages = with pkgs; [
     fd
