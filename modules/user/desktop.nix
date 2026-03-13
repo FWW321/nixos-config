@@ -15,6 +15,7 @@
     enable = true;
     settings = {
       general.language = "zh-CN";
+      location.name = "Chongqing";
     };
     plugins = {
       sources = [
