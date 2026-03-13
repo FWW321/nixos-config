@@ -15,13 +15,8 @@
     };
     niri.url = "github:sodiboo/niri-flake";
     noctalia.url = "github:noctalia-dev/noctalia-shell";
-    elephant.url = "github:abenz1267/elephant";
     stylix.url = "github:danth/stylix";
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
-    walker = {
-      url = "github:abenz1267/walker";
-      inputs.elephant.follows = "elephant";
-    };
     nixvim = {
       url = "github:nix-community/nixvim";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -44,7 +39,6 @@
       nixvim,
       dae,
       noctalia,
-      walker,
       stylix,
       zen-browser,
       sops-nix,

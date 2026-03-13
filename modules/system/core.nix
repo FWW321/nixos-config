@@ -46,51 +46,6 @@
     "zh_CN.UTF-8/UTF-8"
   ];
 
-  i18n.inputMethod = {
-    enable = true;
-    type = "fcitx5";
-    fcitx5.waylandFrontend = true;
-    fcitx5.ignoreUserConfig = true;
-    fcitx5.addons = with pkgs; [
-      qt6Packages.fcitx5-chinese-addons
-      fcitx5-gtk
-      fcitx5-pinyin-zhwiki
-      catppuccin-fcitx5
-    ];
-    fcitx5.settings = {
-      globalOptions = {
-        "Hotkey/TriggerKeys"."0" = "Shift_L";
-      };
-      addons = {
-        classicui.globalSection = {
-          WheelForPaging = "True";
-          "Vertical Candidate List" = "True";
-        };
-      };
-      inputMethod = {
-        "Groups/0" = {
-          Name = "Default";
-          "Default Layout" = "us";
-          DefaultIM = "keyboard-us";
-        };
-        "Groups/0/Items/0" = {
-          Name = "keyboard-us";
-          Layout = "";
-        };
-        "Groups/0/Items/1" = {
-          Name = "pinyin";
-          Layout = "";
-        };
-        GroupOrder."0" = "Default";
-      };
-    };
-  };
-  environment.sessionVariables = {
-    XMODIFIERS = "@im=fcitx";
-    SDL_IM_MODULE = "fcitx";
-    GLFW_IM_MODULE = "ibus";
-  };
-
   environment.pathsToLink = [
     "/share/applications"
     "/share/xdg-desktop-portal"
@@ -120,14 +75,10 @@
     substituters = [
       "https://cache.nixos.org"
       "https://niri.cachix.org"
-      "https://walker.cachix.org"
-      "https://walker-git.cachix.org"
     ];
     trusted-public-keys = [
       # "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
-      "walker.cachix.org-1:fG8q+uAaMqhsMxWjwvk0IMb4mFPFLqHjuvfwQxE4oJM="
-      "walker-git.cachix.org-1:vmC0ocfPWh0S/vRAQGtChuiZBTAe4wiKDeyyXM0/7pM="
     ];
   };
   nix.daemonCPUSchedPolicy = "idle";
