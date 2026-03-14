@@ -112,7 +112,7 @@
   };
 
   users.groups = {
-    gamers = { };
+    shared = { };
     sops-keys = { };
   };
   users.users.fww = {
@@ -122,7 +122,7 @@
       "networkmanager"
       "video"
       "audio"
-      "gamers"
+      "shared"
       "sops-keys"
     ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
@@ -131,6 +131,14 @@
 
   systemd.tmpfiles.rules = [
     "z /etc/ssh/ssh_host_ed25519_key 0640 root sops-keys - -"
+    "d /data/public 2775 root shared - -"
+    "d /data/public/games 2775 root shared - -"
+    "d /data/public/games/steam 2775 root shared - -"
+    "d /data/public/music 2775 root shared - -"
+    "d /data/public/videos 2775 root shared - -"
+    "d /data/public/pictures 2775 root shared - -"
+    "d /data/private 0755 root root - -"
+    "d /data/private/fww 0700 fww users - -"
   ];
 
   programs.niri.enable = true;

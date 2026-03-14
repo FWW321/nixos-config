@@ -15,7 +15,34 @@
     enable = true;
     settings = {
       general.language = "zh-CN";
-      location.name = "Chongqing";
+      ui.translucentWidgets = true;
+      dock = {
+        size = 1.5;
+        groupApps = true;
+      };
+      controlCenter.cards = [
+        { enabled = true; id = "profile-card"; }
+        { enabled = true; id = "shortcuts-card"; }
+        { enabled = false; id = "audio-card"; }
+        { enabled = false; id = "brightness-card"; }
+        { enabled = true; id = "weather-card"; }
+        { enabled = true; id = "media-sysmon-card"; }
+      ];
+      appLauncher = {
+        enableClipboardHistory = true;
+        terminalCommand = "footclient -e";
+      };
+      idle = {
+        enabled = true;
+        screenOffTimeout = 600;
+        lockTimeout = 900;
+        suspendTimeout = 1200;
+      };
+      location = {
+        name = "Chongqing";
+        analogClockInCalendar = true;
+      };
+      systemMonitor.enableDgpuMonitoring = true;
       brightness.enableDdcSupport = true;
     };
     plugins = {
@@ -67,6 +94,7 @@
   programs.niri = {
     enable = true;
     settings = {
+      prefer-no-csd = true;
       input = {
         keyboard.xkb.layout = "us";
         mouse.accel-profile = "flat";
@@ -170,7 +198,7 @@
 
   systemd.user.services.niri-auto-scale = {
     Unit = {
-      Description = "Niri dynamic scale daemon";
+      Description = "Niri dual-mode monitor auto scale daemon";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
     };
@@ -179,19 +207,33 @@
     };
     Service = {
       ExecStart = "${pkgs.writeShellScript "niri-auto-scale" ''
+        PREV_WIDTH=""
+        
         ${pkgs.niri}/bin/niri msg --json event-stream | while read -r event; do
           if echo "$event" | ${pkgs.jq}/bin/jq -e 'has("OutputsChanged")' > /dev/null; then
-            CURRENT_WIDTH=$(${pkgs.niri}/bin/niri msg --json outputs | ${pkgs.jq}/bin/jq -r '.[] | select(.name == "DP-1") | .current_mode.width')
+            sleep 2
+            
+            OUTPUT_INFO=$(${pkgs.niri}/bin/niri msg --json outputs | ${pkgs.jq}/bin/jq -r '.[] | select(.name == "DP-1")')
+            CURRENT_WIDTH=$(echo "$OUTPUT_INFO" | ${pkgs.jq}/bin/jq -r '.current_mode.width // 0')
+            
+            if [ "$CURRENT_WIDTH" = "$PREV_WIDTH" ]; then
+              continue
+            fi
+            PREV_WIDTH="$CURRENT_WIDTH"
+            
             if [ "$CURRENT_WIDTH" = "3840" ]; then
               ${pkgs.niri}/bin/niri msg output DP-1 scale 1.5
-            elif [ "$CURRENT_WIDTH" = "1920" ]; then
-              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.0;
+            else
+              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.0
+              if [ "$CURRENT_WIDTH" != "1920" ]; then
+                ${pkgs.niri}/bin/niri msg output DP-1 mode "1920x1080" 2>/dev/null || true
+              fi
             fi
           fi
         done
       ''}";
       Restart = "on-failure";
-      RestartSec = "2";
+      RestartSec = "3";
     };
   };
 
