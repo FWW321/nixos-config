@@ -43,6 +43,7 @@
   };
 
   home.packages = with pkgs; [
+    qq
     fd
     bun
     curl
