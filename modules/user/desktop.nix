@@ -198,7 +198,7 @@
 
   systemd.user.services.niri-auto-scale = {
     Unit = {
-      Description = "Niri dual-mode monitor auto scale daemon";
+      Description = "Niri dynamic scale daemon";
       PartOf = [ "graphical-session.target" ];
       After = [ "graphical-session.target" ];
     };
@@ -207,33 +207,19 @@
     };
     Service = {
       ExecStart = "${pkgs.writeShellScript "niri-auto-scale" ''
-        PREV_WIDTH=""
-        
         ${pkgs.niri}/bin/niri msg --json event-stream | while read -r event; do
           if echo "$event" | ${pkgs.jq}/bin/jq -e 'has("OutputsChanged")' > /dev/null; then
-            sleep 2
-            
-            OUTPUT_INFO=$(${pkgs.niri}/bin/niri msg --json outputs | ${pkgs.jq}/bin/jq -r '.[] | select(.name == "DP-1")')
-            CURRENT_WIDTH=$(echo "$OUTPUT_INFO" | ${pkgs.jq}/bin/jq -r '.current_mode.width // 0')
-            
-            if [ "$CURRENT_WIDTH" = "$PREV_WIDTH" ]; then
-              continue
-            fi
-            PREV_WIDTH="$CURRENT_WIDTH"
-            
+            CURRENT_WIDTH=$(${pkgs.niri}/bin/niri msg --json outputs | ${pkgs.jq}/bin/jq -r '.[] | select(.name == "DP-1") | .current_mode.width')
             if [ "$CURRENT_WIDTH" = "3840" ]; then
               ${pkgs.niri}/bin/niri msg output DP-1 scale 1.5
-            else
-              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.0
-              if [ "$CURRENT_WIDTH" != "1920" ]; then
-                ${pkgs.niri}/bin/niri msg output DP-1 mode "1920x1080" 2>/dev/null || true
-              fi
+            elif [ "$CURRENT_WIDTH" = "1920" ]; then
+              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.0;
             fi
           fi
         done
       ''}";
       Restart = "on-failure";
-      RestartSec = "3";
+      RestartSec = "2";
     };
   };
 
