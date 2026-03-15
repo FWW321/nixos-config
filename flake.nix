@@ -70,6 +70,7 @@
 
             ./modules/system/core.nix
             ./modules/system/network.nix
+            ./modules/system/secrets.nix
             ./modules/system/theme.nix
 
             home-manager.nixosModules.home-manager

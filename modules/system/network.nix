@@ -22,8 +22,9 @@
         allow_insecure: false
         auto_config_kernel_parameter: true
         tcp_check_url: 'http://cp.cloudflare.com'
+        tcp_check_http_method: HEAD
         udp_check_dns: 'dns.google:53'
-        check_interval: 120s
+        check_interval: 30s
         check_tolerance: 50ms
       }
 
@@ -67,11 +68,23 @@
 
       routing {
         dport(22) -> direct
-        pname(NetworkManager, systemd-resolved) -> direct
-        dip(127.0.0.0/8, 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12) -> direct
+        pname(NetworkManager, systemd-resolved) -> must_direct
+        dip(224.0.0.0/3, 'ff00::/8') -> direct
+        dip(geoip:private) -> direct
+        domain(geosite:category-ads-all) -> block
+
+        dscp(0x4) -> direct
+
+        domain(geosite:category-games@cn) -> direct
+        domain(suffix: steamserver.net, steamcontent.com, cm.steampowered.com) -> direct
+
+        domain(geosite:apple@cn) -> direct
+        domain(geosite:tencent) -> direct
+        domain(geosite:category-ai-cn) -> direct
+        domain(geosite:category-bank-cn, geosite:category-finance) -> direct
+
         domain(geosite:cn) -> direct
         dip(geoip:cn) -> direct
-        domain(geosite:category-ads-all) -> block
         domain(geosite:google) -> jp
         fallback: proxy
       }

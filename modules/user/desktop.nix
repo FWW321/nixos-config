@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   inputs,
   ...
 }:
@@ -77,6 +78,54 @@
     slurp
     wl-clipboard
     cliphist
+    (let
+      script = writeShellScript "niri-set-max-mode" ''
+        set -euo pipefail
+        JQ=${lib.getExe pkgs.jq}
+
+        niri msg --json outputs | $JQ -r '
+          to_entries[] |
+          .key as $name |
+          .value.modes |
+          sort_by(.width * .height) | .[-1] as $max_res |
+          map(select(.width == $max_res.width and .height == $max_res.height)) |
+          sort_by(.refresh_rate) | .[-1] as $best |
+          @sh "niri msg output \($name) mode \($best.width)x\($best.height)@\($best.refresh_rate / 1000)"
+        ' | while read -r cmd; do
+          eval "$cmd"
+        done
+
+        niri msg --json outputs | $JQ -r '
+          to_entries[] |
+          .key as $name |
+          .value.modes[.value.current_mode] as $current |
+          if $current.width >= 3840 then
+            "niri msg output \($name) scale 1.5"
+          else
+            "niri msg output \($name) scale 1"
+          end
+        ' | while read -r cmd; do
+          eval "$cmd"
+        done
+      '';
+    in writeShellScriptBin "niri-set-max-mode" ''
+      exec ${script}
+    '')
+    (let
+      script = writeShellScript "gamescope-auto" ''
+        set -euo pipefail
+        JQ=${lib.getExe pkgs.jq}
+
+        output=$(niri msg --json outputs | $JQ -r 'to_entries[0]')
+        width=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].width')
+        height=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].height')
+        refresh=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].refresh_rate / 1000 | floor')
+
+        exec gamescope --expose-wayland -W "$width" -H "$height" -r "$refresh" -f -S stretch --force-grab-cursor -- "$@"
+      '';
+    in writeShellScriptBin "gamescope-auto" ''
+      exec ${script} "$@"
+    '')
   ];
 
   programs.satty = {
@@ -98,9 +147,6 @@
       input = {
         keyboard.xkb.layout = "us";
         mouse.accel-profile = "flat";
-      };
-      outputs."DP-1" = {
-        variable-refresh-rate = true;
       };
       layout = {
         gaps = 12;
@@ -192,34 +238,8 @@
         "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp -d)\" - | satty --filename -";
         "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";
+        "Mod+Shift+M".action = spawn "niri-set-max-mode";
       };
-    };
-  };
-
-  systemd.user.services.niri-auto-scale = {
-    Unit = {
-      Description = "Niri dynamic scale daemon";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-    };
-    Install = {
-      WantedBy = [ "graphical-session.target" ];
-    };
-    Service = {
-      ExecStart = "${pkgs.writeShellScript "niri-auto-scale" ''
-        ${pkgs.niri}/bin/niri msg --json event-stream | while read -r event; do
-          if echo "$event" | ${pkgs.jq}/bin/jq -e 'has("OutputsChanged")' > /dev/null; then
-            CURRENT_WIDTH=$(${pkgs.niri}/bin/niri msg --json outputs | ${pkgs.jq}/bin/jq -r '.[] | select(.name == "DP-1") | .current_mode.width')
-            if [ "$CURRENT_WIDTH" = "3840" ]; then
-              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.5
-            elif [ "$CURRENT_WIDTH" = "1920" ]; then
-              ${pkgs.niri}/bin/niri msg output DP-1 scale 1.0;
-            fi
-          fi
-        done
-      ''}";
-      Restart = "on-failure";
-      RestartSec = "2";
     };
   };
 
