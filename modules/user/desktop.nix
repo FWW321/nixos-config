@@ -111,21 +111,6 @@
     in writeShellScriptBin "niri-set-max-mode" ''
       exec ${script}
     '')
-    (let
-      script = writeShellScript "gamescope-auto" ''
-        set -euo pipefail
-        JQ=${lib.getExe pkgs.jq}
-
-        output=$(niri msg --json outputs | $JQ -r 'to_entries[0]')
-        width=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].width')
-        height=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].height')
-        refresh=$(echo "$output" | $JQ -r '.value.modes[.value.current_mode].refresh_rate / 1000 | floor')
-
-        exec gamescope --expose-wayland -W "$width" -H "$height" -r "$refresh" -f -S stretch --force-grab-cursor -- "$@"
-      '';
-    in writeShellScriptBin "gamescope-auto" ''
-      exec ${script} "$@"
-    '')
   ];
 
   programs.satty = {
