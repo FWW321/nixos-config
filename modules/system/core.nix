@@ -3,6 +3,10 @@
 
 {
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [
+    inputs.nix-cachyos-kernel.overlays.default
+    inputs.nix-gaming-edge.overlays.proton-cachyos
+  ];
 
   services.openssh = {
     enable = true;
@@ -25,6 +29,22 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 20;
+
+  boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v3;
+
+  services.scx = {
+    enable = true;
+    scheduler = "scx_bpfland";
+  };
+
+  # power-profiles-daemon 电源管理
+  # 使用方式:
+  #   powerprofilesctl get              # 查看当前配置
+  #   powerprofilesctl set performance  # 性能模式
+  #   powerprofilesctl set balanced     # 平衡模式
+  #   powerprofilesctl set power-saver  # 省电模式
+  services.power-profiles-daemon.enable = true;
+
   security.sudo.extraConfig = "Defaults lecture = never";
   security.polkit.enable = true;
 
@@ -53,9 +73,16 @@
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
-    substituters = [ "https://niri.cachix.org" ];
-    trusted-public-keys =
-      [ "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=" ];
+    substituters = [
+      "https://attic.xuyh0120.win/lantian"
+      "https://niri.cachix.org"
+      "https://nix-cache.tokidoki.dev/tokidoki"
+    ];
+    trusted-public-keys = [
+      "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
+      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
+      "tokidoki:MD4VWt3kK8Fmz3jkiGoNRJIW31/QAm7l1Dcgz2Xa4hk="
+    ];
   };
   nix.daemonCPUSchedPolicy = "idle";
   nix.daemonIOSchedClass = "idle";
@@ -82,7 +109,7 @@
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
-    extraCompatPackages = with pkgs; [ proton-ge-bin ];
+    extraCompatPackages = [ pkgs.proton-cachyos-x86_64-v3 ];
   };
 
   users.groups = {
