@@ -1,20 +1,10 @@
 # filepath: ~/nixos-config/users/fww/default.nix
-{
-  config,
-  pkgs,
-  inputs,
-  ...
-}:
+{ config, pkgs, inputs, ... }:
 
 {
   home.username = "fww";
   home.homeDirectory = "/home/fww";
   home.stateVersion = "25.11";
-
-  sops = {
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-    defaultSopsFile = ../../secrets/secrets.yaml;
-  };
 
   imports = [
     inputs.zen-browser.homeModules.default
@@ -24,22 +14,35 @@
     ../../modules/user/editor.nix
   ];
 
+  sops = {
+    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    defaultSopsFile = ../../secrets/secrets.yaml;
+    secrets.github_ssh_key.path = "${config.home.homeDirectory}/.ssh/github";
+  };
+
   stylix.targets.zen-browser.profileNames = [ "default" ];
 
   programs.zen-browser = {
     enable = true;
-    policies = {
-      RequestedLocales = [ "zh-CN" "en-US" ];
-    };
+    policies = { RequestedLocales = [ "zh-CN" "en-US" ]; };
     profiles.default = {
+      settings = { "browser.startup.page" = 3; };
       search = {
         force = true;
         default = "bing";
       };
-      extensions.packages = with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
-        ublock-origin
-      ];
+      extensions.packages =
+        with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
+          ublock-origin
+          kiss-translator
+        ];
     };
+  };
+
+  programs.brave = {
+    enable = true;
+    commandLineArgs = [ "--restore-last-session" ];
+    extensions = [{ id = "bdiifdefkgmcblbcghdlonllpjhhjgof"; }];
   };
 
   home.packages = with pkgs; [
@@ -67,11 +70,6 @@
       push.autoSetupRemote = true;
       url."git@github.com:".insteadOf = "https://github.com/";
     };
-  };
-
-  sops.secrets.github_ssh_key = {
-    path = "${config.home.homeDirectory}/.ssh/github";
-    mode = "0600";
   };
 
   programs.ssh = {

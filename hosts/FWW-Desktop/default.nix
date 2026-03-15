@@ -4,20 +4,20 @@
 {
   networking.hostName = "FWW-Desktop";
 
-  nixpkgs.config.allowUnfree = true;
-
   boot.kernelModules = [ "i2c-dev" ];
-
   hardware.i2c.enable = true;
-
   users.groups.i2c = { };
   users.users.fww.extraGroups = [ "i2c" ];
 
-  environment.systemPackages = with pkgs; [
-    ddcutil
-  ];
-  services.xserver.videoDrivers = [ "nvidia" ];
+  services.udev.extraRules = ''
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1ca6", ATTRS{idProduct}=="0529", MODE="0660", GROUP="input", TAG+="uaccess"
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="24ae", ATTRS{idProduct}=="4617", MODE="0660", GROUP="input", TAG+="uaccess"
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="24ae", ATTRS{idProduct}=="1417", MODE="0660", GROUP="input", TAG+="uaccess"
+  '';
 
+  environment.systemPackages = with pkgs; [ ddcutil ];
+
+  services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
     modesetting.enable = true;
     powerManagement.enable = true;
@@ -30,8 +30,19 @@
     LIBVA_DRIVER_NAME = "nvidia";
     GBM_BACKEND = "nvidia-drm";
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    WLR_NO_HARDWARE_CURSORS = "1";
-    __GL_THREADED_OPTIMIZATION = "1";
+  };
+
+  home-manager.users.fww = { config, pkgs, ... }: {
+    programs.niri.settings = {
+      outputs."DP-1" = {
+        mode = {
+          width = 3840;
+          height = 2160;
+          refresh = 160.0;
+        };
+        scale = 1.5;
+      };
+    };
   };
 
   system.stateVersion = "25.11";

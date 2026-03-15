@@ -1,17 +1,8 @@
 # filepath: ~/nixos-config/modules/system/core.nix
-{
-  config,
-  pkgs,
-  inputs,
-  ...
-}:
+{ config, pkgs, inputs, ... }:
 
 {
-  sops = {
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-    secrets.user_password.neededForUsers = true;
-  };
+  nixpkgs.config.allowUnfree = true;
 
   services.openssh = {
     enable = true;
@@ -19,12 +10,10 @@
       PermitRootLogin = "no";
       PasswordAuthentication = false;
     };
-    hostKeys = [
-      {
-        type = "ed25519";
-        path = "/etc/ssh/ssh_host_ed25519_key";
-      }
-    ];
+    hostKeys = [{
+      type = "ed25519";
+      path = "/etc/ssh/ssh_host_ed25519_key";
+    }];
   };
 
   systemd.services.sshd = {
@@ -41,15 +30,10 @@
 
   time.timeZone = "Asia/Shanghai";
   i18n.defaultLocale = "en_US.UTF-8";
-  i18n.supportedLocales = [
-    "en_US.UTF-8/UTF-8"
-    "zh_CN.UTF-8/UTF-8"
-  ];
+  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "zh_CN.UTF-8/UTF-8" ];
 
-  environment.pathsToLink = [
-    "/share/applications"
-    "/share/xdg-desktop-portal"
-  ];
+  environment.pathsToLink =
+    [ "/share/applications" "/share/xdg-desktop-portal" ];
 
   fonts = {
     enableDefaultPackages = true;
@@ -67,19 +51,11 @@
   };
 
   nix.settings = {
-    experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
+    experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
-    substituters = [
-      "https://cache.nixos.org"
-      "https://niri.cachix.org"
-    ];
-    trusted-public-keys = [
-      # "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
-    ];
+    substituters = [ "https://niri.cachix.org" ];
+    trusted-public-keys =
+      [ "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964=" ];
   };
   nix.daemonCPUSchedPolicy = "idle";
   nix.daemonIOSchedClass = "idle";
@@ -106,9 +82,8 @@
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
-    extraCompatPackages = with pkgs; [
-      proton-ge-bin
-    ];
+    gamescopeSession.enable = true;
+    extraCompatPackages = with pkgs; [ proton-ge-bin ];
   };
 
   users.groups = {
@@ -117,14 +92,8 @@
   };
   users.users.fww = {
     isNormalUser = true;
-    extraGroups = [
-      "wheel"
-      "networkmanager"
-      "video"
-      "audio"
-      "shared"
-      "sops-keys"
-    ];
+    extraGroups =
+      [ "wheel" "networkmanager" "video" "audio" "input" "shared" "sops-keys" ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
     shell = pkgs.nushell;
   };
@@ -147,7 +116,8 @@
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --asterisks --greeting 'Welcome to NixOS' --cmd niri-session";
+        command =
+          "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --asterisks --greeting 'Welcome to NixOS' --cmd niri-session";
         user = "greeter";
       };
     };
@@ -167,9 +137,6 @@
 
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
-  boot.kernelParams = [
-    "quiet"
-    "udev.log_priority=3"
-    "rd.systemd.show_status=false"
-  ];
+  boot.kernelParams =
+    [ "quiet" "udev.log_priority=3" "rd.systemd.show_status=false" ];
 }
