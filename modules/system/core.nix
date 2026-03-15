@@ -26,6 +26,9 @@
   };
 
   programs.nix-ld.enable = true;
+
+  environment.systemPackages = with pkgs; [ lm_sensors ];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 20;
