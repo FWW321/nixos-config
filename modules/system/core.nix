@@ -104,7 +104,6 @@
     enable = true;
     enable32Bit = true;
   };
-  programs.gamemode.enable = true;
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
