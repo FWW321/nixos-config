@@ -4,7 +4,7 @@
 {
   networking.hostName = "FWW-Desktop";
 
-  boot.kernelModules = [ "i2c-dev" ];
+  boot.kernelModules = [ "i2c-dev" "nct6775" ];
   hardware.i2c.enable = true;
   users.groups.i2c = { };
   users.users.fww.extraGroups = [ "i2c" ];
