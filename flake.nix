@@ -30,6 +30,8 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    nix-gaming-edge.url = "github:powerofthe69/nix-gaming-edge";
   };
 
   outputs =
@@ -47,6 +49,8 @@
       zen-browser,
       firefox-addons,
       sops-nix,
+      nix-cachyos-kernel,
+      nix-gaming-edge,
       ...
     }@inputs:
     {
