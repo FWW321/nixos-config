@@ -58,6 +58,8 @@
   environment.pathsToLink =
     [ "/share/applications" "/share/xdg-desktop-portal" ];
 
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
   fonts = {
     enableDefaultPackages = true;
     fontDir.enable = true;
@@ -136,6 +138,7 @@
     "d /data/public/pictures 2775 root shared - -"
     "d /data/private 0755 root root - -"
     "d /data/private/fww 0700 fww users - -"
+    "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
   ];
 
   programs.niri.enable = true;
@@ -165,6 +168,17 @@
 
   boot.consoleLogLevel = 0;
   boot.initrd.verbose = false;
-  boot.kernelParams =
-    [ "quiet" "udev.log_priority=3" "rd.systemd.show_status=false" ];
+  boot.kernelParams = [
+    "quiet"
+    "udev.log_priority=3"
+    "rd.systemd.show_status=false"
+    "transparent_hugepage=always"
+  ];
+
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+    priority = 5;
+  };
 }
