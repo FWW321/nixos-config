@@ -18,7 +18,7 @@
         preferred = "none";
       };
       url = {
-        launch = "\${BROWSER:-zen} \${url}";
+        launch = "\${BROWSER:-zen-beta} \${url}";
         osc8-underline = "url-mode";
       };
       bell = {

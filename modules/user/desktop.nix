@@ -38,6 +38,12 @@
         screenOffTimeout = 600;
         lockTimeout = 900;
         suspendTimeout = 1200;
+        customCommands = builtins.toJSON [
+          {
+            timeout = 10800;
+            command = "systemctl hibernate";
+          }
+        ];
       };
       location = {
         name = "Chongqing";
@@ -45,6 +51,27 @@
       };
       systemMonitor.enableDgpuMonitoring = true;
       brightness.enableDdcSupport = true;
+      bar.widgets = {
+        left = [
+          { id = "Launcher"; }
+          { id = "Clock"; formatHorizontal = "HH:mm"; useMonospacedFont = true; }
+          { id = "SystemMonitor"; }
+          { id = "ActiveWindow"; }
+        ];
+        center = [
+          { id = "Workspace"; hideUnoccupied = false; }
+        ];
+        right = [
+          { id = "Tray"; }
+          { id = "NotificationHistory"; }
+          { id = "plugin:privacy-indicator"; }
+          { id = "plugin:network-indicator"; }
+          { id = "plugin:assistant-panel"; }
+          { id = "Volume"; }
+          { id = "Brightness"; }
+          { id = "ControlCenter"; }
+        ];
+      };
     };
     plugins = {
       sources = [
@@ -67,8 +94,47 @@
           enabled = true;
           sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
         };
+        keybind-cheatsheet = {
+          enabled = true;
+          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        };
+        file-search = {
+          enabled = true;
+          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        };
+        assistant-panel = {
+          enabled = true;
+          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        };
+        privacy-indicator = {
+          enabled = true;
+          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        };
+        network-indicator = {
+          enabled = true;
+          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
+        };
       };
       version = 1;
+    };
+    pluginSettings = {
+      assistant-panel = {
+        ai = {
+          provider = "openai-compatible";
+          models.openai-compatible = "glm-5";
+          openaiBaseUrl = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+          temperature = 0.7;
+          systemPrompt = "You are a helpful assistant. Be concise and helpful. Respond in the same language as the user.";
+        };
+        translator = {
+          backend = "google";
+          targetLanguage = "zh";
+          realTimeTranslation = true;
+        };
+        panelWidth = 600;
+        panelDetached = true;
+        panelPosition = "right";
+      };
     };
   };
 
@@ -215,11 +281,11 @@
 
         "Mod+V".action = spawn "noctalia-shell" "ipc" "call" "plugin:clipper" "toggle";
         "Mod+Shift+R".action = spawn "noctalia-shell" "ipc" "call" "plugin:screen-recorder" "toggle";
-        "Mod+Space".action = toggle-window-floating;
-        "Mod+Shift+Space".action = switch-focus-between-floating-and-tiling;
+        "Mod+Space".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
+        "Mod+T".action = toggle-window-floating;
+        "Mod+Shift+T".action = switch-focus-between-floating-and-tiling;
 
-        "Mod+D".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
-        "Mod+W".action = spawn "zen";
+        "Mod+W".action = spawn "zen-beta";
         "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp -d)\" - | satty --filename -";
         "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";
