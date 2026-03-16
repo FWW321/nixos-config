@@ -22,12 +22,30 @@
         groupApps = true;
       };
       controlCenter.cards = [
-        { enabled = true; id = "profile-card"; }
-        { enabled = true; id = "shortcuts-card"; }
-        { enabled = false; id = "audio-card"; }
-        { enabled = false; id = "brightness-card"; }
-        { enabled = true; id = "weather-card"; }
-        { enabled = true; id = "media-sysmon-card"; }
+        {
+          enabled = true;
+          id = "profile-card";
+        }
+        {
+          enabled = true;
+          id = "shortcuts-card";
+        }
+        {
+          enabled = false;
+          id = "audio-card";
+        }
+        {
+          enabled = false;
+          id = "brightness-card";
+        }
+        {
+          enabled = true;
+          id = "weather-card";
+        }
+        {
+          enabled = true;
+          id = "media-sysmon-card";
+        }
       ];
       appLauncher = {
         enableClipboardHistory = true;
@@ -54,12 +72,19 @@
       bar.widgets = {
         left = [
           { id = "Launcher"; }
-          { id = "Clock"; formatHorizontal = "HH:mm"; useMonospacedFont = true; }
+          {
+            id = "Clock";
+            formatHorizontal = "HH:mm";
+            useMonospacedFont = true;
+          }
           { id = "SystemMonitor"; }
           { id = "ActiveWindow"; }
         ];
         center = [
-          { id = "Workspace"; hideUnoccupied = false; }
+          {
+            id = "Workspace";
+            hideUnoccupied = false;
+          }
         ];
         right = [
           { id = "Tray"; }
@@ -122,7 +147,7 @@
         ai = {
           provider = "openai-compatible";
           models.openai-compatible = "glm-5";
-          openaiBaseUrl = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+          openaiBaseUrl = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions";
           temperature = 0.7;
           systemPrompt = "You are a helpful assistant. Be concise and helpful. Respond in the same language as the user.";
         };
@@ -144,39 +169,42 @@
     slurp
     wl-clipboard
     cliphist
-    (let
-      script = writeShellScript "niri-set-max-mode" ''
-        set -euo pipefail
-        JQ=${lib.getExe pkgs.jq}
+    (
+      let
+        script = writeShellScript "niri-set-max-mode" ''
+          set -euo pipefail
+          JQ=${lib.getExe pkgs.jq}
 
-        niri msg --json outputs | $JQ -r '
-          to_entries[] |
-          .key as $name |
-          .value.modes |
-          sort_by(.width * .height) | .[-1] as $max_res |
-          map(select(.width == $max_res.width and .height == $max_res.height)) |
-          sort_by(.refresh_rate) | .[-1] as $best |
-          @sh "niri msg output \($name) mode \($best.width)x\($best.height)@\($best.refresh_rate / 1000)"
-        ' | while read -r cmd; do
-          eval "$cmd"
-        done
+          niri msg --json outputs | $JQ -r '
+            to_entries[] |
+            .key as $name |
+            .value.modes |
+            sort_by(.width * .height) | .[-1] as $max_res |
+            map(select(.width == $max_res.width and .height == $max_res.height)) |
+            sort_by(.refresh_rate) | .[-1] as $best |
+            @sh "niri msg output \($name) mode \($best.width)x\($best.height)@\($best.refresh_rate / 1000)"
+          ' | while read -r cmd; do
+            eval "$cmd"
+          done
 
-        niri msg --json outputs | $JQ -r '
-          to_entries[] |
-          .key as $name |
-          .value.modes[.value.current_mode] as $current |
-          if $current.width >= 3840 then
-            "niri msg output \($name) scale 1.5"
-          else
-            "niri msg output \($name) scale 1"
-          end
-        ' | while read -r cmd; do
-          eval "$cmd"
-        done
-      '';
-    in writeShellScriptBin "niri-set-max-mode" ''
-      exec ${script}
-    '')
+          niri msg --json outputs | $JQ -r '
+            to_entries[] |
+            .key as $name |
+            .value.modes[.value.current_mode] as $current |
+            if $current.width >= 3840 then
+              "niri msg output \($name) scale 1.5"
+            else
+              "niri msg output \($name) scale 1"
+            end
+          ' | while read -r cmd; do
+            eval "$cmd"
+          done
+        '';
+      in
+      writeShellScriptBin "niri-set-max-mode" ''
+        exec ${script}
+      ''
+    )
   ];
 
   programs.satty = {
