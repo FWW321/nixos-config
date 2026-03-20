@@ -346,6 +346,13 @@
         "Groups/0/Items/1".Name = "pinyin";
         GroupOrder."0" = "Default";
       };
+      addons = {
+        cloudpinyin = {
+          globalSection = {
+            CloudPinyinEnabled = false;
+          };
+        };
+      };
     };
   };
 
