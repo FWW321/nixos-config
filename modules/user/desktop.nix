@@ -207,7 +207,7 @@
     )
     (writeShellScriptBin "noctalia-shell-env" ''
       export NOCTALIA_AP_OPENAI_COMPATIBLE_API_KEY=$(${pkgs.coreutils}/bin/cat ${config.sops.secrets.zhipu_api_key.path})
-      exec ${pkgs.noctalia-shell}/bin/noctalia-shell "$@"
+      exec ${config.programs.noctalia-shell.package}/bin/noctalia-shell "$@"
     '')
   ];
 
@@ -304,9 +304,9 @@
         "Mod+BracketLeft".action = consume-or-expel-window-left;
         "Mod+BracketRight".action = consume-or-expel-window-right;
 
-        "Mod+V".action = spawn "noctalia-shell" "ipc" "call" "plugin:clipper" "toggle";
-        "Mod+Shift+R".action = spawn "noctalia-shell" "ipc" "call" "plugin:screen-recorder" "toggle";
-        "Mod+Space".action = spawn "noctalia-shell" "ipc" "call" "launcher" "toggle";
+        "Mod+V".action = spawn "noctalia-shell-env" "ipc" "call" "plugin:clipper" "toggle";
+        "Mod+Shift+R".action = spawn "noctalia-shell-env" "ipc" "call" "plugin:screen-recorder" "toggle";
+        "Mod+Space".action = spawn "noctalia-shell-env" "ipc" "call" "launcher" "toggle";
         "Mod+T".action = toggle-window-floating;
         "Mod+Shift+T".action = switch-focus-between-floating-and-tiling;
 

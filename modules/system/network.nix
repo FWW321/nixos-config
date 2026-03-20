@@ -24,7 +24,6 @@
     path = "/etc/dae/config.dae";
     mode = "0400";
     owner = "root";
-    restartUnits = [ "dae.service" ];
     content = ''
       
             global {
@@ -61,7 +60,7 @@
             }
       
             subscription {
-              byg: '${config.sops.placeholder.byg_url}'
+              byg: 'https-file://${config.sops.placeholder.byg_url}'
             }
       
             group {
@@ -180,6 +179,8 @@
     enable = true;
     configFile = config.sops.templates."dae/config.dae".path;
   };
+
+  systemd.services.dae.restartTriggers = [ config.sops.templates."dae/config.dae".path ];
 
   environment.systemPackages = [ pkgs.dae ];
 }
