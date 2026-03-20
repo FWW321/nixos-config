@@ -32,7 +32,7 @@
           partitions = {
             home = {
               size = "100%";
-              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" "ssd"]; }; }; };
+              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" "ssd" ]; }; }; };
             };
           };
         };
