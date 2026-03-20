@@ -84,11 +84,13 @@
     substituters = [
       "https://attic.xuyh0120.win/lantian"
       "https://niri.cachix.org"
+      "https://hyprland.cachix.org"
       "https://nix-cache.tokidoki.dev/tokidoki"
     ];
     trusted-public-keys = [
       "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
       "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       "tokidoki:MD4VWt3kK8Fmz3jkiGoNRJIW31/QAm7l1Dcgz2Xa4hk="
     ];
   };
@@ -146,12 +148,26 @@
 
   programs.niri.enable = true;
 
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+    xwayland.enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+  };
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [ ];
+  };
+
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
         command =
-          "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --asterisks --greeting 'Welcome to NixOS' --cmd niri-session";
+          "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --asterisks --greeting 'Welcome to NixOS' --cmd uwsm start";
         user = "greeter";
       };
     };

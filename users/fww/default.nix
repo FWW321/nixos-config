@@ -9,7 +9,7 @@
   imports = [
     inputs.zen-browser.homeModules.default
     ./ai/opencode.nix
-    ../../modules/user/desktop.nix
+    ../../modules/user/desktop
     ../../modules/user/terminal.nix
     ../../modules/user/editor.nix
   ];
