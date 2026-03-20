@@ -58,7 +58,10 @@
   environment.pathsToLink =
     [ "/share/applications" "/share/xdg-desktop-portal" ];
 
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    EDITOR = "nvim";
+  };
 
   fonts = {
     enableDefaultPackages = true;

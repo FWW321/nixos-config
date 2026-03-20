@@ -145,8 +145,8 @@
     pluginSettings = {
       assistant-panel = {
         ai = {
-          provider = "openai-compatible";
-          models.openai-compatible = "glm-5";
+          provider = "openai_compatible";
+          models.openai_compatible = "glm-5";
           openaiBaseUrl = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions";
           temperature = 0.7;
           systemPrompt = "You are a helpful assistant. Be concise and helpful. Respond in the same language as the user.";
@@ -205,6 +205,10 @@
         exec ${script}
       ''
     )
+    (writeShellScriptBin "noctalia-shell-env" ''
+      export NOCTALIA_AP_OPENAI_COMPATIBLE_API_KEY=$(${pkgs.coreutils}/bin/cat ${config.sops.secrets.zhipu_api_key.path})
+      exec ${pkgs.noctalia-shell}/bin/noctalia-shell "$@"
+    '')
   ];
 
   programs.satty = {
@@ -241,14 +245,7 @@
         };
       };
       spawn-at-startup = [
-        { command = [ "noctalia-shell" ]; }
-        {
-          command = [
-            "fcitx5"
-            "-d"
-            "--replace"
-          ];
-        }
+        { command = [ "noctalia-shell-env" ]; }
       ];
       window-rules = [
         {
@@ -351,4 +348,27 @@
       };
     };
   };
+
+  systemd.user.services.fcitx5-daemon = {
+    Service = {
+      Restart = "always";
+      RestartSec = "3";
+    };
+  };
+
+  home.sessionVariables = {
+    SDL_IM_MODULE = "fcitx";
+    GLFW_IM_MODULE = "ibus";
+  };
+
+  sops.secrets.zhipu_api_key = { };
+  sops.secrets.github_token = { };
+
+  home.activation.writeNixConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    TOKEN=$(${pkgs.coreutils}/bin/cat ${config.sops.secrets.github_token.path})
+    ${pkgs.coreutils}/bin/mkdir -p ~/.config/nix
+    ${pkgs.coreutils}/bin/cat > ~/.config/nix/nix.conf << EOF
+    access-tokens = github.com=$TOKEN
+    EOF
+  '';
 }
