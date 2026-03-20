@@ -369,10 +369,9 @@
   };
 
   sops.secrets.zhipu_api_key = { };
-  sops.secrets.github_token = { };
 
   home.activation.writeNixConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    TOKEN=$(${pkgs.coreutils}/bin/cat ${config.sops.secrets.github_token.path})
+    TOKEN=$(${pkgs.coreutils}/bin/cat /run/secrets/github_token)
     ${pkgs.coreutils}/bin/mkdir -p ~/.config/nix
     ${pkgs.coreutils}/bin/cat > ~/.config/nix/nix.conf << EOF
     access-tokens = github.com=$TOKEN
