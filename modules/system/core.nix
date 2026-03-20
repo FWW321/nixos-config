@@ -10,6 +10,7 @@
 
   services.openssh = {
     enable = true;
+    startWhenNeeded = true;
     settings = {
       PermitRootLogin = "no";
       PasswordAuthentication = false;
@@ -20,15 +21,11 @@
     }];
   };
 
-  systemd.services.sshd = {
-    wantedBy = [ ];
-    enable = false;
-  };
-
   programs.nix-ld.enable = true;
 
   environment.systemPackages = with pkgs; [ lm_sensors ];
 
+  boot.initrd.systemd.enable = true;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 20;
@@ -47,6 +44,7 @@
   #   powerprofilesctl set balanced     # 平衡模式
   #   powerprofilesctl set power-saver  # 省电模式
   services.power-profiles-daemon.enable = true;
+  services.irqbalance.enable = true;
 
   security.sudo.extraConfig = "Defaults lecture = never";
   security.polkit.enable = true;
@@ -54,6 +52,8 @@
   time.timeZone = "Asia/Shanghai";
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "zh_CN.UTF-8/UTF-8" ];
+
+  networking.firewall.enable = true;
 
   environment.pathsToLink =
     [ "/share/applications" "/share/xdg-desktop-portal" ];
@@ -74,13 +74,14 @@
       nerd-fonts.symbols-only
       noto-fonts-color-emoji
       wqy_microhei
-      wqy_zenhei
     ];
   };
 
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     auto-optimise-store = true;
+    trusted-users = [ "root" "@wheel" ];
+    max-jobs = "auto";
     substituters = [
       "https://attic.xuyh0120.win/lantian"
       "https://niri.cachix.org"
@@ -143,8 +144,9 @@
     "d /data/public/pictures 2775 root shared - -"
     "d /data/private 0755 root root - -"
     "d /data/private/fww 0700 fww users - -"
-    "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
   ];
+
+  boot.kernel.sysfs.kernel.mm.transparent_hugepage.defrag = "defer+madvise";
 
   programs.niri.enable = true;
 
@@ -174,7 +176,6 @@
   };
 
   systemd.services.greetd.serviceConfig = {
-    Type = "idle";
     StandardInput = "tty";
     StandardOutput = "tty";
     StandardError = "journal";
@@ -200,4 +201,6 @@
     memoryPercent = 50;
     priority = 5;
   };
+
+  services.btrfs.autoScrub.enable = true;
 }

@@ -83,7 +83,7 @@ in
       };
 
       misc = {
-        vrr = 1;
+        vrr = 2;
         vfr = true;
       };
 

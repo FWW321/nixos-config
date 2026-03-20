@@ -81,13 +81,13 @@
           };
         };
       };
-      cmp = {
+      blink-cmp = {
         enable = true;
-        autoEnableSouces = true;
-        settings.mapping = {
-          "<CR>" = "cmp.mapping.confirm({ select = true })";
-          "<Tab>" = "cmp.mapping(cmp.mapping.select_next_item(), {'i', 's'})";
-          "<S-Tab>" = "cmp.mapping(cmp.mapping.select_prev_item(), {'i', 's'})";
+        settings = {
+          keymap.preset = "super-tab";
+          completion.documentation.auto_show = true;
+          appearance.nerd_font_variant = "normal";
+          signature.enabled = true;
         };
       };
       keymaps = [

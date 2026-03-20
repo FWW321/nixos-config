@@ -125,6 +125,7 @@
     curl
     btop
     ripgrep
+    nh
     xwayland-satellite
     nvtopPackages.nvidia
   ];
