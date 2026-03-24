@@ -2,6 +2,7 @@
 # 用户 fww 的 Home Manager 配置
 {
   config,
+  lib,
   pkgs,
   inputs,
   ...
@@ -11,6 +12,17 @@
   home.username = "fww";
   home.homeDirectory = "/home/fww";
   home.stateVersion = "25.11";
+
+  # home-manager 26.05 改了 gtk.gtk4.theme 默认值，保持 GTK4 跟随 Stylix 全局主题
+  gtk.gtk4.theme = config.gtk.theme;
+
+  # home-manager 今天 (2026-03-24) 新增了 qt.kvantum 模块，其条件 cfg.settings != {} 永远为 true
+  # （submodule 会自动注入 General/Applications 选项），导致与 Stylix 冲突
+  # 用 mkForce 覆盖整个 submodule 条目，让 Stylix 的自动配色生效
+  # 详见: https://github.com/nix-community/home-manager/commit/61463d50
+  xdg.configFile."Kvantum/kvantum.kvconfig" = lib.mkForce {
+    source = (pkgs.formats.ini { }).generate "kvantum.kvconfig" { General.theme = "Base16Kvantum"; };
+  };
 
   imports = [
     inputs.zen-browser.homeModules.default
