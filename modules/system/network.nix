@@ -1,20 +1,24 @@
 # filepath: ~/nixos-config/modules/system/network.nix
+# 网络配置：NetworkManager、蓝牙、dae 代理
 { config, pkgs, ... }:
+
 {
-  networking = {
-    networkmanager = {
-      enable = true;
-      wifi.backend = "iwd";
-    };
-  };
-  services.resolved = {
+  networking.networkmanager = {
     enable = true;
+    wifi.backend = "iwd"; # iwd 比 wpa_supplicant 更现代、更快
   };
 
+  # DNS 解析 (dae 会接管 DNS 路由)
+  services.resolved.enable = true;
+
+  # 蓝牙
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
-    settings.General.Experimental = true;
+    settings.General = {
+      Experimental = true; # 电量显示等实验功能
+      FastConnectable = true; # 更快的连接
+    };
   };
   services.blueman.enable = true;
 

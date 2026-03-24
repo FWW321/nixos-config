@@ -120,6 +120,7 @@ in
         "Mod+Shift+T".action = switch-focus-between-floating-and-tiling;
 
         "Mod+W".action = spawn "zen-beta";
+        "Mod+E".action = spawn "nautilus";
         "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp -d)\" - | satty --filename -";
         "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";

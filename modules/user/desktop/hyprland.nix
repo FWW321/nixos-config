@@ -141,6 +141,7 @@ in
         "$mod SHIFT, T, focusurgentorlast,"
 
         "$mod, W, exec, zen-beta"
+        "$mod, E, exec, nautilus"
         "$mod SHIFT, S, exec, grim -g \"$(slurp -d)\" - | satty --filename -"
         ", Print, exec, grim - | satty --filename -"
         "$mod, Print, exec, hyprctl -e activewindow > /tmp/hypr_screenshot_window.json && grim -g \"$(hyprctl -j activewindow | jq -r '\"'\"'.at[0],.at[1] \\\" \\\" .size[0]x.size[1] '\"'\"'\" -r)\" - | satty --filename -"
