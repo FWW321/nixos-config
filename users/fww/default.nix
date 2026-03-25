@@ -29,7 +29,7 @@
     ./ai/opencode.nix
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
-    ../../modules/user/editor.nix
+    ../../modules/user/editor
     ../../modules/user/scripts/wallpaper-switch.nix
   ];
 
