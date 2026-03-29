@@ -88,18 +88,31 @@
   };
 
   # 系统工具
-  home.packages = with pkgs; [
-    qq
-    teamspeak6-client
-    fd
-    bun
-    curl
-    btop
-    ripgrep
-    nh
-    xwayland-satellite
-    nvtopPackages.nvidia
-  ];
+  home.packages =
+    with pkgs;
+    [
+      qq
+      (symlinkJoin {
+        name = "teamspeak6-client";
+        paths = [ teamspeak6-client ];
+        buildInputs = [ makeWrapper ];
+        postBuild = ''
+          wrapProgram $out/bin/TeamSpeak \
+            --add-flags '--ozone-platform-hint=x11' \
+            --prefix LD_LIBRARY_PATH : "${
+              lib.makeLibraryPath [ stdenv.cc.cc.lib ]
+            }:/run/opengl-driver/lib"
+        '';
+      })
+      fd
+      bun
+      curl
+      btop
+      ripgrep
+      nh
+      xwayland-satellite
+      nvtopPackages.nvidia
+    ];
 
   programs.bash.enable = true;
 
