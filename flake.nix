@@ -28,10 +28,16 @@
     };
     niri.url = "github:sodiboo/niri-flake";
     noctalia.url = "github:noctalia-dev/noctalia-shell";
-    stylix.url = "github:danth/stylix";
+    stylix = {
+      url = "github:danth/stylix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # 应用
-    zen-browser.url = "github:0xc000022070/zen-browser-flake";
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     firefox-addons = {
       url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,9 +48,19 @@
     };
 
     # 网络和性能
-    dae.url = "github:daeuniverse/flake.nix";
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
-    nix-gaming-edge.url = "github:powerofthe69/nix-gaming-edge";
+    dae = {
+      url = "github:daeuniverse/flake.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-cachyos-kernel = {
+      url = "github:xddxdd/nix-cachyos-kernel/release";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-gaming-edge = {
+      url = "github:powerofthe69/nix-gaming-edge";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    comfyui-nix.url = "github:utensils/comfyui-nix";
   };
 
   outputs =
@@ -59,6 +75,7 @@
           inputs.dae.nixosModules.dae
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
+          inputs.comfyui-nix.nixosModules.default
 
           # 硬件模块
           inputs.nixos-hardware.nixosModules.common-cpu-intel
@@ -70,6 +87,7 @@
           ./hosts/FWW-Desktop/hardware.nix
           ./hosts/FWW-Desktop/disko.nix
           ./hosts/FWW-Desktop/nvidia.nix
+          ./hosts/FWW-Desktop/comfyui.nix
 
           # 通用系统模块
           ./modules/system/boot.nix
