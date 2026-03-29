@@ -21,8 +21,8 @@
           end
 
           map("n", "<leader>gh", gs.preview_hunk_inline, "预览修改")
-          map("n", "<leader>gB", gs.blame_line, "Git Blame")
-          map("n", "<leader>gs", gs.stage_hunk, "暂存修改")
+          map("n", "<leader>gb", gs.blame_line, "Git Blame")
+          map("n", "<leader>ga", gs.stage_hunk, "Stage Hunk")
           map("n", "<leader>gr", gs.reset_hunk, "取消暂存")
           map("n", "<leader>gS", gs.stage_buffer, "暂存整个文件")
           map("n", "<leader>gu", gs.undo_stage_hunk, "撤销暂存")

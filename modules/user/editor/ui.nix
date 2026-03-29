@@ -64,20 +64,15 @@
         preset = "modern";
         show_help = false;
         spec = [
-          {
-            __unkey = true;
-            mode = "n";
-            "<leader>b" = { name = "Buffers"; __unkey = true; };
-            "<leader>c" = { name = "Code"; __unkey = true; };
-            "<leader>d" = { name = "Debug"; __unkey = true; };
-            "<leader>f" = { name = "Find"; __unkey = true; };
-            "<leader>g" = { name = "Git"; __unkey = true; };
-            "<leader>s" = { name = "Search"; __unkey = true; };
-            "<leader>t" = { name = "Tabs"; __unkey = true; };
-            "<leader>u" = { name = "UI"; __unkey = true; };
-            "<leader>w" = { name = "Windows"; __unkey = true; };
-            "<leader>x" = { name = "Trouble"; __unkey = true; };
-          }
+          { __unkeyed-1 = "<leader>b"; group = "Buffers"; mode = "n"; }
+          { __unkeyed-1 = "<leader>c"; group = "Code"; mode = "n"; }
+          { __unkeyed-1 = "<leader>f"; group = "Find"; mode = "n"; }
+          { __unkeyed-1 = "<leader>g"; group = "Git"; mode = "n"; }
+          { __unkeyed-1 = "<leader>s"; group = "Search"; mode = "n"; }
+          { __unkeyed-1 = "<leader>t"; group = "Toggle"; mode = "n"; }
+          { __unkeyed-1 = "<leader>u"; group = "UI"; mode = "n"; }
+          { __unkeyed-1 = "<leader>w"; group = "Windows"; mode = "n"; }
+          { __unkeyed-1 = "<leader>x"; group = "Trouble"; mode = "n"; }
         ];
       };
     };

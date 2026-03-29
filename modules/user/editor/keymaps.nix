@@ -113,16 +113,16 @@
       options.desc = "Projects";
     }
 
-    # --- 终端 ---
+    # --- Toggle ---
     {
       mode = "n";
-      key = "<leader>ft";
+      key = "<leader>tt";
       action.__raw = "function() Snacks.terminal() end";
       options.desc = "Toggle Terminal";
     }
     {
       mode = "n";
-      key = "<leader>fT";
+      key = "<leader>tT";
       action.__raw =
         "function() Snacks.terminal({ cwd = vim.fn.expand('%:p:h') }) end";
       options.desc = "Terminal (cwd)";
@@ -143,7 +143,7 @@
     }
     {
       mode = "n";
-      key = "<leader>gb";
+      key = "<leader>gB";
       action.__raw = "function() Snacks.picker.git_branches() end";
       options.desc = "Git Branches";
     }
@@ -155,7 +155,7 @@
     }
     {
       mode = "n";
-      key = "<leader>gB";
+      key = "<leader>go";
       action.__raw = "function() Snacks.gitbrowse() end";
       options.desc = "Git Browse";
     }
