@@ -127,10 +127,10 @@
         swap = {
           enable = true;
           swap_next = {
-            "<leader>sp" = "@parameter.inner";
+            "<leader>cp" = "@parameter.inner";
           };
           swap_previous = {
-            "<leader>sP" = "@parameter.inner";
+            "<leader>cP" = "@parameter.inner";
           };
         };
       };

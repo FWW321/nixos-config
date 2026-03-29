@@ -90,6 +90,7 @@
   # 系统工具
   home.packages = with pkgs; [
     qq
+    teamspeak6-client
     fd
     bun
     curl
