@@ -32,7 +32,10 @@ in
         wallpaperChangeMode = "random";
         changeInterval = 1800; # 30 分钟（未启用）
         # 过渡动画
-        transitionType = [ "fade" "crossFade" ];
+        transitionType = [
+          "fade"
+          "crossFade"
+        ];
         transitionDuration = 500;
       };
 
@@ -57,13 +60,34 @@ in
 
       # 控制中心
       controlCenter.cards = [
-        { enabled = true; id = "profile-card"; }
-        { enabled = true; id = "shortcuts-card"; }
-        { enabled = true; id = "network-card"; } # 内置 WiFi/蓝牙控制
-        { enabled = true; id = "audio-card"; }
-        { enabled = true; id = "brightness-card"; }
-        { enabled = true; id = "weather-card"; }
-        { enabled = true; id = "media-sysmon-card"; }
+        {
+          enabled = true;
+          id = "profile-card";
+        }
+        {
+          enabled = true;
+          id = "shortcuts-card";
+        }
+        {
+          enabled = true;
+          id = "network-card";
+        } # 内置 WiFi/蓝牙控制
+        {
+          enabled = true;
+          id = "audio-card";
+        }
+        {
+          enabled = true;
+          id = "brightness-card";
+        }
+        {
+          enabled = true;
+          id = "weather-card";
+        }
+        {
+          enabled = true;
+          id = "media-sysmon-card";
+        }
       ];
 
       # 应用启动器
@@ -196,7 +220,7 @@ in
       assistant-panel = {
         ai = {
           provider = "openai_compatible";
-          models.openai_compatible = "glm-5";
+          models.openai_compatible = "glm-5.1";
           openaiBaseUrl = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions";
           temperature = 0.7;
           systemPrompt = "You are a helpful assistant. Be concise and helpful. Respond in the same language as the user.";
