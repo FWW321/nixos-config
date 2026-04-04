@@ -11,6 +11,7 @@
       context7_key.owner = "fww";
       hf_token.owner = "fww";
       civitai_token.owner = "fww";
+      motion_plus_token.owner = "fww";
     };
   };
 }
