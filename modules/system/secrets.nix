@@ -17,7 +17,7 @@
       content = builtins.toJSON {
         "$schema" = "https://opencode.ai/config.json";
         model = "zhipuai-coding-plan/glm-5.1";
-        small_model = "zhipuai-coding-plan/glm-5-turbo";
+        small_model = "zhipuai-coding-plan/glm-5v-turbo";
         provider."zhipuai-coding-plan".options.apiKey = config.sops.placeholder.zhipu_api_key;
         mcp = {
           context7 = {

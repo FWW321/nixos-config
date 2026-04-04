@@ -55,7 +55,7 @@
       # C/C++
       clang-tools
       # Web
-      nodePackages.prettier
+      prettier
       prettierd
       # Shell
       shfmt
