@@ -11,6 +11,13 @@ let
     sha256 = "0056bbl00g9ainrkjkg78c17ahv4cihwi05in350pb575a6d8dnk";
   };
 
+  shadcnSkillSrc = pkgs.fetchFromGitHub {
+    owner = "shadcn-ui";
+    repo = "ui";
+    rev = "main";
+    sha256 = "1ha7mlihd286f6d7mzpz5v78p4ghrvbyyxv0d7q6x6i4ha24aznn";
+  };
+
   golangSkillsSrc = pkgs.fetchFromGitHub {
     owner = "samber";
     repo = "cc-skills-golang";
@@ -136,6 +143,13 @@ in
         recursive = true;
       };
     }
+
+    {
+      "opencode/skills/shadcn" = {
+        source = "${shadcnSkillSrc}/skills/shadcn";
+        recursive = true;
+      };
+    }
   ];
 
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -228,6 +242,16 @@ in
           enabled = true;
           command = [ "npx" "-y" "https://api.motion.dev/registry.tgz?package=motion-studio-mcp&version=latest" ];
           environment.TOKEN = "{file:/run/secrets/motion_plus_token}";
+        };
+        "mcp-server-tauri" = {
+          type = "local";
+          enabled = true;
+          command = [ "npx" "-y" "@hypothesi/tauri-mcp-server" ];
+        };
+        "shadcn" = {
+          type = "local";
+          enabled = true;
+          command = [ "npx" "-y" "shadcn@latest" "mcp" ];
         };
       };
     };
