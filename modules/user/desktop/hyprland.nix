@@ -21,6 +21,8 @@ let
   '';
 in
 {
+  home.pointerCursor.hyprcursor.enable = true;
+
   home.packages = [
     (pkgs.writeShellScriptBin "hyprland-set-max-mode" ''
       exec ${script}
@@ -173,10 +175,6 @@ in
       bindm = [
         "$mod, mouse:272, movewindow"
         "$mod, mouse:273, resizewindow"
-      ];
-
-      env = [
-        "HYPRCURSOR_SIZE,24"
       ];
 
       exec-once = [

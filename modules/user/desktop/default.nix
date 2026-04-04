@@ -42,7 +42,6 @@
     };
   };
 
-  # XWayland DPI
   xresources.properties."Xft.dpi" = 144;
 
   # Fcitx5 输入法
