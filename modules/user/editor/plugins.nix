@@ -21,10 +21,9 @@
     ts-comments.enable = true;
     lastplace.enable = true;
 
-    trouble = {
-      enable = true;
-      lazyLoad.settings.cmd = [ "Trouble" ];
-    };
+    # 不能 lazyLoad：nixvim 用 lz.n 做 lazy loading，快捷键通过 lazyLoad.settings.keys 定义才生效，
+    # 全局 keymaps 里定义的快捷键无法触发 cmd 加载，Trouble 也很轻量，不值得折腾
+    trouble.enable = true;
 
     todo-comments = {
       enable = true;
