@@ -383,6 +383,102 @@
       options.desc = "行尾";
     }
 
+    # --- AI (opencode) ---
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>aa";
+      action.__raw = "function() require('opencode').ask('@this: ', { submit = true }) end";
+      options.desc = "Ask opencode";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>ax";
+      action.__raw = "function() require('opencode').select() end";
+      options.desc = "opencode Actions";
+    }
+    {
+      mode = [ "n" "t" ];
+      key = "<leader>at";
+      action.__raw = "function() require('opencode').toggle() end";
+      options.desc = "Toggle opencode";
+    }
+    {
+      mode = "n";
+      key = "<leader>ae";
+      action.__raw = ''
+        function() require('opencode').prompt('explain') end
+      '';
+      options.desc = "Explain";
+    }
+    {
+      mode = "n";
+      key = "<leader>ar";
+      action.__raw = ''
+        function() require('opencode').prompt('review') end
+      '';
+      options.desc = "Review";
+    }
+    {
+      mode = "n";
+      key = "<leader>af";
+      action.__raw = ''
+        function() require('opencode').prompt('fix') end
+      '';
+      options.desc = "Fix Diagnostics";
+    }
+    {
+      mode = "n";
+      key = "<leader>ai";
+      action.__raw = ''
+        function() require('opencode').prompt('implement') end
+      '';
+      options.desc = "Implement";
+    }
+    {
+      mode = "n";
+      key = "<leader>aT";
+      action.__raw = ''
+        function() require('opencode').prompt('test') end
+      '';
+      options.desc = "Add Tests";
+    }
+    {
+      mode = "n";
+      key = "<leader>ad";
+      action.__raw = ''
+        function() require('opencode').prompt('document') end
+      '';
+      options.desc = "Document";
+    }
+    {
+      mode = "n";
+      key = "<leader>ao";
+      action.__raw = ''
+        function() require('opencode').prompt('optimize') end
+      '';
+      options.desc = "Optimize";
+    }
+    {
+      mode = "n";
+      key = "<leader>ag";
+      action.__raw = ''
+        function() require('opencode').prompt('diff') end
+      '';
+      options.desc = "Review Git Diff";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "go";
+      action.__raw = "function() return require('opencode').operator('@this ') end";
+      options.desc = "opencode Operator";
+    }
+    {
+      mode = "n";
+      key = "<C-.>";
+      action.__raw = "function() require('opencode').toggle() end";
+      options.desc = "Toggle opencode";
+    }
+
     # --- 可视模式 ---
     {
       mode = "v";
