@@ -71,6 +71,19 @@
       jq
     ];
 
+    diagnostic.settings = {
+      virtual_text = {
+        prefix = "●";
+        spacing = 4;
+      };
+      underline = true;
+      severity_sort = true;
+      float = {
+        border = "rounded";
+        source = "if_many";
+      };
+    };
+
     globals.mapleader = " ";
 
     opts = {
