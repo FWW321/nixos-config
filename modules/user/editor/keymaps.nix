@@ -3,7 +3,7 @@
 { ... }:
 
 {
-  programs.nixvim.plugins.keymaps = [
+  programs.nixvim.keymaps = [
     # --- Buffer ---
     {
       mode = "n";
