@@ -27,7 +27,7 @@
           lualine_a = [ "mode" ];
           lualine_b = [ "branch" "diff" "diagnostics" ];
           lualine_c = [ "filename" ];
-          lualine_x = [ "filetype" "encoding" ];
+          lualine_x = [ { __unkeyed-1.__raw = "require('opencode').statusline"; } "filetype" "encoding" ];
           lualine_y = [ "progress" ];
           lualine_z = [ "location" ];
         };
@@ -73,6 +73,7 @@
           { __unkeyed-1 = "<leader>u"; group = "UI"; mode = "n"; }
           { __unkeyed-1 = "<leader>w"; group = "Windows"; mode = "n"; }
           { __unkeyed-1 = "<leader>x"; group = "Trouble"; mode = "n"; }
+          { __unkeyed-1 = "<leader>a"; group = "AI (opencode)"; mode = [ "n" "x" ]; }
         ];
       };
     };

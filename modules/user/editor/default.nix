@@ -17,6 +17,7 @@
     ./git.nix
     ./snacks.nix
     ./plugins.nix
+    ./opencode.nix
     ./keymaps.nix
   ];
 
