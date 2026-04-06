@@ -25,6 +25,13 @@ let
     sha256 = "0w665npjky1y824csk9lajdvanmz61va0zxwf9m2jxaqdg3awdpm";
   };
 
+  mattpocockSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "mattpocock";
+    repo = "skills";
+    rev = "main";
+    sha256 = "0fq0p7npnacaps3albr3v1kwl8dvh1nmwnd9bgf1ls3i1p1di2ch";
+  };
+
   surrealSkillsSrc = pkgs.fetchFromGitHub {
     owner = "24601";
     repo = "surreal-skills";
@@ -161,6 +168,25 @@ in
     {
       "opencode/skills/shadcn" = {
         source = "${shadcnSkillSrc}/skills/shadcn";
+        recursive = true;
+      };
+    }
+
+    {
+      "opencode/skills/grill-me" = {
+        source = "${mattpocockSkillsSrc}/grill-me";
+        recursive = true;
+      };
+      "opencode/skills/design-an-interface" = {
+        source = "${mattpocockSkillsSrc}/design-an-interface";
+        recursive = true;
+      };
+      "opencode/skills/tdd" = {
+        source = "${mattpocockSkillsSrc}/tdd";
+        recursive = true;
+      };
+      "opencode/skills/improve-codebase-architecture" = {
+        source = "${mattpocockSkillsSrc}/improve-codebase-architecture";
         recursive = true;
       };
     }
