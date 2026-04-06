@@ -25,6 +25,13 @@ let
     sha256 = "0w665npjky1y824csk9lajdvanmz61va0zxwf9m2jxaqdg3awdpm";
   };
 
+  surrealSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "24601";
+    repo = "surreal-skills";
+    rev = "main";
+    sha256 = "1gdcz4i4sa7xnc5ppcx19dgha5a0n2jr0ffr5zmqqfwc4zsz0wsp";
+  };
+
   uiuxProMaxSrc = pkgs.fetchFromGitHub {
     owner = "nextlevelbuilder";
     repo = "ui-ux-pro-max-skill";
@@ -140,6 +147,13 @@ in
       };
       "opencode/skills/ui-ux-pro-max/scripts" = {
         source = "${uiuxProMaxSrc}/src/ui-ux-pro-max/scripts";
+        recursive = true;
+      };
+    }
+
+    {
+      "opencode/skills/surrealdb" = {
+        source = surrealSkillsSrc;
         recursive = true;
       };
     }
