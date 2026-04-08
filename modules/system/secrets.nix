@@ -12,6 +12,8 @@
       hf_token.owner = "fww";
       civitai_token.owner = "fww";
       motion_plus_token.owner = "fww";
+      telegram_bot_token.owner = "hermes";
+      telegram_allowed_users.owner = "hermes";
     };
   };
 }

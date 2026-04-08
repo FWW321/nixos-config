@@ -61,6 +61,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     comfyui-nix.url = "github:utensils/comfyui-nix";
+
+    # AI Agent
+    hermes-agent = {
+      url = "github:nousresearch/hermes-agent";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -76,6 +82,7 @@
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
           inputs.comfyui-nix.nixosModules.default
+          inputs.hermes-agent.nixosModules.default
 
           # 硬件模块
           inputs.nixos-hardware.nixosModules.common-cpu-intel
@@ -100,6 +107,7 @@
           ./modules/system/network.nix
           ./modules/system/secrets.nix
           ./modules/system/theme.nix
+          ./modules/system/hermes.nix
 
           # Home Manager
           home-manager.nixosModules.home-manager
