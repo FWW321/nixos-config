@@ -26,7 +26,7 @@
 
   imports = [
     inputs.zen-browser.homeModules.default
-    ./ai/opencode.nix
+    ./ai/opencode
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
     ../../modules/user/editor

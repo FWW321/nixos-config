@@ -1,9 +1,6 @@
-{ config, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 
 let
-  zhipuKey = "/run/secrets/zhipu_api_key";
-  context7Key = "/run/secrets/context7_key";
-
   rustSkillsSrc = pkgs.fetchFromGitHub {
     owner = "actionbook";
     repo = "rust-skills";
@@ -37,6 +34,20 @@ let
     repo = "surreal-skills";
     rev = "main";
     sha256 = "1gdcz4i4sa7xnc5ppcx19dgha5a0n2jr0ffr5zmqqfwc4zsz0wsp";
+  };
+
+  gitWorkflowSkillSrc = pkgs.fetchFromGitHub {
+    owner = "netresearch";
+    repo = "git-workflow-skill";
+    rev = "main";
+    sha256 = "0bnwbzcfvfqc5s7cq0f5grvdwai0qynr4l9cf5qicq2fyi3vwlr8";
+  };
+
+  githubProjectSkillSrc = pkgs.fetchFromGitHub {
+    owner = "netresearch";
+    repo = "github-project-skill";
+    rev = "main";
+    sha256 = "1pgar8xqlmbvypzq4p69zw19dgvrrfyvhz3iqny2l48b529fjwf7";
   };
 
   uiuxProMaxSrc = pkgs.fetchFromGitHub {
@@ -98,10 +109,6 @@ let
 
 in
 {
-  home.packages = [ pkgs.agent-browser pkgs.nodejs ];
-
-  home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "${pkgs.brave}/bin/brave";
-
   xdg.configFile = lib.mkMerge [
     {
       "opencode/skills/agent-browser/SKILL.md" = {
@@ -116,11 +123,13 @@ in
           sha256 = "1sxywjd9xmxz298c76gxi3hr8my9xadvagspsmil4r08j2ybvvg0";
         };
       };
-      "opencode/skills/conventional-git/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/samber/cc-skills/main/skills/conventional-git/SKILL.md";
-          sha256 = "1zsnmr6xwpjgxqmc0c88x7h42nhjnc7mskrcf8ziwyh0ywzs6vl1";
-        };
+      "opencode/skills/git-workflow" = {
+        source = gitWorkflowSkillSrc;
+        recursive = true;
+      };
+      "opencode/skills/github-project" = {
+        source = githubProjectSkillSrc;
+        recursive = true;
       };
       "opencode/skills/security-audit/SKILL.md" = {
         source = builtins.fetchurl {
@@ -191,109 +200,4 @@ in
       };
     }
   ];
-
-  home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    TOKEN_PATH="/run/secrets/motion_plus_token"
-    if [ ! -f "$TOKEN_PATH" ]; then
-      echo "WARNING: $TOKEN_PATH not found, skipping Motion AI Kit installation"
-      return 0
-    fi
-
-    TOKEN=$(cat "$TOKEN_PATH")
-    SKILLS_DIR="${config.xdg.configHome}/opencode/skills"
-    SCRIPT=$(${pkgs.curl}/bin/curl -sL "https://api.motion.dev/registry/skills/motion-ai-kit?token=$TOKEN")
-
-    if [ -z "$SCRIPT" ]; then
-      echo "ERROR: Failed to download Motion AI Kit script"
-      return 1
-    fi
-
-    eval "$(echo "$SCRIPT" | grep -E '^SKILL_(COUNT|[0-9]+_(NAME|FILE_COUNT|FILE_[0-9]+_(PATH|B64)))=')"
-
-    i=1
-    while [ "$i" -le "$SKILL_COUNT" ]; do
-      eval "skill_name=\$SKILL_''${i}_NAME"
-      rm -rf "$SKILLS_DIR/$skill_name"
-      i=$((i + 1))
-    done
-
-    i=1
-    while [ "$i" -le "$SKILL_COUNT" ]; do
-      eval "skill_name=\$SKILL_''${i}_NAME"
-      eval "file_count=\$SKILL_''${i}_FILE_COUNT"
-      skill_dir="$SKILLS_DIR/$skill_name"
-
-      j=1
-      while [ "$j" -le "$file_count" ]; do
-        eval "rel_path=\$SKILL_''${i}_FILE_''${j}_PATH"
-        eval "file_data=\$SKILL_''${i}_FILE_''${j}_B64"
-        full_path="$skill_dir$rel_path"
-
-        mkdir -p "$(dirname "$full_path")"
-        printf '%s' "$file_data" | base64 -d > "$full_path"
-        j=$((j + 1))
-      done
-      i=$((i + 1))
-    done
-  '';
-
-  programs.opencode = {
-    enable = true;
-    settings = {
-      model = "zhipuai-coding-plan/glm-5.1";
-      small_model = "zhipuai-coding-plan/glm-5v-turbo";
-      provider."zhipuai-coding-plan".options.apiKey = "{file:${zhipuKey}}";
-      mcp = {
-        context7 = {
-          type = "remote";
-          url = "https://mcp.context7.com/mcp";
-          headers.CONTEXT7_API_KEY = "{file:${context7Key}}";
-          enabled = true;
-        };
-        "zai-mcp-server" = {
-          type = "local";
-          enabled = true;
-          command = [ "bunx" "-y" "@z_ai/mcp-server" ];
-          environment = {
-            Z_AI_API_KEY = "{file:${zhipuKey}}";
-            Z_AI_MODE = "ZHIPU";
-          };
-        };
-        "web-search-prime" = {
-          type = "remote";
-          enabled = true;
-          url = "https://open.bigmodel.cn/api/mcp/web_search_prime/mcp";
-          headers.Authorization = "Bearer {file:${zhipuKey}}";
-        };
-        "web-reader" = {
-          type = "remote";
-          enabled = true;
-          url = "https://open.bigmodel.cn/api/mcp/web_reader/mcp";
-          headers.Authorization = "Bearer {file:${zhipuKey}}";
-        };
-        "zread" = {
-          type = "remote";
-          enabled = true;
-          url = "https://open.bigmodel.cn/api/mcp/zread/mcp";
-          headers.Authorization = "Bearer {file:${zhipuKey}}";
-        };
-        "motion-studio" = {
-          type = "local";
-          enabled = true;
-          command = [ "npx" "-y" "https://api.motion.dev/registry.tgz?package=motion-studio-mcp&version=latest" ];
-          environment.TOKEN = "{file:/run/secrets/motion_plus_token}";
-        };
-        "mcp-server-tauri" = {
-          type = "local";
-          enabled = true;
-          command = [ "npx" "-y" "@hypothesi/tauri-mcp-server" ];
-        };
-        "shadcn" = {
-          type = "local";
-          enabled = true;
-          command = [ "npx" "-y" "shadcn@latest" "mcp" ];
-        };
-      };
-    };
-  };
 }
