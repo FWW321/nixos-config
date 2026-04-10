@@ -38,10 +38,6 @@
       lazygit
       # Node.js（copilot.lua 需要）
       nodejs
-      # Rust
-      cargo
-      rustc
-      rustfmt
       # Python
       ruff
       # Lua

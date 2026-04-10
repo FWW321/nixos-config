@@ -112,6 +112,7 @@
       nh
       xwayland-satellite
       nvtopPackages.nvidia
+      inputs.fenix.packages.${pkgs.stdenv.hostPlatform.system}.complete.toolchain
     ];
 
   programs.bash.enable = true;
