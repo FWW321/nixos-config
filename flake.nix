@@ -62,6 +62,12 @@
     };
     comfyui-nix.url = "github:utensils/comfyui-nix";
 
+    # Rust
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # AI Agent
     hermes-agent = {
       url = "github:nousresearch/hermes-agent";
