@@ -3,7 +3,7 @@
 let
   rtkPlugin = pkgs.fetchurl {
     url = "https://raw.githubusercontent.com/rtk-ai/rtk/master/hooks/opencode/rtk.ts";
-    hash = "sha256-1fxnpkmqd31qb4gsvnwdimjiwgji9s6xdar2jlpqk13cjhqw2c35";
+    sha256 = "1fxnpkmqd31qb4gsvnwdimjiwgji9s6xdar2jlpqk13cjhqw2c35";
   };
 in
 {
