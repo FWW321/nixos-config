@@ -10,7 +10,7 @@ in
     ./plugins.nix
   ];
 
-  home.packages = [ pkgs.agent-browser pkgs.nodejs ];
+  home.packages = [ pkgs.agent-browser pkgs.nodejs pkgs.rtk ];
 
   home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "${pkgs.brave}/bin/brave";
 
