@@ -1,6 +1,10 @@
 { pkgs, lib, ... }:
 
 let
+  graphifyWrapper = pkgs.writeShellScriptBin "graphify" ''
+    exec ${pkgs.uv}/bin/uvx graphifyy "$@"
+  '';
+
   rustSkillsSrc = pkgs.fetchFromGitHub {
     owner = "actionbook";
     repo = "rust-skills";
@@ -109,6 +113,8 @@ let
 
 in
 {
+  home.packages = [ graphifyWrapper ];
+
   xdg.configFile = lib.mkMerge [
     {
       "opencode/skills/agent-browser/SKILL.md" = {
@@ -141,6 +147,12 @@ in
         source = builtins.fetchurl {
           url = "https://raw.githubusercontent.com/openclaw/skills/main/skills/gitgoodordietrying/cicd-pipeline/SKILL.md";
           sha256 = "1ayx3g74nshrnasyy3k1d970k3ni2n1v18hd4yv68z9a7n9rx3xp";
+        };
+      };
+      "opencode/skills/graphify/SKILL.md" = {
+        source = builtins.fetchurl {
+          url = "https://raw.githubusercontent.com/safishamsi/graphify/master/graphify/skill-opencode.md";
+          sha256 = "986fe30e61005ecae1830427e46cbc58880c196d289b0ceaf9aaf93f368ab80d";
         };
       };
     }
