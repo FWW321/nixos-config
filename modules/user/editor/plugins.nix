@@ -4,6 +4,8 @@
 
 {
   programs.nixvim.plugins = {
+    lz-n.enable = true;
+
     flash = {
       enable = true;
       settings = {

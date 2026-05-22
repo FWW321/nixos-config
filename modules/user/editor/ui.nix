@@ -78,28 +78,6 @@
       };
     };
 
-    highlight-colors = {
-      enable = true;
-      lazyLoad.settings.ft = [
-        "css"
-        "scss"
-        "html"
-        "javascript"
-        "javascriptreact"
-        "typescript"
-        "typescriptreact"
-        "vue"
-        "svelte"
-      ];
-      settings = {
-        render = {
-          background = true;
-          foreground = false;
-        };
-        enable_tailwind = true;
-      };
-    };
-
     render-markdown = {
       enable = true;
       lazyLoad.settings.ft = [ "markdown" ];

@@ -11,7 +11,7 @@
 {
   home.username = "fww";
   home.homeDirectory = "/home/fww";
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 
   # home-manager 26.05 改了 gtk.gtk4.theme 默认值，保持 GTK4 跟随 Stylix 全局主题
   gtk.gtk4.theme = config.gtk.theme;
@@ -134,11 +134,13 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks."github.com" = {
-      hostname = "github.com";
-      user = "git";
-      identityFile = config.sops.secrets.github_ssh_key.path;
-      identitiesOnly = true;
+    settings = {
+      "github.com" = {
+        hostname = "github.com";
+        user = "git";
+        identityFile = config.sops.secrets.github_ssh_key.path;
+        identitiesOnly = true;
+      };
     };
   };
 }

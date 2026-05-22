@@ -9,8 +9,8 @@
       github_token.owner = "fww";
       zhipu_api_key.owner = "fww";
       context7_key.owner = "fww";
-      hf_token.owner = "fww";
-      civitai_token.owner = "fww";
+      # hf_token.owner = "fww";
+      # civitai_token.owner = "fww";
       motion_plus_token.owner = "fww";
       telegram_bot_token.owner = "hermes";
       telegram_allowed_users.owner = "hermes";
