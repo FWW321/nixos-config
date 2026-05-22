@@ -60,8 +60,6 @@
       url = "github:powerofthe69/nix-gaming-edge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    comfyui-nix.url = "github:utensils/comfyui-nix";
-
     # Rust
     fenix = {
       url = "github:nix-community/fenix";
@@ -87,7 +85,6 @@
           inputs.dae.nixosModules.dae
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
-          inputs.comfyui-nix.nixosModules.default
           inputs.hermes-agent.nixosModules.default
 
           # 硬件模块
@@ -100,7 +97,6 @@
           ./hosts/FWW-Desktop/hardware.nix
           ./hosts/FWW-Desktop/disko.nix
           ./hosts/FWW-Desktop/nvidia.nix
-          ./hosts/FWW-Desktop/comfyui.nix
 
           # 通用系统模块
           ./modules/system/boot.nix

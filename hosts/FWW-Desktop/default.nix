@@ -24,5 +24,5 @@
     wayland.windowManager.hyprland.settings.monitor = "DP-1, 3840x2160@160, 0x0, 1.5";
   };
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 }
