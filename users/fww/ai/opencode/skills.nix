@@ -9,49 +9,49 @@ let
     owner = "actionbook";
     repo = "rust-skills";
     rev = "main";
-    sha256 = "0056bbl00g9ainrkjkg78c17ahv4cihwi05in350pb575a6d8dnk";
+    sha256 = "157rssync4939v1kwkkrkwcj7qlcak7vadmaimwf7nlwg1xggblj";
   };
 
   shadcnSkillSrc = pkgs.fetchFromGitHub {
     owner = "shadcn-ui";
     repo = "ui";
     rev = "main";
-    sha256 = "1ha7mlihd286f6d7mzpz5v78p4ghrvbyyxv0d7q6x6i4ha24aznn";
+    sha256 = "1h1zw70ka1vy4qgcarjbq1q6j3zd4fb1df0i22qhk9q8q303bcic";
   };
 
   golangSkillsSrc = pkgs.fetchFromGitHub {
     owner = "samber";
     repo = "cc-skills-golang";
     rev = "main";
-    sha256 = "0w665npjky1y824csk9lajdvanmz61va0zxwf9m2jxaqdg3awdpm";
+    sha256 = "14p7jmhb10hkglgip1npf6iqmw7h48fj6v8mdndbp4b34sr6mw6p";
   };
 
   mattpocockSkillsSrc = pkgs.fetchFromGitHub {
     owner = "mattpocock";
     repo = "skills";
     rev = "main";
-    sha256 = "0fq0p7npnacaps3albr3v1kwl8dvh1nmwnd9bgf1ls3i1p1di2ch";
+    sha256 = "0ymjhhlzfpvzsijqqc62ka34ga1m2gzbypc84w01irzxnzdsw2s3";
   };
 
   surrealSkillsSrc = pkgs.fetchFromGitHub {
     owner = "24601";
     repo = "surreal-skills";
     rev = "main";
-    sha256 = "1gdcz4i4sa7xnc5ppcx19dgha5a0n2jr0ffr5zmqqfwc4zsz0wsp";
+    sha256 = "18fcdyyl6dbksba5pbn277ajaawr2bgmy9z9rb27n57fp8mh7sb8";
   };
 
   gitWorkflowSkillSrc = pkgs.fetchFromGitHub {
     owner = "netresearch";
     repo = "git-workflow-skill";
     rev = "main";
-    sha256 = "0bnwbzcfvfqc5s7cq0f5grvdwai0qynr4l9cf5qicq2fyi3vwlr8";
+    sha256 = "00c8dqmkbf0wh1s5ybisp7wgb66i5mipwak4vn4x72qa0s2v4j5n";
   };
 
   githubProjectSkillSrc = pkgs.fetchFromGitHub {
     owner = "netresearch";
     repo = "github-project-skill";
     rev = "main";
-    sha256 = "1pgar8xqlmbvypzq4p69zw19dgvrrfyvhz3iqny2l48b529fjwf7";
+    sha256 = "0znljg23m26h11ydlp0zj3w1ag2vq6yvjpayvgx5yknifqbvkpan";
   };
 
   uiuxProMaxSrc = pkgs.fetchFromGitHub {
@@ -120,7 +120,7 @@ in
       "opencode/skills/agent-browser/SKILL.md" = {
         source = builtins.fetchurl {
           url = "https://raw.githubusercontent.com/vercel-labs/agent-browser/main/skills/agent-browser/SKILL.md";
-          sha256 = "0m8ai678bl28whp2n3763gzcvr5xyn4kc2fdgkkasq0n3q4wnhdk";
+          sha256 = "0b74mbx6km6b4k6kyagmrvbfd7a6w0dqnxq98rivn33x0rhrhw00";
         };
       };
       "opencode/skills/humanizer-zh/SKILL.md" = {
@@ -137,22 +137,10 @@ in
         source = githubProjectSkillSrc;
         recursive = true;
       };
-      "opencode/skills/security-audit/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/openclaw/skills/main/skills/kingrubic/agentic-security-audit/SKILL.md";
-          sha256 = "1zg82f8al1xkzkw5wf37lhb5243ndqa7xcrp1jxxbgk23zavychf";
-        };
-      };
-      "opencode/skills/cicd-pipeline/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/openclaw/skills/main/skills/gitgoodordietrying/cicd-pipeline/SKILL.md";
-          sha256 = "1ayx3g74nshrnasyy3k1d970k3ni2n1v18hd4yv68z9a7n9rx3xp";
-        };
-      };
       "opencode/skills/graphify/SKILL.md" = {
         source = builtins.fetchurl {
           url = "https://raw.githubusercontent.com/safishamsi/graphify/master/graphify/skill-opencode.md";
-          sha256 = "986fe30e61005ecae1830427e46cbc58880c196d289b0ceaf9aaf93f368ab80d";
+          sha256 = "0091c94ahsl7jiz7abgpfba07gd5zpnv4laa6mn89jy6620frchs";
         };
       };
     }
