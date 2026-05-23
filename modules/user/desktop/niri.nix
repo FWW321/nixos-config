@@ -48,7 +48,7 @@ in
       };
       layout = {
         gaps = 12;
-        center-focused-column = "always";
+        center-focused-column = "never";
         default-column-width = {
           proportion = 0.5;
         };
