@@ -19,6 +19,7 @@ let
       eval "$cmd"
     done
   '';
+  noctalia = "noctalia-shell-env";
 in
 {
   home.pointerCursor.hyprcursor.enable = true;
@@ -32,11 +33,7 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     systemd.enable = false;
-    settings = let
-      noctalia = "noctalia-shell-env";
-    in {
-      "$mod" = "SUPER";
-
+    settings.config = {
       general = {
         gaps_in = 12;
         gaps_out = 12;
@@ -64,19 +61,9 @@ in
 
       animations = {
         enabled = true;
-        bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
-        animation = [
-          "windows, 1, 7, myBezier"
-          "windowsOut, 1, 7, default, popin 80%"
-          "border, 1, 10, default"
-          "borderangle, 1, 8, default"
-          "fade, 1, 7, default"
-          "workspaces, 1, 6, default"
-        ];
       };
 
       dwindle = {
-        pseudotile = false;
         preserve_split = true;
       };
 
@@ -86,7 +73,6 @@ in
 
       misc = {
         vrr = 2;
-        vfr = true;
       };
 
       xwayland = {
@@ -102,130 +88,120 @@ in
         };
         sensitivity = 0;
       };
-
-      bind = [
-        "$mod, Return, exec, footclient"
-        "$mod, Q, killactive,"
-        "$mod SHIFT, E, exit,"
-
-        "$mod, Left, movefocus, l"
-        "$mod, Right, movefocus, r"
-        "$mod, Up, movefocus, u"
-        "$mod, Down, movefocus, d"
-
-        "$mod SHIFT, Left, movewindow, l"
-        "$mod SHIFT, Right, movewindow, r"
-        "$mod SHIFT, Up, movewindow, u"
-        "$mod SHIFT, Down, movewindow, d"
-
-        "$mod, F, togglefloating,"
-        "$mod SHIFT, F, fullscreen,"
-        "$mod, C, centerwindow,"
-
-        "$mod, 1, workspace, 1"
-        "$mod, 2, workspace, 2"
-        "$mod, 3, workspace, 3"
-        "$mod, 4, workspace, 4"
-        "$mod, 5, workspace, 5"
-        "$mod, 6, workspace, 6"
-        "$mod, 7, workspace, 7"
-        "$mod, 8, workspace, 8"
-        "$mod, 9, workspace, 9"
-
-        "$mod SHIFT, 1, movetoworkspace, 1"
-        "$mod SHIFT, 2, movetoworkspace, 2"
-        "$mod SHIFT, 3, movetoworkspace, 3"
-        "$mod SHIFT, 4, movetoworkspace, 4"
-        "$mod SHIFT, 5, movetoworkspace, 5"
-        "$mod SHIFT, 6, movetoworkspace, 6"
-        "$mod SHIFT, 7, movetoworkspace, 7"
-        "$mod SHIFT, 8, movetoworkspace, 8"
-        "$mod SHIFT, 9, movetoworkspace, 9"
-
-        "$mod, Page_Down, workspace, e+1"
-        "$mod, Page_Up, workspace, e-1"
-
-        "$mod, BracketLeft, movewindow, l"
-        "$mod, BracketRight, movewindow, r"
-
-        "$mod, V, exec, ${noctalia} ipc call plugin:clipper toggle"
-        "$mod SHIFT, R, exec, ${noctalia} ipc call plugin:screen-recorder toggle"
-        "$mod, Space, exec, ${noctalia} ipc call launcher toggle"
-        "$mod, T, togglefloating,"
-        "$mod SHIFT, T, focusurgentorlast,"
-
-        "$mod, W, exec, zen-beta"
-        "$mod, E, exec, nautilus"
-        "$mod SHIFT, S, exec, grim -g \"$(slurp -d)\" - | satty --filename -"
-        ", Print, exec, grim - | satty --filename -"
-        "$mod, Print, exec, hyprctl -e activewindow > /tmp/hypr_screenshot_window.json && grim -g \"$(hyprctl -j activewindow | jq -r '\"'\"'.at[0],.at[1] \\\" \\\" .size[0]x.size[1] '\"'\"'\" -r)\" - | satty --filename -"
-
-        "$mod SHIFT, M, exec, hyprland-set-max-mode"
-
-        ", XF86AudioRaiseVolume, exec, ${noctalia} ipc call plugin:volume up"
-        ", XF86AudioLowerVolume, exec, ${noctalia} ipc call plugin:volume down"
-        ", XF86AudioMute, exec, ${noctalia} ipc call plugin:volume toggle-mute"
-
-        ", XF86MonBrightnessUp, exec, ${noctalia} ipc call plugin:brightness up"
-        ", XF86MonBrightnessDown, exec, ${noctalia} ipc call plugin:brightness down"
-
-        "$mod SHIFT, Slash, exec, ${noctalia} ipc call plugin:keybind-cheatsheet toggle"
-      ];
-
-      bindm = [
-        "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
-      ];
-
-      exec-once = [
-        "foot --server"
-        "fcitx5 -d"
-        noctalia
-      ];
     };
 
     extraConfig = ''
-      windowrule {
-          name = steam-games-immediate
-          match:class = ^(steam_app_.*\.exe)$
-          immediate = yes
-      }
+      local mainMod = "SUPER"
 
-      windowrule {
-          name = cs2-immediate
-          match:class = ^(cs2)$
-          immediate = yes
-      }
+      hl.curve("myBezier", { type = "bezier", points = {{0.05, 0.9}, {0.1, 1.05}} })
+      hl.animation({ leaf = "windows", enabled = true, speed = 7, bezier = "myBezier" })
+      hl.animation({ leaf = "windowsOut", enabled = true, speed = 7, bezier = "default", style = "popin 80%" })
+      hl.animation({ leaf = "border", enabled = true, speed = 10, bezier = "default" })
+      hl.animation({ leaf = "borderangle", enabled = true, speed = 8, bezier = "default" })
+      hl.animation({ leaf = "fade", enabled = true, speed = 7, bezier = "default" })
+      hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default" })
 
-      windowrule {
-          name = steam-friends-float
-          match:class = ^(steam)$
-          match:title = ^(Friends List)$
-          float = yes
-      }
+      hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd("footclient"))
+      hl.bind(mainMod .. " + Q", hl.dsp.window.close())
+      hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
 
-      windowrule {
-          name = spotify-float
-          match:title = ^(Spotify Free)$
-          float = yes
-      }
+      hl.bind(mainMod .. " + Left", hl.dsp.focus({ direction = "left" }))
+      hl.bind(mainMod .. " + Right", hl.dsp.focus({ direction = "right" }))
+      hl.bind(mainMod .. " + Up", hl.dsp.focus({ direction = "up" }))
+      hl.bind(mainMod .. " + Down", hl.dsp.focus({ direction = "down" }))
 
-      windowrule {
-          name = steam-workspace
-          match:class = ^(steam)$
-          workspace = 2 silent
-          monitor = DP-1
-          center = yes
-          maximize = yes
-      }
+      hl.bind(mainMod .. " + SHIFT + Left", hl.dsp.window.move({ direction = "left" }))
+      hl.bind(mainMod .. " + SHIFT + Right", hl.dsp.window.move({ direction = "right" }))
+      hl.bind(mainMod .. " + SHIFT + Up", hl.dsp.window.move({ direction = "up" }))
+      hl.bind(mainMod .. " + SHIFT + Down", hl.dsp.window.move({ direction = "down" }))
 
-      layerrule {
-          name = noXray-blur
-          match:namespace = noXray
-          blur = yes
-          xray = yes
-          ignore_alpha = 0
-      }
+      hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
+      hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
+      hl.bind(mainMod .. " + C", hl.dsp.window.center())
+
+      for i = 1, 9 do
+        hl.bind(mainMod .. " + " .. i, hl.dsp.focus({ workspace = tostring(i) }))
+        hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = tostring(i) }))
+      end
+
+      hl.bind(mainMod .. " + Page_Down", hl.dsp.focus({ workspace = "e+1" }))
+      hl.bind(mainMod .. " + Page_Up", hl.dsp.focus({ workspace = "e-1" }))
+
+      hl.bind(mainMod .. " + BracketLeft", hl.dsp.window.move({ direction = "left" }))
+      hl.bind(mainMod .. " + BracketRight", hl.dsp.window.move({ direction = "right" }))
+
+      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${noctalia} ipc call plugin:clipper toggle"))
+      hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("${noctalia} ipc call plugin:screen-recorder toggle"))
+      hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("${noctalia} ipc call launcher toggle"))
+      hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }))
+      hl.bind(mainMod .. " + SHIFT + T", hl.dsp.focus({ urgent_or_last = true }))
+
+      hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("zen-beta"))
+      hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
+      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd([[grim -g "$(slurp -d)" - | satty --filename -]]))
+
+      hl.bind("Print", hl.dsp.exec_cmd("grim - | satty --filename -"))
+      hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd([[hyprctl -e activewindow > /tmp/hypr_screenshot_window.json && grim -g "$(hyprctl -j activewindow | jq -r '.at[0],.at[1] " " .size[0]x.size[1]' -r)" - | satty --filename -]]))
+
+      hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprland-set-max-mode"))
+
+      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume up"))
+      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume down"))
+      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume toggle-mute"))
+      hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("${noctalia} ipc call plugin:brightness up"))
+      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${noctalia} ipc call plugin:brightness down"))
+
+      hl.bind(mainMod .. " + SHIFT + Slash", hl.dsp.exec_cmd("${noctalia} ipc call plugin:keybind-cheatsheet toggle"))
+
+      hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
+      hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+      hl.on("hyprland.start", function()
+        hl.exec_cmd("foot --server")
+        hl.exec_cmd("fcitx5 -d")
+        hl.exec_cmd("${noctalia}")
+      end)
+
+      hl.window_rule({
+        name = "steam-games-immediate",
+        match = { class = [[^(steam_app_.*\.exe)$]] },
+        immediate = true,
+      })
+
+      hl.window_rule({
+        name = "cs2-immediate",
+        match = { class = "^(cs2)$" },
+        immediate = true,
+      })
+
+      hl.window_rule({
+        name = "steam-friends-float",
+        match = { class = "^(steam)$", title = "^(Friends List)$" },
+        float = true,
+      })
+
+      hl.window_rule({
+        name = "spotify-float",
+        match = { title = "^(Spotify Free)$" },
+        float = true,
+      })
+
+      hl.window_rule({
+        name = "steam-workspace",
+        match = { class = "^(steam)$" },
+        workspace = "2 silent",
+        monitor = "DP-1",
+        center = true,
+        maximize = true,
+      })
+
+      hl.layer_rule({
+        name = "noXray-blur",
+        match = { namespace = "noXray" },
+        blur = true,
+        xray = true,
+        ignore_alpha = 0,
+      })
     '';
   };
 }
