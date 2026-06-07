@@ -65,12 +65,6 @@
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # AI Agent
-    hermes-agent = {
-      url = "github:nousresearch/hermes-agent";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -85,7 +79,6 @@
           inputs.dae.nixosModules.dae
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
-          inputs.hermes-agent.nixosModules.default
 
           # 硬件模块
           inputs.nixos-hardware.nixosModules.common-cpu-intel
@@ -109,7 +102,6 @@
           ./modules/system/network.nix
           ./modules/system/secrets.nix
           ./modules/system/theme.nix
-          ./modules/system/hermes.nix
 
           # Home Manager
           home-manager.nixosModules.home-manager

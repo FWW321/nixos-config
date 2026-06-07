@@ -23,7 +23,6 @@
   services.blueman.enable = true;
 
   sops.secrets.byg_url = { };
-  sops.secrets.hxy_url = { };
 
   sops.templates."dae/config.dae" = {
     path = "/etc/dae/config.dae";
@@ -66,72 +65,71 @@
       
             subscription {
               byg: 'https-file://${config.sops.placeholder.byg_url}'
-              hxy: 'https-file://${config.sops.placeholder.hxy_url}'
             }
       
             group {
               proxy {
-                filter: subtag(byg, hxy)
+                filter: subtag(byg)
                 policy: min_moving_avg
               }
               hk {
-                filter: subtag(byg, hxy) && name(keyword: '香港', keyword: 'HK')
+                filter: subtag(byg) && name(keyword: '香港', keyword: 'HK')
                 policy: min_moving_avg
               }
               tw {
-                filter: subtag(byg, hxy) && name(keyword: '台湾', keyword: 'TW')
+                filter: subtag(byg) && name(keyword: '台湾', keyword: 'TW')
                 policy: min_moving_avg
               }
               sg {
-                filter: subtag(byg, hxy) && name(keyword: '新加坡', keyword: 'SG')
+                filter: subtag(byg) && name(keyword: '新加坡', keyword: 'SG')
                 policy: min_moving_avg
               }
               jp {
-                filter: subtag(byg, hxy) && name(keyword: '日本', keyword: 'JP') && !name(keyword: '06')
+                filter: subtag(byg) && name(keyword: '日本', keyword: 'JP') && !name(keyword: '06')
                 policy: min_moving_avg
               }
               kr {
-                filter: subtag(byg, hxy) && name(keyword: '韩国', keyword: 'KR')
+                filter: subtag(byg) && name(keyword: '韩国', keyword: 'KR')
                 policy: min_moving_avg
               }
               vn {
-                filter: subtag(byg, hxy) && name(keyword: '越南', keyword: 'VN')
+                filter: subtag(byg) && name(keyword: '越南', keyword: 'VN')
                 policy: min_moving_avg
               }
               my {
-                filter: subtag(byg, hxy) && name(keyword: '马来西亚', keyword: 'MY')
+                filter: subtag(byg) && name(keyword: '马来西亚', keyword: 'MY')
                 policy: min_moving_avg
               }
               th {
-                filter: subtag(byg, hxy) && name(keyword: '泰国', keyword: 'TH')
+                filter: subtag(byg) && name(keyword: '泰国', keyword: 'TH')
                 policy: min_moving_avg
               }
               in {
-                filter: subtag(byg, hxy) && name(keyword: '印度', keyword: 'IN')
+                filter: subtag(byg) && name(keyword: '印度', keyword: 'IN')
                 policy: min_moving_avg
               }
               au {
-                filter: subtag(byg, hxy) && name(keyword: '澳大利亚', keyword: 'AU')
+                filter: subtag(byg) && name(keyword: '澳大利亚', keyword: 'AU')
                 policy: min_moving_avg
               }
               ca {
-                filter: subtag(byg, hxy) && name(keyword: '加拿大', keyword: 'CA')
+                filter: subtag(byg) && name(keyword: '加拿大', keyword: 'CA')
                 policy: min_moving_avg
               }
               us {
-                filter: subtag(byg, hxy) && name(keyword: '美国', keyword: 'US')
+                filter: subtag(byg) && name(keyword: '美国', keyword: 'US')
                 policy: min_moving_avg
               }
               de {
-                filter: subtag(byg, hxy) && name(keyword: '德国', keyword: 'DE')
+                filter: subtag(byg) && name(keyword: '德国', keyword: 'DE')
                 policy: min_moving_avg
               }
               fr {
-                filter: subtag(byg, hxy) && name(keyword: '法国', keyword: 'FR')
+                filter: subtag(byg) && name(keyword: '法国', keyword: 'FR')
                 policy: min_moving_avg
               }
               uk {
-                filter: subtag(byg, hxy) && name(keyword: '英国', keyword: 'UK')
+                filter: subtag(byg) && name(keyword: '英国', keyword: 'UK')
                 policy: min_moving_avg
               }
             }
