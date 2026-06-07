@@ -81,6 +81,25 @@
       };
     };
 
+    autoCmd = [
+      {
+        event = "DiagnosticChanged";
+        callback.__raw = ''
+          function(ev)
+            local count = vim.b[ev.buf].inlay_hint_refresh_count or 0
+            if count >= 3 then return end
+            vim.b[ev.buf].inlay_hint_refresh_count = count + 1
+            vim.defer_fn(function()
+              if vim.api.nvim_buf_is_valid(ev.buf) then
+                pcall(vim.lsp.inlay_hint.enable, true, { bufnr = ev.buf })
+              end
+            end, 500)
+          end
+        '';
+        desc = "Refresh inlay hints when diagnostics arrive (server ready)";
+      }
+    ];
+
     globals.mapleader = " ";
 
     opts = {

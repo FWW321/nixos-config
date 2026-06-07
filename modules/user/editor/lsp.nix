@@ -1,7 +1,6 @@
 # filepath: ~/nixos-config/modules/user/editor/lsp.nix
 # LSP 语言服务器、诊断（nvim-lint）、格式化（conform-nvim）
 {
-  config,
   pkgs,
   ...
 }:
@@ -17,6 +16,13 @@ in
   programs.nixvim.plugins = {
     lsp = {
       enable = true;
+      inlayHints = false;
+      onAttach = ''
+        if client:supports_method("textDocument/inlayHint") then
+          vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+          vim.b[bufnr].inlay_hint_refresh_count = 0
+        end
+      '';
       servers = {
         nixd.enable = true;
 
@@ -24,14 +30,37 @@ in
           enable = true;
           installCargo = false;
           installRustc = false;
+          settings = {
+            inlayHints = {
+              enable = true;
+              typeHints.enable = true;
+              parameterHints.enable = true;
+              chainingHints.enable = true;
+              closureReturnTypeHints.enable = true;
+            };
+            check = {
+              command = "clippy";
+              onSave = true;
+            };
+          };
         };
 
         lua_ls = {
           enable = true;
           settings = {
             diagnostics.globals = [ "vim" ];
-            workspace.library = [ "\${3rd}/luv/library" "\${3rd}/busted/library" ];
+            workspace.library = [
+              "\${3rd}/luv/library"
+              "\${3rd}/busted/library"
+            ];
             telemetry.enable = false;
+            hint = {
+              enable = true;
+              setType = true;
+              paramType = true;
+              paramName = "all";
+              arrayIndex = "Auto";
+            };
             format = {
               enable = true;
               defaultConfig = {
@@ -42,7 +71,21 @@ in
           };
         };
 
-        basedpyright.enable = true;
+        basedpyright = {
+          enable = true;
+          settings = {
+            basedpyright = {
+              analysis = {
+                inlayHints = {
+                  variableTypes = true;
+                  callArgumentNames = true;
+                  functionReturnTypes = true;
+                  genericTypes = true;
+                };
+              };
+            };
+          };
+        };
         jdtls.enable = true;
         zls.enable = true;
         gopls = {
@@ -93,6 +136,44 @@ in
             typescript = {
               tsdk = "${pkgs.typescript}/lib/node_modules/typescript/lib";
               preferences.preferTypeOnlyAutoImports = true;
+              inlayHints = {
+                parameterNames = {
+                  enabled = "all";
+                  suppressWhenArgumentMatchesName = true;
+                };
+                functionLikeReturnTypes = {
+                  enabled = true;
+                };
+                variableTypes = {
+                  enabled = true;
+                };
+                propertyDeclarationTypes = {
+                  enabled = true;
+                };
+                enumMemberValues = {
+                  enabled = true;
+                };
+              };
+            };
+            javascript = {
+              inlayHints = {
+                parameterNames = {
+                  enabled = "all";
+                  suppressWhenArgumentMatchesName = true;
+                };
+                functionLikeReturnTypes = {
+                  enabled = true;
+                };
+                variableTypes = {
+                  enabled = true;
+                };
+                propertyDeclarationTypes = {
+                  enabled = true;
+                };
+                enumMemberValues = {
+                  enabled = true;
+                };
+              };
             };
           };
         };
@@ -198,7 +279,10 @@ in
         formatters_by_ft = {
           nix = [ "nixfmt" ];
           lua = [ "stylua" ];
-          python = [ "ruff_format" "ruff_fix" ];
+          python = [
+            "ruff_format"
+            "ruff_fix"
+          ];
           rust = [ "rustfmt" ];
           go = [ "gofmt" ];
           java = [ "google-java-format" ];
@@ -224,11 +308,18 @@ in
           toml = [ "taplo" ];
           graphql = [ "prettier" ];
           jq = [ "jq" ];
-          "_" = [ "trim_whitespace" "trim_newlines" ];
+          "_" = [
+            "trim_whitespace"
+            "trim_newlines"
+          ];
         };
         formatters = {
           shfmt = {
-            prepend_args = [ "-i" "4" "-ci" ];
+            prepend_args = [
+              "-i"
+              "4"
+              "-ci"
+            ];
           };
           google-java-format = {
             prepend_args = [ "--aosp" ];
