@@ -14,7 +14,7 @@
   home.stateVersion = "26.05";
 
   # home-manager 26.05 改了 gtk.gtk4.theme 默认值，保持 GTK4 跟随 Stylix 全局主题
-  gtk.gtk4.theme = config.gtk.theme;
+  gtk.gtk4.theme = lib.mkForce config.gtk.theme;
 
   # home-manager 今天 (2026-03-24) 新增了 qt.kvantum 模块，其条件 cfg.settings != {} 永远为 true
   # （submodule 会自动注入 General/Applications 选项），导致与 Stylix 冲突
