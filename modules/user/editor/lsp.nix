@@ -176,7 +176,7 @@ in
         nix = [ "statix" ];
         bash = [ "shellcheck" ];
         sh = [ "shellcheck" ];
-        markdown = [ "markdownlint-cli" ];
+        markdown = [ "markdownlint" ];
         yaml = [ "yamllint" ];
         python = [ "ruff" ];
         go = [ "golangci-lint" ];
