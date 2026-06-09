@@ -177,6 +177,7 @@ in
 
       picker = {
         enabled = true;
+        layout = { preset = "telescope"; };
         matcher = {
           fuzzy = true;
           smartcase = true;

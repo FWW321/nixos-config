@@ -10,6 +10,7 @@
         keymap.preset = "super-tab";
         completion = {
           documentation.auto_show = true;
+          trigger.prefetch_on_insert = true;
           menu = {
             draw = {
               treesitter = { "lsp" = [ "kind" ]; };
@@ -19,11 +20,7 @@
         appearance.nerd_font_variant = "normal";
         signature.enabled = true;
         cmdline.enabled = true;
-        trigger.prefetch_on_insert = true;
-        fuzzy = {
-          implementation = "prefer_rust_with_warning";
-          use_fzf_lua = false;
-        };
+        fuzzy.implementation = "prefer_rust_with_warning";
         sources = {
           default = [ "lsp" "path" "snippets" "buffer" "copilot" ];
           providers = {
@@ -33,19 +30,6 @@
               score_offset = 100;
               async = true;
             };
-          };
-        };
-        windows = {
-          autocomplete = {
-            scrolloff = 4;
-            min_width = 40;
-          };
-          documentation = {
-            border = "rounded";
-            winhighlight = "Normal:CmpDoc,Border:CmpDocBorder";
-          };
-          signature_help = {
-            border = "rounded";
           };
         };
       };

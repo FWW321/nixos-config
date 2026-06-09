@@ -46,5 +46,39 @@
 
     mini-move.enable = true;
     mini-pairs.enable = true;
+
+    noice = {
+      enable = true;
+      settings = {
+        presets = {
+          bottom_search = false;
+          command_palette = true;
+          long_message_to_split = true;
+          inc_rename = true;
+          lsp_doc_border = true;
+        };
+        cmdline = {
+          view = "cmdline_center";
+          format = {
+            cmdline = { pattern = "^:"; icon = ""; lang = "vim"; };
+            search_down = { kind = "search"; pattern = "^/"; icon = " "; lang = "regex"; };
+            search_up = { kind = "search"; pattern = "^%?"; icon = " "; lang = "regex"; };
+          };
+        };
+        views = {
+          cmdline_center = {
+            backend = "popup";
+            relative = "editor";
+            position = { row = "40%"; col = "50%"; };
+            size = { width = "60%"; height = "auto"; };
+            border = { style = "rounded"; padding = [ 0 1 ]; };
+          };
+        };
+        lsp.override = {
+          "vim.lsp.util.convert_input_to_markdown_lines" = true;
+          "vim.lsp.util.stylize_markdown" = true;
+        };
+      };
+    };
   };
 }
