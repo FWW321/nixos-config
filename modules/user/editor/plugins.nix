@@ -1,8 +1,10 @@
 # filepath: ~/nixos-config/modules/user/editor/plugins.nix
 # 编辑增强、跳转、注释、Trouble、TODO、mini 系列
-{ ... }:
-
+{ config, pkgs, ... }:
 {
+
+  sops.secrets.zhipu_api_key = { };
+
   programs.nixvim.plugins = {
     lz-n.enable = true;
 
@@ -23,8 +25,6 @@
     ts-comments.enable = true;
     lastplace.enable = true;
 
-    # 不能 lazyLoad：nixvim 用 lz.n 做 lazy loading，快捷键通过 lazyLoad.settings.keys 定义才生效，
-    # 全局 keymaps 里定义的快捷键无法触发 cmd 加载，Trouble 也很轻量，不值得折腾
     trouble.enable = true;
 
     todo-comments = {
@@ -80,5 +80,60 @@
         };
       };
     };
+
   };
+
+  programs.nixvim.extraConfigLuaPre = ''
+    vim.env.ZHIPU_API_KEY = vim.fn.readfile("${config.sops.secrets.zhipu_api_key.path}")[1] or ""
+  '';
+
+  programs.nixvim.extraPlugins = [
+    (pkgs.vimUtils.buildVimPlugin {
+      pname = "multicursor.nvim";
+      version = "1.0";
+      src = pkgs.fetchFromGitHub {
+        owner = "jake-stewart";
+        repo = "multicursor.nvim";
+        rev = "1.0";
+        hash = "sha256-JHl8Z7ESrWus2I6Pe+6gmdgCAZOzAKX7kimy71sAoe4=";
+      };
+    })
+    pkgs.vimPlugins.minuet-ai-nvim
+    pkgs.vimPlugins.plenary-nvim
+  ];
+
+  programs.nixvim.extraConfigLua = ''
+    require("minuet").setup({
+      provider = "openai_compatible",
+      request_timeout = 5,
+      throttle = 1000,
+      debounce = 400,
+      provider_options = {
+        openai_compatible = {
+          model = "glm-5.1",
+          end_point = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions",
+          api_key = "ZHIPU_API_KEY",
+          name = "GLM",
+          stream = true,
+          optional = {
+            max_tokens = 1024,
+            thinking = {
+              type = "disabled",
+            },
+          },
+        },
+      },
+    })
+
+    require("multicursor-nvim").setup()
+
+    local hl = vim.api.nvim_set_hl
+    hl(0, "MultiCursorCursor", { reverse = true })
+    hl(0, "MultiCursorVisual", { link = "Visual" })
+    hl(0, "MultiCursorSign", { link = "SignColumn" })
+    hl(0, "MultiCursorMatchPreview", { link = "Search" })
+    hl(0, "MultiCursorDisabledCursor", { reverse = true })
+    hl(0, "MultiCursorDisabledVisual", { link = "Visual" })
+    hl(0, "MultiCursorDisabledSign", { link = "SignColumn" })
+  '';
 }

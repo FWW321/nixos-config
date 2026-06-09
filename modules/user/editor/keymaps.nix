@@ -343,14 +343,6 @@
       options.desc = "Next Buffer";
     }
 
-    # --- 通用 ---
-    {
-      mode = "n";
-      key = "<C-s>";
-      action = "<cmd>w<CR>";
-      options.desc = "Save";
-    }
-
     # --- Flash ---
     {
       mode = [ "n" "x" "o" ];
@@ -415,100 +407,66 @@
       options.desc = "行尾";
     }
 
-    # --- AI (opencode) ---
+    # --- Multicursor ---
     {
       mode = [ "n" "x" ];
-      key = "<leader>aa";
-      action.__raw = "function() require('opencode').ask('@this: ', { submit = true }) end";
-      options.desc = "Ask opencode";
-    }
-    {
-      mode = [ "n" "x" ];
-      key = "<leader>ax";
-      action.__raw = "function() require('opencode').select() end";
-      options.desc = "opencode Actions";
-    }
-    {
-      mode = [ "n" "t" ];
-      key = "<leader>at";
-      action.__raw = "function() require('opencode').toggle() end";
-      options.desc = "Toggle opencode";
-    }
-    {
-      mode = "n";
-      key = "<leader>ae";
-      action.__raw = ''
-        function() require('opencode').prompt('explain') end
-      '';
-      options.desc = "Explain";
-    }
-    {
-      mode = "n";
-      key = "<leader>ar";
-      action.__raw = ''
-        function() require('opencode').prompt('review') end
-      '';
-      options.desc = "Review";
-    }
-    {
-      mode = "n";
-      key = "<leader>af";
-      action.__raw = ''
-        function() require('opencode').prompt('fix') end
-      '';
-      options.desc = "Fix Diagnostics";
-    }
-    {
-      mode = "n";
-      key = "<leader>ai";
-      action.__raw = ''
-        function() require('opencode').prompt('implement') end
-      '';
-      options.desc = "Implement";
-    }
-    {
-      mode = "n";
-      key = "<leader>aT";
-      action.__raw = ''
-        function() require('opencode').prompt('test') end
-      '';
-      options.desc = "Add Tests";
-    }
-    {
-      mode = "n";
-      key = "<leader>ad";
-      action.__raw = ''
-        function() require('opencode').prompt('document') end
-      '';
-      options.desc = "Document";
-    }
-    {
-      mode = "n";
-      key = "<leader>ao";
-      action.__raw = ''
-        function() require('opencode').prompt('optimize') end
-      '';
-      options.desc = "Optimize";
-    }
-    {
-      mode = "n";
-      key = "<leader>ag";
-      action.__raw = ''
-        function() require('opencode').prompt('diff') end
-      '';
-      options.desc = "Review Git Diff";
+      key = "<leader>mn";
+      action.__raw = "function() require('multicursor-nvim').matchAddCursor(1) end";
+      options.desc = "Multi: Match Next";
     }
     {
       mode = [ "n" "x" ];
-      key = "go";
-      action.__raw = "function() return require('opencode').operator('@this ') end";
-      options.desc = "opencode Operator";
+      key = "<leader>mp";
+      action.__raw = "function() require('multicursor-nvim').matchAddCursor(-1) end";
+      options.desc = "Multi: Match Prev";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>ms";
+      action.__raw = "function() require('multicursor-nvim').matchSkipCursor(1) end";
+      options.desc = "Multi: Match Skip";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>ma";
+      action.__raw = "function() require('multicursor-nvim').matchAllAddCursors() end";
+      options.desc = "Multi: Match All";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>m<up>";
+      action.__raw = "function() require('multicursor-nvim').lineAddCursor(-1) end";
+      options.desc = "Multi: Add Line Above";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>m<down>";
+      action.__raw = "function() require('multicursor-nvim').lineAddCursor(1) end";
+      options.desc = "Multi: Add Line Below";
     }
     {
       mode = "n";
-      key = "<C-.>";
-      action.__raw = "function() require('opencode').toggle() end";
-      options.desc = "Toggle opencode";
+      key = "<C-LeftMouse>";
+      action.__raw = "require('multicursor-nvim').handleMouse";
+      options.desc = "Multi: Mouse Add Cursor";
+    }
+    {
+      mode = "n";
+      key = "<C-LeftDrag>";
+      action.__raw = "require('multicursor-nvim').handleMouseDrag";
+      options.desc = "Multi: Mouse Drag";
+    }
+    {
+      mode = "n";
+      key = "<C-LeftRelease>";
+      action.__raw = "require('multicursor-nvim').handleMouseRelease";
+      options.desc = "Multi: Mouse Release";
+    }
+    {
+      mode = [ "n" "x" ];
+      key = "<leader>mt";
+      action.__raw = "require('multicursor-nvim').toggleCursor";
+      options.desc = "Multi: Toggle Cursor";
     }
 
     # --- 可视模式 ---
@@ -537,4 +495,21 @@
       options.desc = "右缩进";
     }
   ];
+
+  # --- Multicursor: 多光标激活时的按键层 ---
+  programs.nixvim.extraConfigLua = ''
+    local mc = require("multicursor-nvim")
+    mc.addKeymapLayer(function(layerSet)
+      layerSet({"n", "x"}, "<left>", mc.prevCursor)
+      layerSet({"n", "x"}, "<right>", mc.nextCursor)
+      layerSet({"n", "x"}, "<leader>x", mc.deleteCursor)
+      layerSet("n", "<esc>", function()
+        if not mc.cursorsEnabled() then
+          mc.enableCursors()
+        else
+          mc.clearCursors()
+        end
+      end)
+    end)
+  '';
 }

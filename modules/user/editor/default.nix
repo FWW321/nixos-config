@@ -1,7 +1,6 @@
 # filepath: ~/nixos-config/modules/user/editor/default.nix
 # Neovim 编辑器入口：全局选项、外部依赖、子模块汇总
 {
-  config,
   pkgs,
   inputs,
   ...
@@ -17,7 +16,6 @@
     ./git.nix
     ./snacks.nix
     ./plugins.nix
-    ./opencode.nix
     ./keymaps.nix
   ];
 
@@ -37,7 +35,7 @@
       statix
       # Git
       lazygit
-      # Node.js（copilot.lua 需要）
+      # Node.js
       nodejs
       # Python
       ruff
