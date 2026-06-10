@@ -36,6 +36,24 @@ let
     sha256 = "1137nd1krgxhgzhvnw32nqjz327ifsp791s9clmmdcbldqs805yh";
   };
 
+  understandAnythingSrc = pkgs.fetchFromGitHub {
+    owner = "Egonex-AI";
+    repo = "Understand-Anything";
+    rev = "main";
+    sha256 = "08gdri49xw4a98vqcmck7bkcy5abzhfv06hjzirgq3ch7vhl6gv8";
+  };
+
+  understandAnythingSkillDirs = [
+    "understand"
+    "understand-chat"
+    "understand-dashboard"
+    "understand-diff"
+    "understand-domain"
+    "understand-explain"
+    "understand-knowledge"
+    "understand-onboard"
+  ];
+
   uiuxProMaxSrc = pkgs.fetchFromGitHub {
     owner = "nextlevelbuilder";
     repo = "ui-ux-pro-max-skill";
@@ -213,5 +231,15 @@ in
         recursive = true;
       };
     }
+
+    (lib.listToAttrs (
+      map (dir: {
+        name = "opencode/skills/${dir}";
+        value = {
+          source = "${understandAnythingSrc}/understand-anything-plugin/skills/${dir}";
+          recursive = true;
+        };
+      }) understandAnythingSkillDirs
+    ))
   ];
 }

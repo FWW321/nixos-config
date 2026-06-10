@@ -67,5 +67,10 @@ in
       command = [ "${pkgs.github-mcp-server}/bin/github-mcp-server" "stdio" "--toolsets" "default,actions,dependabot,notifications" ];
       environment.GITHUB_PERSONAL_ACCESS_TOKEN = "{file:${githubToken}}";
     };
+    "codegraph" = {
+      type = "local";
+      enabled = true;
+      command = [ "npx" "-y" "@colbymchenry/codegraph" "serve" "--mcp" ];
+    };
   };
 }
