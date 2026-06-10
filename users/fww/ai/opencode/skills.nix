@@ -1,10 +1,6 @@
 { pkgs, lib, ... }:
 
 let
-  graphifyWrapper = pkgs.writeShellScriptBin "graphify" ''
-    exec ${pkgs.uv}/bin/uvx graphifyy "$@"
-  '';
-
   rustSkillsSrc = pkgs.fetchFromGitHub {
     owner = "actionbook";
     repo = "rust-skills";
@@ -152,8 +148,6 @@ let
 
 in
 {
-  home.packages = [ graphifyWrapper ];
-
   xdg.configFile = lib.mkMerge [
     {
       "opencode/skills/agent-browser/SKILL.md" = {
@@ -171,12 +165,6 @@ in
       "opencode/skills/git-workflow" = {
         source = gitWorkflowSkillSrc;
         recursive = true;
-      };
-      "opencode/skills/graphify/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/safishamsi/graphify/master/graphify/skill-opencode.md";
-          sha256 = "0091c94ahsl7jiz7abgpfba07gd5zpnv4laa6mn89jy6620frchs";
-        };
       };
     }
 
