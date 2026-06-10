@@ -46,8 +46,6 @@
       golangci-lint
       # Java
       google-java-format
-      # Zig
-      zig
       # C/C++
       clang-tools
       # Web

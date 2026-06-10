@@ -109,10 +109,12 @@
       curl
       btop
       ripgrep
+      wireshark-cli
       nh
       xwayland-satellite
       nvtopPackages.nvidia
       inputs.fenix.packages.${pkgs.stdenv.hostPlatform.system}.complete.toolchain
+      zig
     ];
 
   programs.bash.enable = true;
