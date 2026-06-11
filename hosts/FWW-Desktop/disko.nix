@@ -16,8 +16,8 @@
                 type = "btrfs";
                 extraArgs = [ "-f" ];
                 subvolumes = {
-                  "@root" = { mountpoint = "/"; mountOptions = ["compress=zstd" "noatime" "ssd"]; };
-                  "@nix" = { mountpoint = "/nix"; mountOptions = [ "compress=zstd" "noatime" "ssd" ]; };
+                  "@root" = { mountpoint = "/"; mountOptions = ["compress=zstd" "noatime" "ssd" "discard=async" "space_cache=v2"]; };
+                  "@nix" = { mountpoint = "/nix"; mountOptions = [ "compress=zstd" "noatime" "ssd" "discard=async" "space_cache=v2" ]; };
                 };
               };
             };
@@ -32,7 +32,7 @@
           partitions = {
             home = {
               size = "100%";
-              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" "ssd" ]; }; }; };
+              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@home" = { mountpoint = "/home"; mountOptions = [ "compress=zstd" "noatime" "ssd" "discard=async" "space_cache=v2" ]; }; }; };
             };
           };
         };
@@ -45,7 +45,7 @@
           partitions = {
             data = {
               size = "100%";
-              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@data" = { mountpoint = "/data"; mountOptions = [ "compress=zstd" "noatime" "ssd" ]; }; }; };
+              content = { type = "btrfs"; extraArgs = [ "-f" ]; subvolumes = { "@data" = { mountpoint = "/data"; mountOptions = [ "compress=zstd" "noatime" "ssd" "discard=async" "space_cache=v2" ]; }; }; };
             };
           };
         };

@@ -30,5 +30,7 @@
 
   # 存储维护
   services.btrfs.autoScrub.enable = true;
-  services.fstrim.enable = true; # NVMe/SSD TRIM 定时任务
+  # TRIM 由 btrfs discard=async 挂载选项实时处理，无需 fstrim 定时任务
+  services.smartd.enable = true; # 磁盘 SMART 健康监控
+  services.fwupd.enable = true; # 固件更新（主板/SSD/外设）
 }
