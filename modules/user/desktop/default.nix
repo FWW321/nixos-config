@@ -78,8 +78,6 @@
     GLFW_IM_MODULE = "ibus";
   };
 
-  sops.secrets.zhipu_api_key = { };
-
   # GitHub Token 配置
   home.activation.writeNixConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     TOKEN=$(cat /run/secrets/github_token)

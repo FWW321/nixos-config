@@ -38,6 +38,7 @@
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
     defaultSopsFile = ../../secrets/secrets.yaml;
     secrets.github_ssh_key.path = "${config.home.homeDirectory}/.ssh/github";
+    secrets.zhipu_api_key = { };
   };
 
   # Zen Browser

@@ -27,9 +27,6 @@
     performance.byteCompileLua.enable = true;
 
     extraPackages = with pkgs; [
-      # 搜索工具（snacks picker / grepprg 必需）
-      ripgrep
-      fd
       # Nix
       nixfmt
       statix
@@ -41,9 +38,6 @@
       ruff
       # Lua
       stylua
-      # Go
-      go
-      golangci-lint
       # Java
       google-java-format
       # C/C++

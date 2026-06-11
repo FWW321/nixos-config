@@ -3,8 +3,6 @@
 { config, pkgs, ... }:
 {
 
-  sops.secrets.zhipu_api_key = { };
-
   programs.nixvim.plugins = {
     lz-n.enable = true;
 
