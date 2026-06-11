@@ -19,8 +19,20 @@
   # Nushell - 现代化 shell
   programs.nushell = {
     enable = true;
-    extraConfig = ''$env.config = { show_banner: false, edit_mode: vi, error_style: "fancy" }'';
+    extraConfig = ''
+      $env.config.show_banner = false
+      $env.config.edit_mode = "vi"
+      $env.config.error_style = "fancy"
+      $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
+    '';
     shellAliases = { vi = "nvim"; vim = "nvim"; ll = "ls -l"; cat = "bat"; };
+  };
+
+  # Carapace - 跨 shell 智能补全
+  programs.carapace = {
+    enable = true;
+    enableNushellIntegration = true;
+    enableBashIntegration = true;
   };
 
   # Starship prompt
