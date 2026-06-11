@@ -32,9 +32,12 @@
       "rd.systemd.show_status=false"
       "transparent_hugepage=always"
     ];
-
-    kernel.sysfs.kernel.mm.transparent_hugepage.defrag = "defer+madvise";
   };
+
+  # THP defrag (boot.kernel.sysfs 不存在，用 tmpfiles 在启动时写入 sysfs)
+  systemd.tmpfiles.rules = [
+    "w /sys/kernel/mm/transparent_hugepage/defrag - - - - defer+madvise"
+  ];
 
   # scx 调度器 - 现代 BPF 调度器，提升交互响应
   services.scx = {
@@ -50,7 +53,7 @@
   zramSwap = {
     enable = true;
     algorithm = "zstd";
-    memoryPercent = 50;
+    memoryPercent = 30;
     priority = 100;
   };
 }
