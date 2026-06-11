@@ -11,6 +11,10 @@
       auto-optimise-store = true;
       trusted-users = [ "root" "@wheel" ];
       max-jobs = "auto";
+      connect-timeout = 5;
+      warn-dirty = false;
+      keep-derivations = true;
+      keep-outputs = true;
       substituters = [
         "https://attic.xuyh0120.win/lantian"
         "https://niri.cachix.org"
@@ -34,7 +38,7 @@
     gc = {
       automatic = true;
       dates = "weekly";
-      options = "--delete-older-than 14d";
+      options = "--delete-older-than 14d --max-freed ${toString (100 * 1024 * 1024 * 1024)}";
     };
   };
 }
