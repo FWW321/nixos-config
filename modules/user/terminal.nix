@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/user/terminal.nix
 # 终端环境：Foot、Nushell、现代化 CLI 工具
-{ ... }:
+{ lib, ... }:
 
 {
   # Foot 终端
@@ -19,12 +19,20 @@
   # Nushell - 现代化 shell
   programs.nushell = {
     enable = true;
-    extraConfig = ''
-      $env.config.show_banner = false
-      $env.config.edit_mode = "vi"
-      $env.config.error_style = "fancy"
-      $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
-    '';
+    extraConfig = lib.mkMerge [
+      ''
+        $env.config.show_banner = false
+        $env.config.edit_mode = "vi"
+        $env.config.error_style = "fancy"
+        $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
+      ''
+      (lib.mkAfter ''
+        $env.config.completions.external.completer = {|spans|
+          do $carapace_completer $spans
+          | where { ($in.value? | default "") !~ "ERR" }
+        }
+      '')
+    ];
     shellAliases = { vi = "nvim"; vim = "nvim"; ll = "ls -l"; cat = "bat"; };
   };
 
