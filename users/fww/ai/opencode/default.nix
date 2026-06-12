@@ -62,9 +62,14 @@ in
   programs.opencode = {
     enable = true;
     settings = {
-      model = "zhipuai-coding-plan/glm-5.1";
-      small_model = "zhipuai-coding-plan/glm-5v-turbo";
-      provider."zhipuai-coding-plan".options.apiKey = "{file:${zhipuKey}}";
+      model = "zhipuai-coding-plan/glm-x-preview";
+      small_model = "zhipuai-coding-plan/glm-5.1";
+      provider."zhipuai-coding-plan" = {
+        options.apiKey = "{file:${zhipuKey}}";
+        models = {
+          "glm-x-preview" = { };
+        };
+      };
     };
   };
 }
