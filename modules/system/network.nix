@@ -20,7 +20,6 @@
       FastConnectable = true; # 更快的连接
     };
   };
-  services.blueman.enable = true;
 
   sops.secrets.byg_url = { };
   sops.secrets.lxy_url = { };

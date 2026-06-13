@@ -31,4 +31,7 @@
   # sudo 配置
   security.sudo.extraConfig = "Defaults lecture = never";
   security.polkit.enable = true;
+
+  # 注册 shell 到 /etc/shells（pkexec 需要）
+  environment.shells = with pkgs; [ nushell bash ];
 }
