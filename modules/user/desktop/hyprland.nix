@@ -103,7 +103,7 @@ in
 
       hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd("footclient"))
       hl.bind(mainMod .. " + Q", hl.dsp.window.close())
-      hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
+      hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("noctalia msg panel-toggle session"))
 
       hl.bind(mainMod .. " + Left", hl.dsp.focus({ direction = "left" }))
       hl.bind(mainMod .. " + Right", hl.dsp.focus({ direction = "right" }))

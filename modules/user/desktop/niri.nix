@@ -104,7 +104,7 @@ in
       binds = with config.lib.niri.actions; {
         "Mod+Return".action = spawn "footclient";
         "Mod+Q".action = close-window;
-        "Mod+Shift+E".action = quit;
+        "Mod+Shift+E".action = spawn "noctalia" "msg" "panel-toggle" "session";
 
         "Mod+Left".action = focus-column-left;
         "Mod+Right".action = focus-column-right;
