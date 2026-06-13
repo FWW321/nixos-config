@@ -32,7 +32,9 @@
     };
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
-      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    noctalia-greeter = {
+      url = "github:noctalia-dev/noctalia-greeter";
     };
     stylix = {
       url = "github:danth/stylix";
@@ -85,6 +87,7 @@
           inputs.dae.nixosModules.dae
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
+          inputs.noctalia-greeter.nixosModules.default
 
           # 硬件模块
           inputs.nixos-hardware.nixosModules.common-cpu-intel

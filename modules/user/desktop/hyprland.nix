@@ -19,7 +19,7 @@ let
       eval "$cmd"
     done
   '';
-  noctalia = "noctalia-shell-env";
+  noctalia = "noctalia";
 in
 {
   home.pointerCursor.hyprcursor.enable = true;
@@ -130,28 +130,27 @@ in
       hl.bind(mainMod .. " + BracketLeft", hl.dsp.window.move({ direction = "left" }))
       hl.bind(mainMod .. " + BracketRight", hl.dsp.window.move({ direction = "right" }))
 
-      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${noctalia} ipc call plugin:clipper toggle"))
-      hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("${noctalia} ipc call plugin:screen-recorder toggle"))
-      hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("${noctalia} ipc call launcher toggle"))
+      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${noctalia} msg panel-toggle clipboard"))
+      hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("${noctalia} msg panel-toggle wallpaper"))
+      hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("${noctalia} msg panel-toggle launcher"))
       hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }))
       hl.bind(mainMod .. " + SHIFT + T", hl.dsp.focus({ urgent_or_last = true }))
 
       hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("zen-beta"))
       hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
-      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd([[grim -g "$(slurp -d)" - | satty --filename -]]))
+      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia-env msg screenshot-region"))
 
-      hl.bind("Print", hl.dsp.exec_cmd("grim - | satty --filename -"))
-      hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd([[hyprctl -e activewindow > /tmp/hypr_screenshot_window.json && grim -g "$(hyprctl -j activewindow | jq -r '.at[0],.at[1] " " .size[0]x.size[1]' -r)" - | satty --filename -]]))
+      hl.bind("Print", hl.dsp.exec_cmd("noctalia-env msg screenshot-fullscreen"))
 
       hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprland-set-max-mode"))
 
-      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume up"))
-      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume down"))
-      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("${noctalia} ipc call plugin:volume toggle-mute"))
-      hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("${noctalia} ipc call plugin:brightness up"))
-      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${noctalia} ipc call plugin:brightness down"))
+      hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("${noctalia} msg volume-up"))
+      hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("${noctalia} msg volume-down"))
+      hl.bind("XF86AudioMute", hl.dsp.exec_cmd("${noctalia} msg volume-mute"))
+      hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("${noctalia} msg brightness-up"))
+      hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("${noctalia} msg brightness-down"))
 
-      hl.bind(mainMod .. " + SHIFT + Slash", hl.dsp.exec_cmd("${noctalia} ipc call plugin:keybind-cheatsheet toggle"))
+      hl.bind(mainMod .. " + SHIFT + Slash", hl.dsp.exec_cmd("${noctalia} msg settings-toggle"))
 
       hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
       hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })

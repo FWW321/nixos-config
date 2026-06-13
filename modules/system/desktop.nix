@@ -24,13 +24,17 @@
   # GVFS 后端（Nautilus 网络共享 / MTP / 挂载支持）
   services.gvfs.enable = true;
 
-  # 登录管理器
+  # 登录管理器：Noctalia Greeter（配合 greetd）
   services.greetd = {
     enable = true;
     settings.default_session = {
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --remember-session --asterisks --greeting 'Welcome to NixOS' --cmd 'uwsm start'";
       user = "greeter";
     };
+  };
+
+  programs.noctalia-greeter = {
+    enable = true;
+    greeter-args = "--session niri";
   };
 
   systemd.services.greetd.serviceConfig = {
@@ -60,26 +64,6 @@
       "/etc/profiles/per-user/%U/share/dbus-1/services"
       "/run/current-system/sw/share/dbus-1/services"
     ];
-  };
-
-  # 字体
-  fonts = {
-    enableDefaultPackages = true;
-    fontDir.enable = true;
-    packages = with pkgs; [
-      noto-fonts-cjk-sans
-      noto-fonts-cjk-serif
-      nerd-fonts.jetbrains-mono
-      nerd-fonts.fira-code
-      nerd-fonts.symbols-only
-      noto-fonts-color-emoji
-    ];
-    fontconfig.defaultFonts = {
-      sansSerif = [ "Noto Sans CJK SC" "Noto Sans" ];
-      serif = [ "Noto Serif CJK SC" "Noto Serif" ];
-      monospace = [ "JetBrainsMono Nerd Font" "Noto Sans Mono CJK SC" ];
-      emoji = [ "Noto Color Emoji" ];
-    };
   };
 
   # 环境变量

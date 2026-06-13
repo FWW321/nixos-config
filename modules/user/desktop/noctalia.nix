@@ -1,250 +1,223 @@
 # filepath: ~/nixos-config/modules/user/desktop/noctalia.nix
-# Noctalia Shell 配置：基于 Quickshell (Qt/QML) 的现代桌面 shell
-# 完全由 Stylix 管理配色方案、字体、透明度、壁纸
+# Noctalia Shell v5 配置：基于 C++/OpenGL ES 的轻量 Wayland 桌面 shell
+# 配色方案由 Stylix 统一管理
 { config, pkgs, ... }:
 
 let
-  # 壁纸文件（从 Stylix 同步）
   wallpaperDir = "${config.home.homeDirectory}/Pictures/Wallpapers";
+  wallpaperSrc = ../../../wallpapers;
+  avatarDir = "${config.home.homeDirectory}/Pictures/Avatars";
+  avatarSrc = ../../../Avatars;
 in
 {
-  programs.noctalia-shell = {
+  programs.noctalia = {
     enable = true;
 
     settings = {
-      # 通用设置
-      general.language = "zh-CN";
-
-      # UI 设置（透明度由 Stylix 管理）
-      ui = {
-        translucentWidgets = true;
-        enableAnimations = true;
-        animationDuration = 200;
+      # Shell 通用设置
+      shell = {
+        lang = "zh-Hans";
+        font_family = "JetBrainsMono Nerd Font";
+        polkit_agent = true;
+        avatar_path = "${config.home.homeDirectory}/Pictures/Avatars/2131F1CB68E2BAA3698C8F87BB484FB8.jpg";
+        clipboard_enabled = true;
+        clipboard_history_max_entries = 100;
+        animation.enabled = true;
+        # 屏幕物理圆角补偿
+        screen_corners = {
+          enabled = true;
+          size = 32;
+        };
+        panel = {
+          transparency_mode = "glass";
+          borders = true;
+          shadow = true;
+        };
+        # 截图：管道传给 satty 标注
+        screenshot = {
+          save_to_file = false;
+          copy_to_clipboard = false;
+          pipe_to_command = true;
+          pipe_command = "satty -f -";
+        };
       };
 
-      # 壁纸管理（使用 Stylix 的壁纸）
+      # 壁纸管理
       wallpaper = {
         enabled = true;
         directory = wallpaperDir;
-        fillMode = "crop"; # crop, fit, stretch, tile
-        # 自动轮换（禁用，使用手动控制）
-        automationEnabled = false;
-        wallpaperChangeMode = "random";
-        changeInterval = 1800; # 30 分钟（未启用）
-        # 过渡动画
-        transitionType = [
+        fill_mode = "crop";
+        transition = [
           "fade"
-          "crossFade"
+          "wipe"
         ];
-        transitionDuration = 500;
+        transition_duration = 500;
+        automation = {
+          enabled = false;
+          order = "random";
+        };
       };
 
-      # 配色方案：完全由 Stylix 统一管理
-      # Stylix 会自动设置 programs.noctalia-shell.colors
-      # 不在此处覆盖任何配色，保证全局配色统一
-
-      # 网络设置
-      network = {
-        wifiEnabled = true;
-        showWifiStrength = true;
-        bluetoothEnabled = true;
-        bluetoothAutoConnect = true;
-      };
-
-      # Dock 设置
-      dock = {
-        size = 1.5;
-        groupApps = true;
-        showRunningIndicator = true;
-      };
-
-      # 控制中心
-      controlCenter.cards = [
-        {
-          enabled = true;
-          id = "profile-card";
-        }
-        {
-          enabled = true;
-          id = "shortcuts-card";
-        }
-        {
-          enabled = true;
-          id = "network-card";
-        } # 内置 WiFi/蓝牙控制
-        {
-          enabled = true;
-          id = "audio-card";
-        }
-        {
-          enabled = true;
-          id = "brightness-card";
-        }
-        {
-          enabled = true;
-          id = "weather-card";
-        }
-        {
-          enabled = true;
-          id = "media-sysmon-card";
-        }
-      ];
-
-      # 应用启动器
-      appLauncher = {
-        enableClipboardHistory = true;
-        terminalCommand = "footclient -e";
-        showRecentApps = true;
-        maxRecentApps = 5;
-      };
-
-      # 空闲/锁屏/休眠
-      idle = {
+      # 背景层：niri overview 中显示模糊壁纸
+      backdrop = {
         enabled = true;
-        screenOffTimeout = 600; # 10 分钟关闭屏幕
-        lockTimeout = 900; # 15 分钟锁屏
-        suspendTimeout = 1200; # 20 分钟挂起
-        # 3 小时后休眠（配合系统休眠设置）
-        customCommands = builtins.toJSON [
-          {
-            timeout = 10800;
-            command = "systemctl hibernate";
-          }
+        blur_intensity = 0.5;
+        tint_intensity = 0.3;
+      };
+
+      # 配色方案：Stylix 尚未适配 noctalia v5（缺少 target），
+      # 所以 Noctalia 暂时自己管理配色，从壁纸图片提取（M3 算法）
+      # 其余应用配色仍由 Stylix 统一管理
+      theme = {
+        mode = "dark";
+        source = "wallpaper";
+        wallpaper_scheme = "m3-content";
+        templates = {
+          enable_community_templates = true;
+          community_ids = [ "steam" ];
+        };
+      };
+
+      # Dock
+      dock = {
+        enabled = true;
+        position = "bottom";
+        icon_size = 48;
+        show_dots = true;
+        show_running = true;
+        magnification = true;
+      };
+
+      # 控制中心快捷按钮
+      control_center = {
+        shortcuts = [
+          { type = "wifi"; }
+          { type = "bluetooth"; }
+          { type = "nightlight"; }
+          { type = "notification"; }
+          { type = "wallpaper"; }
+          { type = "screen_recorder"; }
+          { type = "session"; }
         ];
+      };
+
+      # 空闲/锁屏
+      idle = {
+        behavior = {
+          lock = {
+            timeout = 900;
+            enabled = true;
+            command = "noctalia:session lock";
+          };
+          screen-off = {
+            timeout = 600;
+            enabled = true;
+            command = "noctalia:dpms-off";
+            resume_command = "noctalia:dpms-on";
+          };
+        };
       };
 
       # 位置/天气
       location = {
-        name = "Chongqing";
-        analogClockInCalendar = true;
+        address = "Chongqing";
+      };
+
+      # 天气
+      weather = {
+        enabled = true;
+        refresh_minutes = 30;
+        unit = "celsius";
       };
 
       # 系统监控
-      systemMonitor = {
-        enableDgpuMonitoring = true; # NVIDIA GPU 监控
-        showCpuUsage = true;
-        showMemoryUsage = true;
-        showNetworkSpeed = true;
+      system.monitor = {
+        enabled = true;
+        cpu_poll_seconds = 2.0;
+        gpu_poll_seconds = 5.0;
+        memory_poll_seconds = 2.0;
+        network_poll_seconds = 3.0;
       };
 
       # 亮度控制
       brightness = {
-        enableDdcSupport = true; # DDC/CI 支持外接显示器亮度调节
+        enable_ddcutil = true;
+      };
+
+      # 护眼模式：日落后自动降低色温（基于 location 自动计算日落时间）
+      nightlight = {
+        enabled = true;
+        temperature_day = 6500;
+        temperature_night = 4000;
+      };
+
+      # 通知
+      notification = {
+        enable_daemon = true;
+        show_app_name = true;
+        show_actions = true;
+      };
+
+      # 锁屏
+      lockscreen = {
+        enabled = true;
       };
 
       # 顶栏配置
-      bar.widgets = {
-        left = [
-          { id = "Launcher"; }
-          {
-            id = "Clock";
-            formatHorizontal = "HH:mm";
-            useMonospacedFont = true;
-          }
-          { id = "SystemMonitor"; }
-          { id = "ActiveWindow"; }
+      bar.main = {
+        position = "top";
+        thickness = 34;
+        background_opacity = 0.85;
+        radius = 12;
+        margin_ends = 15;
+        margin_edge = 10;
+        capsule = true;
+        start = [
+          "launcher"
+          "clock"
+          "active_window"
         ];
         center = [
-          {
-            id = "Workspace";
-            hideUnoccupied = false;
-          }
+          "workspaces"
         ];
-        right = [
-          { id = "Tray"; }
-          { id = "NotificationHistory"; }
-          { id = "plugin:privacy-indicator"; }
-          # 使用内置 Network widget
-          {
-            id = "Network";
-            showWifiName = false; # 简洁显示
-          }
-          # 内置蓝牙 widget
-          {
-            id = "Bluetooth";
-            showConnectedDevice = true;
-          }
-          { id = "plugin:assistant-panel"; }
-          { id = "Volume"; }
-          { id = "Brightness"; }
-          { id = "ControlCenter"; }
+        end = [
+          "tray"
+          "notifications"
+          "network"
+          "bluetooth"
+          "volume"
+          "brightness"
+          "control-center"
         ];
       };
-    };
 
-    # 插件配置
-    plugins = {
-      sources = [
-        {
-          enabled = true;
-          name = "Noctalia Plugins";
-          url = "https://github.com/noctalia-dev/noctalia-plugins";
-        }
-      ];
-      states = {
-        polkit-agent = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        clipper = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        screen-recorder = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        keybind-cheatsheet = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        file-search = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        assistant-panel = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        privacy-indicator = {
-          enabled = true;
-          sourceUrl = "https://github.com/noctalia-dev/noctalia-plugins";
-        };
-        # 移除 network-indicator 插件，使用内置 Network widget
+      # Clock widget 格式
+      widget.clock = {
+        format = "{:%H:%M}";
       };
-      version = 1;
-    };
 
-    # 插件设置
-    pluginSettings = {
-      assistant-panel = {
-        ai = {
-          provider = "openai_compatible";
-          models.openai_compatible = "glm-5.1";
-          openaiBaseUrl = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions";
-          temperature = 0.7;
-          systemPrompt = "You are a helpful assistant. Be concise and helpful. Respond in the same language as the user.";
-        };
-        translator = {
-          backend = "google";
-          targetLanguage = "zh";
-          realTimeTranslation = true;
-        };
-        panelWidth = 600;
-        panelDetached = true;
-        panelPosition = "right";
+      # 工作区：隐藏空工作区，只显示有窗口的
+      widget.workspaces = {
+        hide_when_empty = true;
       };
+
+      # 插件
+      plugins = {
+        enabled = [
+          "noctalia/screen_recorder"
+        ];
+      };
+
+      # TODO: Noctalia v5 暂无 IPC 命令触发 greeter 同步，
+      # 目前只能手动 Settings → Shell → Security → Noctalia Greeter → Sync Now
+      # 等 v5 添加 greeter-sync IPC 后，通过 hooks.wallpaper_changed 自动同步
     };
   };
 
-  # 下载壁纸到本地文件夹（从 Stylix 获取）
-  # Stylix 已经通过 ~/.cache/noctalia/wallpapers.json 设置默认壁纸
-  # 这里额外将壁纸复制到 Pictures/Wallpapers 供手动管理
-  home.activation.copyWallpaper = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p ${wallpaperDir}
-    # 从 Stylix 复制壁纸
-    if [ -f ${config.stylix.image} ]; then
-      cp -f ${config.stylix.image} ${wallpaperDir}/stylix-wallpaper.png
-    fi
+  # 将仓库壁纸同步到本地壁纸目录
+  home.activation.copyAssets = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p ${wallpaperDir} ${avatarDir}
+    cp -rf ${wallpaperSrc}/. ${wallpaperDir}/
+    cp -rf ${avatarSrc}/. ${avatarDir}/
   '';
 }

@@ -21,14 +21,8 @@
   # Wayland 工具包
   home.packages = with pkgs; [
     gpu-screen-recorder
-    grim
-    slurp
     wl-clipboard
     jq
-    (writeShellScriptBin "noctalia-shell-env" ''
-      export NOCTALIA_AP_OPENAI_COMPATIBLE_API_KEY=$(cat ${config.sops.secrets.zhipu_api_key.path})
-      exec ${config.programs.noctalia-shell.package}/bin/noctalia-shell "$@"
-    '')
   ];
 
   # 截图标注工具

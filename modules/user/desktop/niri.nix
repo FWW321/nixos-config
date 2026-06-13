@@ -59,10 +59,22 @@ in
           inactive.color = config.lib.stylix.colors.withHashtag.base03;
         };
       };
+
+      # 允许通知操作按钮激活窗口（如点击通知的"回复"按钮聚焦对应应用）
+      debug.honor-xdg-activation-with-invalid-serial = [ ];
+
       spawn-at-startup = [
-        { command = [ "noctalia-shell-env" ]; }
+        { command = [ "noctalia" ]; }
       ];
+
       window-rules = [
+        # Noctalia 设置窗口以浮动弹窗形式打开
+        {
+          matches = [ { app-id = "^dev\\.noctalia\\.Noctalia\\.Settings$"; } ];
+          open-floating = true;
+          default-column-width.fixed = 1080;
+          default-window-height.fixed = 920;
+        }
         {
           matches = [ { app-id = "^steam$"; } ];
           open-maximized = true;
@@ -77,6 +89,15 @@ in
             bottom-left = 8.0;
           };
           clip-to-geometry = true;
+        }
+      ];
+
+      # Noctalia 壁纸层嵌入 niri overview backdrop，
+      # 打开 overview 时显示 noctalia 管理的壁纸（带模糊效果）
+      layer-rules = [
+        {
+          matches = [ { namespace = "^noctalia-backdrop"; } ];
+          place-within-backdrop = true;
         }
       ];
 
@@ -129,18 +150,25 @@ in
         "Mod+BracketLeft".action = consume-or-expel-window-left;
         "Mod+BracketRight".action = consume-or-expel-window-right;
 
-        "Mod+V".action = spawn "noctalia-shell-env" "ipc" "call" "plugin:clipper" "toggle";
-        "Mod+Shift+R".action = spawn "noctalia-shell-env" "ipc" "call" "plugin:screen-recorder" "toggle";
-        "Mod+Space".action = spawn "noctalia-shell-env" "ipc" "call" "launcher" "toggle";
+        "Mod+V".action = spawn "noctalia" "msg" "panel-toggle" "clipboard";
+        "Mod+Shift+R".action = spawn "noctalia" "msg" "panel-toggle" "wallpaper";
+        "Mod+Space".action = spawn "noctalia" "msg" "panel-toggle" "launcher";
         "Mod+T".action = toggle-window-floating;
         "Mod+Shift+T".action = switch-focus-between-floating-and-tiling;
 
         "Mod+W".action = spawn "zen-beta";
         "Mod+E".action = spawn "nautilus";
-        "Mod+Shift+S".action = spawn "bash" "-c" "grim -g \"$(slurp -d)\" - | satty --filename -";
-        "Print".action = spawn "bash" "-c" "grim - | satty --filename -";
+        "Mod+Shift+S".action = spawn "noctalia" "msg" "screenshot-region";
+        "Print".action = spawn "noctalia" "msg" "screenshot-fullscreen";
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";
         "Mod+Shift+M".action = spawn "niri-set-max-mode";
+
+        # 硬件媒体键
+        "XF86AudioRaiseVolume".action = spawn "noctalia" "msg" "volume-up";
+        "XF86AudioLowerVolume".action = spawn "noctalia" "msg" "volume-down";
+        "XF86AudioMute".action = spawn "noctalia" "msg" "volume-mute";
+        "XF86MonBrightnessUp".action = spawn "noctalia" "msg" "brightness-up";
+        "XF86MonBrightnessDown".action = spawn "noctalia" "msg" "brightness-down";
       };
     };
   };
