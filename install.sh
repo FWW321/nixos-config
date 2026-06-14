@@ -52,8 +52,8 @@ git add "$PROJECT_ROOT/hosts/$HOSTNAME/hardware.nix"
 
 echo "[3/4] ⚙️ 正在拉取 NixPkgs 并编译 NixOS 系统，这可能需要一些时间..."
 nixos-install --root /mnt --flake .#$HOSTNAME --no-root-passwd \
-  --option extra-substituters "https://attic.xuyh0120.win/lantian https://niri.cachix.org https://hyprland.cachix.org https://nix-cache.tokidoki.dev/tokidoki https://nix-community.cachix.org" \
-  --option extra-trusted-public-keys "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= tokidoki:MD4VWt3kK8Fmz3jkiGoNRJIW31/QAm7l1Dcgz2Xa4hk= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+  --option extra-substituters "https://attic.xuyh0120.win/lantian https://niri.cachix.org https://hyprland.cachix.org https://nix-community.cachix.org" \
+  --option extra-trusted-public-keys "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
 
 echo "[4/4] 📂 正在将当前配置工程部署到您的用户主目录..."
 # 在新系统中创建 fww 用户的主目录配置文件夹
