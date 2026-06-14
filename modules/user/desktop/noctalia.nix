@@ -109,12 +109,6 @@ in
             enabled = true;
             command = "noctalia:session lock";
           };
-          screen-off = {
-            timeout = 600;
-            enabled = true;
-            command = "noctalia:dpms-off";
-            resume_command = "noctalia:dpms-on";
-          };
         };
       };
 
