@@ -28,7 +28,6 @@
           lualine_b = [ "branch" "diff" "diagnostics" ];
           lualine_c = [ "filename" ];
           lualine_x = [
-            { __raw = "require('minuet.lualine')"; }
             "filetype"
             "encoding"
           ];

@@ -96,33 +96,10 @@
         hash = "sha256-JHl8Z7ESrWus2I6Pe+6gmdgCAZOzAKX7kimy71sAoe4=";
       };
     })
-    pkgs.vimPlugins.minuet-ai-nvim
     pkgs.vimPlugins.plenary-nvim
   ];
 
   programs.nixvim.extraConfigLua = ''
-    require("minuet").setup({
-      provider = "openai_compatible",
-      request_timeout = 5,
-      throttle = 1000,
-      debounce = 400,
-      provider_options = {
-        openai_compatible = {
-          model = "glm-5.1",
-          end_point = "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions",
-          api_key = "ZHIPU_API_KEY",
-          name = "GLM",
-          stream = true,
-          optional = {
-            max_tokens = 1024,
-            thinking = {
-              type = "disabled",
-            },
-          },
-        },
-      },
-    })
-
     require("multicursor-nvim").setup()
 
     local hl = vim.api.nvim_set_hl
