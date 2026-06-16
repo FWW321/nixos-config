@@ -62,7 +62,8 @@
     };
     nix-cachyos-kernel = {
       url = "github:xddxdd/nix-cachyos-kernel/release";
-      inputs.nixpkgs.follows = "nixpkgs";
+      # 不要 follows nixpkgs！pinned overlay 需要用 kernel flake 自己的 nixpkgs
+      # 才能命中 lantian attic 的二进制缓存
     };
     nix-gaming-edge = {
       url = "github:powerofthe69/nix-gaming-edge";
