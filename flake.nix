@@ -55,6 +55,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # AI 工具
+    open-design = {
+      url = "github:nexu-io/open-design";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # 网络和性能
     dae = {
       url = "github:daeuniverse/flake.nix";
@@ -121,7 +127,10 @@
               useUserPackages = true;
               backupFileExtension = "backup";
               extraSpecialArgs = { inherit inputs; };
-              sharedModules = [ inputs.sops-nix.homeManagerModules.sops ];
+              sharedModules = [
+                inputs.sops-nix.homeManagerModules.sops
+                inputs.open-design.homeManagerModules.default
+              ];
               users.fww = import ./users/fww/default.nix;
             };
           }
