@@ -26,17 +26,11 @@ in
     settings = {
       model = "zhipuai-coding-plan/glm-5.2";
       small_model = "zhipuai-coding-plan/glm-5.1";
+      # 启用 LSP：opencode 自动下载所需的 language server 到自己的数据目录，
+      # 并将诊断信息作为反馈喂给 agent
+      lsp = true;
       provider."zhipuai-coding-plan" = {
         options.apiKey = "{file:${zhipuKey}}";
-        models = {
-          "glm-5.2" = {
-            name = "GLM-5.2";
-            limit = {
-              context = 1000000;
-              output = 131072;
-            };
-          };
-        };
       };
     };
   };
