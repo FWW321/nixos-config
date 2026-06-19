@@ -32,8 +32,6 @@
       statix
       # Git
       lazygit
-      # Node.js
-      nodejs
       # Python
       ruff
       # Lua

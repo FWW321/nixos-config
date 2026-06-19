@@ -28,6 +28,7 @@
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
     ../../modules/user/editor
+    ./development.nix
   ];
 
   # SOPS 密钥管理
@@ -116,7 +117,6 @@
         '';
       })
       fd
-      bun
       curl
       btop
       ripgrep
@@ -124,8 +124,6 @@
       nh
       xwayland-satellite
       nvtopPackages.nvidia
-      inputs.fenix.packages.${pkgs.stdenv.hostPlatform.system}.complete.toolchain
-      zig
     ];
 
   programs.bash.enable = true;
