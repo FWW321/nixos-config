@@ -195,6 +195,7 @@ in
         html.enable = true;
         cssls.enable = true;
         jsonls.enable = true;
+        svelte.enable = true;
         tailwindcss = {
           enable = true;
           filetypes = [
