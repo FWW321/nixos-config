@@ -6,7 +6,7 @@
   # 使用 pinned overlay：锁定 nixpkgs 版本与二进制缓存一致，避免每次本地编译内核
   nixpkgs.overlays = [
     inputs.nix-cachyos-kernel.overlays.pinned
-    inputs.nix-gaming-edge.overlays.proton-cachyos
+    inputs.proton-cachyos-nix.overlays.default
   ];
 
   boot = {

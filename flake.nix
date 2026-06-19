@@ -71,8 +71,9 @@
       # 不要 follows nixpkgs！pinned overlay 需要用 kernel flake 自己的 nixpkgs
       # 才能命中 lantian attic 的二进制缓存
     };
-    nix-gaming-edge = {
-      url = "github:powerofthe69/nix-gaming-edge";
+    # Proton-CachyOS：作者专门维护的仓库，哈希更新更及时
+    proton-cachyos-nix = {
+      url = "github:powerofthe69/proton-cachyos-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Rust
