@@ -14,7 +14,7 @@
     # NVIDIA 官方已宣布开源模块逐步取代闭源模块
     open = true;
     nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.beta;
+    package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
 
   # NVIDIA 早期加载 - 确保在 display manager 前加载驱动
