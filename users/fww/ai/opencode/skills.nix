@@ -45,6 +45,13 @@ let
     "understand-onboard"
   ];
 
+  mattSkillsSrc = pkgs.fetchFromGitHub {
+    owner = "mattpocock";
+    repo = "skills";
+    rev = "6eeb81b5fcfeeb5bd531dd47ab2f9f2bbea27461";
+    sha256 = "sha256-6T0KwZcUIIbd6kpkQXPCnnJPVY2mEjxYjed4FjKnRAw=";
+  };
+
 in
 {
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -135,5 +142,20 @@ in
         };
       }) understandAnythingSkillDirs
     ))
+
+    {
+      "opencode/skills/grill-with-docs" = {
+        source = "${mattSkillsSrc}/skills/engineering/grill-with-docs";
+        recursive = true;
+      };
+      "opencode/skills/grilling" = {
+        source = "${mattSkillsSrc}/skills/productivity/grilling";
+        recursive = true;
+      };
+      "opencode/skills/domain-modeling" = {
+        source = "${mattSkillsSrc}/skills/engineering/domain-modeling";
+        recursive = true;
+      };
+    }
   ];
 }
