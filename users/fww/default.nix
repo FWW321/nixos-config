@@ -76,18 +76,7 @@
         with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system};
         [
           ublock-origin
-        ]
-        ++ [
-          # GitHub release 的 1.35.0 未签名（无 META-INF），Zen/Firefox 拒绝加载；
-          # 改用 AMO 签名版 1.34.1，待 AMO 上架 1.35.0 后可切换
-          (inputs.firefox-addons.lib.${pkgs.stdenv.hostPlatform.system}.buildFirefoxXpiAddon {
-            pname = "read-frog";
-            version = "1.34.1";
-            addonId = "{bd311a81-4530-4fcc-9178-74006155461b}";
-            url = "https://addons.mozilla.org/firefox/downloads/file/4847790/read_frog_open_ai_translator-1.34.1.xpi";
-            sha256 = "16rz2hhxw3l9jd11ww9nj5qdqsdnvrdfm794grbhprvq1bcll00w";
-            meta.description = "Open Source Immersive Translate";
-          })
+          kiss-translator
         ];
     };
   };
