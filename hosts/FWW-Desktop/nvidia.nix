@@ -41,5 +41,10 @@
     WLR_NO_HARDWARE_CURSORS = "1";
     # NVIDIA VA-API 后端
     NVD_BACKEND = "direct";
+    # DLSS / NVAPI：Proton 下启用 N 卡专属功能（DLSS 升档、Reflex、帧生成）
+    # 需配合带 NVAPI 的 Proton（如 proton-cachyos，自带 DXVK-NVAPI）
+    # 内核模块开/闭源不影响——DLSS 走 userspace NVAPI，两边都支持
+    PROTON_ENABLE_NVAPI = "1"; # 暴露 NVAPI 接口给游戏
+    DXVK_NVAPIHACK = "0"; # 关闭 GPU 伪装，让真 NVAPI/DLSS 路径生效
   };
 }
