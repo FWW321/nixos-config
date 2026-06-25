@@ -29,7 +29,6 @@
     ../../modules/user/terminal.nix
       ../../modules/user/editor
       ./development.nix
-      ./games.nix
   ];
 
   # SOPS 密钥管理
