@@ -27,8 +27,9 @@
     ./ai/open-design.nix
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
-    ../../modules/user/editor
-    ./development.nix
+      ../../modules/user/editor
+      ./development.nix
+      ./games.nix
   ];
 
   # SOPS 密钥管理
