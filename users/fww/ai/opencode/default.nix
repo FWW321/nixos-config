@@ -15,11 +15,10 @@ in
 
   home.packages = [
     pkgs.agent-browser
-    pkgs.nodejs
     pkgs.rtk
   ];
 
-  home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "zen-beta";
+  home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "brave";
 
   programs.opencode = {
     enable = true;
