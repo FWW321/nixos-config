@@ -22,10 +22,6 @@
     };
 
     # 桌面环境
-    hyprland = {
-      url = "github:hyprwm/Hyprland";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     niri = {
       url = "github:sodiboo/niri-flake";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -106,6 +102,7 @@
     };
 
     # 网络和性能
+    # dae 代理：flake module 用可写 /etc/dae（避开 nixpkgs 只读 credentials bug），unstable 包跟进最新 main 提交
     dae = {
       url = "github:daeuniverse/flake.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -135,8 +132,8 @@
         specialArgs = { inherit inputs; };
         modules = [
           # 外部模块
-          inputs.disko.nixosModules.disko
           inputs.dae.nixosModules.dae
+          inputs.disko.nixosModules.disko
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
           inputs.noctalia-greeter.nixosModules.default

@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/system/network.nix
 # 网络配置：NetworkManager、蓝牙、dae 代理
-{ config, pkgs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   networking.networkmanager = {
@@ -37,11 +37,15 @@
               log_level: info
               allow_insecure: false
               auto_config_kernel_parameter: true
-              tcp_check_url: 'http://cp.cloudflare.com'
+              tcp_check_url: 'http://cp.cloudflare.com,1.1.1.1,2606:4700:4700::1111'
               tcp_check_http_method: HEAD
-              udp_check_dns: 'dns.google:53'
+              udp_check_dns: 'dns.google:53,8.8.8.8,2001:4860:4860::8888'
               check_interval: 30s
               check_tolerance: 50ms
+              # 抗审查：uTLS 伪装 Chrome 指纹 + TLS 分片规避 SNI/指纹检测（仅对 TCP 生效，配合下方 block QUIC）
+              tls_implementation: utls
+              utls_imitate: chrome_auto
+              tls_fragment: true
             }
       
             dns {
@@ -139,6 +143,10 @@
               pname(NetworkManager, systemd-resolved) -> must_direct
               dip(224.0.0.0/3, 'ff00::/8') -> direct
               dip(geoip:private) -> direct
+
+              # 阻止 QUIC/HTTP3，强制回退 TCP（TLS 分片仅对 TCP 生效；官方 example 推荐）
+              l4proto(udp) && dport(443) -> block
+
               domain(geosite:category-ads-all) -> block
       
               dscp(0x4) -> direct
@@ -179,10 +187,19 @@
     '';
   };
 
+  # ── dae 代理 ──────────────────────────────────────────────
+  # ⚠️ 已知坑：nixpkgs 的 services/networking/dae.nix 用 systemd LoadCredential 把配置注入
+  #    只读 tmpfs（${CREDENTIALS_DIRECTORY}/config.dae）。但 dae 拉订阅需要在 config 同目录
+  #    创建 persist.d 缓存 → 只读导致 mkdir 失败 → 订阅全部解析失败 → "no dialer in this
+  #    group"，proxy 组无节点，网络全断。
+  # 解决：用 daeuniverse/flake.nix 的 module（它 disabledModules 主动禁用 nixpkgs 版本，
+  #    改用可写 /etc/dae/config.dae，无此坑）+ unstable 包跟进最新 main 提交。
+  # 若将来切回 nixpkgs：必须 override ExecStart/ExecStartPre，用 list ["" "新命令"]
+  #    （第一个 "" 是 systemd 清空指令，避免 "more than one ExecStart" 冲突），把 -c 指回
+  #    可写的 /etc/dae/config.dae。定期 nix flake update dae 可拉新 unstable。
   services.dae = {
     enable = true;
     configFile = config.sops.templates."dae/config.dae".path;
+    package = inputs.dae.packages.${pkgs.system}.dae-unstable;
   };
-
-  environment.systemPackages = [ pkgs.dae ];
 }
