@@ -16,6 +16,7 @@
     ./niri.nix
     ./hyprland.nix
     ./media.nix
+    ./input-method.nix
   ];
 
   # Wayland 工具包
@@ -37,35 +38,6 @@
   };
 
   xresources.properties."Xft.dpi" = 144;
-
-  # Fcitx5 输入法
-  i18n.inputMethod = {
-    enable = true;
-    type = "fcitx5";
-    fcitx5 = {
-      waylandFrontend = true;
-      addons = with pkgs; [
-        qt6Packages.fcitx5-chinese-addons
-        fcitx5-gtk
-        fcitx5-pinyin-zhwiki
-      ];
-      settings = {
-        globalOptions."Hotkey/TriggerKeys"."0" = "Shift_L";
-        inputMethod = {
-          "Groups/0" = { Name = "Default"; "Default Layout" = "us"; DefaultIM = "keyboard-us"; };
-          "Groups/0/Items/0".Name = "keyboard-us";
-          "Groups/0/Items/1".Name = "pinyin";
-          GroupOrder."0" = "Default";
-        };
-        addons.cloudpinyin.globalSection.CloudPinyinEnabled = false;
-      };
-    };
-  };
-
-  systemd.user.services.fcitx5-daemon.Service = {
-    Restart = "always";
-    RestartSec = "3";
-  };
 
   home.sessionVariables = {
     SDL_IM_MODULE = "fcitx";
