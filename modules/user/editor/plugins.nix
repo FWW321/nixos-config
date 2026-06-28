@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/user/editor/plugins.nix
 # 编辑增强、跳转、注释、Trouble、TODO、mini 系列
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 {
 
   programs.nixvim.plugins = {
@@ -89,12 +89,7 @@
     (pkgs.vimUtils.buildVimPlugin {
       pname = "multicursor.nvim";
       version = "1.0";
-      src = pkgs.fetchFromGitHub {
-        owner = "jake-stewart";
-        repo = "multicursor.nvim";
-        rev = "1.0";
-        hash = "sha256-JHl8Z7ESrWus2I6Pe+6gmdgCAZOzAKX7kimy71sAoe4=";
-      };
+      src = inputs.multicursor-nvim;
     })
     pkgs.vimPlugins.plenary-nvim
   ];

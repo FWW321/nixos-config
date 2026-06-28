@@ -2,38 +2,11 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 
 let
-  shadcnSkillSrc = pkgs.fetchFromGitHub {
-    owner = "shadcn-ui";
-    repo = "ui";
-    rev = "main";
-    sha256 = "0kvly0plh4qq736yvrkkminxkn2ixr3jwz80mr6w1kdrxyvf5pg8";
-  };
-
-  surrealSkillsSrc = pkgs.fetchFromGitHub {
-    owner = "24601";
-    repo = "surreal-skills";
-    rev = "main";
-    sha256 = "18fcdyyl6dbksba5pbn277ajaawr2bgmy9z9rb27n57fp8mh7sb8";
-  };
-
-  gitWorkflowSkillSrc = pkgs.fetchFromGitHub {
-    owner = "netresearch";
-    repo = "git-workflow-skill";
-    rev = "main";
-    sha256 = "1137nd1krgxhgzhvnw32nqjz327ifsp791s9clmmdcbldqs805yh";
-  };
-
-  understandAnythingSrc = pkgs.fetchFromGitHub {
-    owner = "Egonex-AI";
-    repo = "Understand-Anything";
-    rev = "main";
-    sha256 = "08gdri49xw4a98vqcmck7bkcy5abzhfv06hjzirgq3ch7vhl6gv8";
-  };
-
   understandAnythingSkillDirs = [
     "understand"
     "understand-chat"
@@ -44,14 +17,6 @@ let
     "understand-knowledge"
     "understand-onboard"
   ];
-
-  mattSkillsSrc = pkgs.fetchFromGitHub {
-    owner = "mattpocock";
-    repo = "skills";
-    rev = "6eeb81b5fcfeeb5bd531dd47ab2f9f2bbea27461";
-    sha256 = "sha256-6T0KwZcUIIbd6kpkQXPCnnJPVY2mEjxYjed4FjKnRAw=";
-  };
-
 in
 {
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -101,34 +66,26 @@ in
 
   xdg.configFile = lib.mkMerge [
     {
-      "opencode/skills/agent-browser/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/vercel-labs/agent-browser/main/skills/agent-browser/SKILL.md";
-          sha256 = "0b74mbx6km6b4k6kyagmrvbfd7a6w0dqnxq98rivn33x0rhrhw00";
-        };
-      };
-      "opencode/skills/humanizer-zh/SKILL.md" = {
-        source = builtins.fetchurl {
-          url = "https://raw.githubusercontent.com/op7418/Humanizer-zh/main/SKILL.md";
-          sha256 = "1sxywjd9xmxz298c76gxi3hr8my9xadvagspsmil4r08j2ybvvg0";
-        };
-      };
+      "opencode/skills/agent-browser/SKILL.md".source =
+        "${inputs.agent-browser-skill}/skills/agent-browser/SKILL.md";
+      "opencode/skills/humanizer-zh/SKILL.md".source =
+        "${inputs.humanizer-zh}/SKILL.md";
       "opencode/skills/git-workflow" = {
-        source = gitWorkflowSkillSrc;
+        source = inputs.git-workflow-skill;
         recursive = true;
       };
     }
 
     {
       "opencode/skills/surrealdb" = {
-        source = surrealSkillsSrc;
+        source = inputs.surreal-skills;
         recursive = true;
       };
     }
 
     {
       "opencode/skills/shadcn" = {
-        source = "${shadcnSkillSrc}/skills/shadcn";
+        source = "${inputs.shadcn-ui}/skills/shadcn";
         recursive = true;
       };
     }
@@ -137,7 +94,7 @@ in
       map (dir: {
         name = "opencode/skills/${dir}";
         value = {
-          source = "${understandAnythingSrc}/understand-anything-plugin/skills/${dir}";
+          source = "${inputs.understand-anything}/understand-anything-plugin/skills/${dir}";
           recursive = true;
         };
       }) understandAnythingSkillDirs
@@ -145,17 +102,21 @@ in
 
     {
       "opencode/skills/grill-with-docs" = {
-        source = "${mattSkillsSrc}/skills/engineering/grill-with-docs";
+        source = "${inputs.matt-skills}/skills/engineering/grill-with-docs";
         recursive = true;
       };
       "opencode/skills/grilling" = {
-        source = "${mattSkillsSrc}/skills/productivity/grilling";
+        source = "${inputs.matt-skills}/skills/productivity/grilling";
         recursive = true;
       };
       "opencode/skills/domain-modeling" = {
-        source = "${mattSkillsSrc}/skills/engineering/domain-modeling";
+        source = "${inputs.matt-skills}/skills/engineering/domain-modeling";
         recursive = true;
       };
+    }
+
+    {
+      "opencode/skills/herdr/SKILL.md".source = "${inputs.herdr}/SKILL.md";
     }
   ];
 }

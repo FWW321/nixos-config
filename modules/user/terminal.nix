@@ -1,8 +1,16 @@
 # filepath: ~/nixos-config/modules/user/terminal.nix
-# 终端环境：Foot、Nushell、现代化 CLI 工具
-{ lib, ... }:
+# 终端环境：Foot、Nushell、Herdr、现代化 CLI 工具
+{
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
 
 {
+  # Herdr - AI agent 终端复用器
+  home.packages = [ inputs.herdr.packages.${pkgs.system}.default ];
+
   # Foot 终端
   programs.foot = {
     enable = true;

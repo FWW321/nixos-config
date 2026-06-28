@@ -60,6 +60,50 @@
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    herdr = {
+      url = "github:ogulcancelik/herdr";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # opencode skills 与插件（flake=false，仅取源码）
+    shadcn-ui = {
+      url = "github:shadcn-ui/ui";
+      flake = false;
+    };
+    surreal-skills = {
+      url = "github:24601/surreal-skills";
+      flake = false;
+    };
+    git-workflow-skill = {
+      url = "github:netresearch/git-workflow-skill";
+      flake = false;
+    };
+    understand-anything = {
+      url = "github:Egonex-AI/Understand-Anything";
+      flake = false;
+    };
+    matt-skills = {
+      url = "github:mattpocock/skills";
+      flake = false;
+    };
+    agent-browser-skill = {
+      url = "github:vercel-labs/agent-browser";
+      flake = false;
+    };
+    humanizer-zh = {
+      url = "github:op7418/Humanizer-zh";
+      flake = false;
+    };
+    rtk = {
+      url = "github:rtk-ai/rtk";
+      flake = false;
+    };
+
+    # Neovim 插件
+    multicursor-nvim = {
+      url = "github:jake-stewart/multicursor.nvim";
+      flake = false;
+    };
 
     # 网络和性能
     dae = {
