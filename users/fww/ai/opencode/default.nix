@@ -19,7 +19,7 @@ in
     pkgs.rtk
   ];
 
-  home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "${pkgs.brave}/bin/brave";
+  home.sessionVariables.AGENT_BROWSER_EXECUTABLE_PATH = "zen-beta";
 
   programs.opencode = {
     enable = true;

@@ -15,7 +15,7 @@
     ./noctalia.nix
     ./niri.nix
     ./hyprland.nix
-    ./nautilus.nix
+    ./media.nix
   ];
 
   # Wayland 工具包

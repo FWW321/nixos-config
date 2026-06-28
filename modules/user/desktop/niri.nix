@@ -157,7 +157,7 @@ in
         "Mod+Shift+T".action = switch-focus-between-floating-and-tiling;
 
         "Mod+W".action = spawn "zen-beta";
-        "Mod+E".action = spawn "nautilus";
+        "Mod+E".action = spawn "footclient" "--" "yazi";
         "Mod+Shift+S".action = spawn "noctalia" "msg" "screenshot-region";
         "Print".action = spawn "noctalia" "msg" "screenshot-fullscreen";
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";

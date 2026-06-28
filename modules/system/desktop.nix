@@ -21,9 +21,6 @@
     config.common.default = "*";
   };
 
-  # GVFS 后端（Nautilus 网络共享 / MTP / 挂载支持）
-  services.gvfs.enable = true;
-
   # 登录管理器：Noctalia Greeter（配合 greetd）
   services.greetd = {
     enable = true;

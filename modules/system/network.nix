@@ -21,7 +21,6 @@
     };
   };
 
-  sops.secrets.byg_url = { };
   sops.secrets.lxy_url = { };
 
   sops.templates."dae/config.dae" = {
@@ -65,73 +64,72 @@
             }
       
             subscription {
-              byg: 'https-file://${config.sops.placeholder.byg_url}'
               lxy: 'https-file://${config.sops.placeholder.lxy_url}'
             }
       
             group {
               proxy {
-                filter: subtag(byg, lxy)
+                filter: subtag(lxy)
                 policy: min_moving_avg
               }
               hk {
-                filter: subtag(byg, lxy) && name(keyword: '香港', keyword: 'HK')
+                filter: subtag(lxy) && name(keyword: '香港', keyword: 'HK')
                 policy: min_moving_avg
               }
               tw {
-                filter: subtag(byg, lxy) && name(keyword: '台湾', keyword: 'TW')
+                filter: subtag(lxy) && name(keyword: '台湾', keyword: 'TW')
                 policy: min_moving_avg
               }
               sg {
-                filter: subtag(byg, lxy) && name(keyword: '新加坡', keyword: 'SG')
+                filter: subtag(lxy) && name(keyword: '新加坡', keyword: 'SG')
                 policy: min_moving_avg
               }
               jp {
-                filter: subtag(byg, lxy) && name(keyword: '日本', keyword: 'JP')
+                filter: subtag(lxy) && name(keyword: '日本', keyword: 'JP')
                 policy: min_moving_avg
               }
               kr {
-                filter: subtag(byg, lxy) && name(keyword: '韩国', keyword: 'KR')
+                filter: subtag(lxy) && name(keyword: '韩国', keyword: 'KR')
                 policy: min_moving_avg
               }
               vn {
-                filter: subtag(byg, lxy) && name(keyword: '越南', keyword: 'VN')
+                filter: subtag(lxy) && name(keyword: '越南', keyword: 'VN')
                 policy: min_moving_avg
               }
               my {
-                filter: subtag(byg, lxy) && name(keyword: '马来西亚', keyword: 'MY')
+                filter: subtag(lxy) && name(keyword: '马来西亚', keyword: 'MY')
                 policy: min_moving_avg
               }
               th {
-                filter: subtag(byg, lxy) && name(keyword: '泰国', keyword: 'TH')
+                filter: subtag(lxy) && name(keyword: '泰国', keyword: 'TH')
                 policy: min_moving_avg
               }
               in {
-                filter: subtag(byg, lxy) && name(keyword: '印度', keyword: 'IN')
+                filter: subtag(lxy) && name(keyword: '印度', keyword: 'IN')
                 policy: min_moving_avg
               }
               au {
-                filter: subtag(byg, lxy) && name(keyword: '澳大利亚', keyword: 'AU')
+                filter: subtag(lxy) && name(keyword: '澳大利亚', keyword: 'AU')
                 policy: min_moving_avg
               }
               ca {
-                filter: subtag(byg, lxy) && name(keyword: '加拿大', keyword: 'CA')
+                filter: subtag(lxy) && name(keyword: '加拿大', keyword: 'CA')
                 policy: min_moving_avg
               }
               us {
-                filter: subtag(byg, lxy) && name(keyword: '美国', keyword: 'US')
+                filter: subtag(lxy) && name(keyword: '美国', keyword: 'US')
                 policy: min_moving_avg
               }
               de {
-                filter: subtag(byg, lxy) && name(keyword: '德国', keyword: 'DE')
+                filter: subtag(lxy) && name(keyword: '德国', keyword: 'DE')
                 policy: min_moving_avg
               }
               fr {
-                filter: subtag(byg, lxy) && name(keyword: '法国', keyword: 'FR')
+                filter: subtag(lxy) && name(keyword: '法国', keyword: 'FR')
                 policy: min_moving_avg
               }
               uk {
-                filter: subtag(byg, lxy) && name(keyword: '英国', keyword: 'UK')
+                filter: subtag(lxy) && name(keyword: '英国', keyword: 'UK')
                 policy: min_moving_avg
               }
             }

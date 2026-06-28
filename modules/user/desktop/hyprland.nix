@@ -137,7 +137,7 @@ in
       hl.bind(mainMod .. " + SHIFT + T", hl.dsp.focus({ urgent_or_last = true }))
 
       hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("zen-beta"))
-      hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
+      hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("footclient -- yazi"))
       hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("noctalia-env msg screenshot-region"))
 
       hl.bind("Print", hl.dsp.exec_cmd("noctalia-env msg screenshot-fullscreen"))
