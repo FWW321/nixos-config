@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/system/desktop.nix
 # 桌面环境：Hyprland、Niri、greetd、字体、本地化
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 {
   # Wayland 合成器
@@ -10,8 +10,6 @@
     enable = true;
     withUWSM = true;
     xwayland.enable = true;
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
   # XDG Portal - 现代桌面集成
