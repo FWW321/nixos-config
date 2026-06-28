@@ -41,7 +41,7 @@
         }
       '')
     ];
-    shellAliases = { vi = "nvim"; vim = "nvim"; ll = "ls -l"; cat = "bat"; cl = "clear"; };
+    shellAliases = { vi = "nvim"; vim = "nvim"; ll = "ls -l"; cat = "bat"; cls = "clear"; };
   };
 
   # Carapace - 跨 shell 智能补全
