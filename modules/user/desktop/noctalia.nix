@@ -80,7 +80,7 @@ in
 
       # Dock
       dock = {
-        enabled = true;
+        enabled = false;
         position = "bottom";
         icon_size = 48;
         show_dots = true;
