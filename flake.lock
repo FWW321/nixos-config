@@ -514,6 +514,22 @@
         "type": "github"
       }
     },
+    "makepad-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775577059,
+        "narHash": "sha256-Wof7zqGoCeZ4E9my0+rCLGxZQbEaIX8bdjxlPdqP7ko=",
+        "owner": "ZhangHanDong",
+        "repo": "makepad-skills",
+        "rev": "6e16c8d5beefcb410d57e83a799014beb2957977",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ZhangHanDong",
+        "repo": "makepad-skills",
+        "type": "github"
+      }
+    },
     "matt-skills": {
       "flake": false,
       "locked": {
@@ -946,6 +962,7 @@
         "herdr": "herdr",
         "home-manager": "home-manager",
         "humanizer-zh": "humanizer-zh",
+        "makepad-skills": "makepad-skills",
         "matt-skills": "matt-skills",
         "multicursor-nvim": "multicursor-nvim",
         "niri": "niri",

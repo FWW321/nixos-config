@@ -17,6 +17,23 @@ let
     "understand-knowledge"
     "understand-onboard"
   ];
+
+  makepadSkillDirs = [
+    "makepad-2.0-animation"
+    "makepad-2.0-app-structure"
+    "makepad-2.0-design-judgment"
+    "makepad-2.0-dsl"
+    "makepad-2.0-events"
+    "makepad-2.0-layout"
+    "makepad-2.0-migration"
+    "makepad-2.0-performance"
+    "makepad-2.0-shaders"
+    "makepad-2.0-splash"
+    "makepad-2.0-theme"
+    "makepad-2.0-troubleshooting"
+    "makepad-2.0-vector"
+    "makepad-2.0-widgets"
+  ];
 in
 {
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -118,5 +135,15 @@ in
     {
       "opencode/skills/herdr/SKILL.md".source = "${inputs.herdr}/SKILL.md";
     }
+
+    (lib.listToAttrs (
+      map (dir: {
+        name = "opencode/skills/${dir}";
+        value = {
+          source = "${inputs.makepad-skills}/skills/${dir}";
+          recursive = true;
+        };
+      }) makepadSkillDirs
+    ))
   ];
 }

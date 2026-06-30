@@ -90,6 +90,10 @@
       url = "github:op7418/Humanizer-zh";
       flake = false;
     };
+    makepad-skills = {
+      url = "github:ZhangHanDong/makepad-skills";
+      flake = false;
+    };
     rtk = {
       url = "github:rtk-ai/rtk";
       flake = false;
