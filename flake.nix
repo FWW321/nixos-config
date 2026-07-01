@@ -121,11 +121,7 @@
       url = "github:powerofthe69/proton-cachyos-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Rust
-    fenix = {
-      url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Rust（改用 rustup，见 users/fww/development.nix；fenix 已移除避免双轨冲突）
   };
 
   outputs =

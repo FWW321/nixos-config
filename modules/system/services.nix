@@ -19,8 +19,17 @@
     }];
   };
 
-  # 运行非 NixOS 二进制文件
-  programs.nix-ld.enable = true;
+  # 运行非 NixOS 二进制文件（cargo install 装的、下载的闭源软件等）
+  # libraries → NIX_LD_LIBRARY_PATH，预编译二进制运行时自动找库（一处配置全局生效）
+  # 替代 development.nix 里的 LD_LIBRARY_PATH：cargo-makepad 等运行时找 libssl.so.3
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      openssl # libssl.so.3（cargo-makepad 运行时依赖）
+      stdenv.cc.cc # libstdc++.so（C++ 预编译二进制常用）
+      zlib # 常见压缩库依赖
+    ];
+  };
 
   # 系统工具
   environment.systemPackages = with pkgs; [ lm_sensors ];

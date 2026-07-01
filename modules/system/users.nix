@@ -10,7 +10,7 @@
 
   users.users.fww = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "sops-keys" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "sops-keys" "kvm" ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
     shell = pkgs.nushell;
   };

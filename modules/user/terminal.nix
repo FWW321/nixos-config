@@ -41,7 +41,15 @@
         }
       '')
     ];
-    shellAliases = { vi = "nvim"; vim = "nvim"; ll = "ls -l"; cat = "bat"; cls = "clear"; };
+    shellAliases = {
+      vi = "nvim";
+      vim = "nvim";
+      ll = "ls -l";
+      cat = "bat";
+      cls = "clear";
+      # 不设 cmpa 别名：cargo-makepad 无环境变量/全局配置支持默认 sdk-path，
+      # AI 用原名会下到项目目录，别名反而造成两份 SDK。顺应设计，SDK 落 ./android_33_linux_x64（.gitignore 忽略）
+    };
   };
 
   # Carapace - 跨 shell 智能补全
