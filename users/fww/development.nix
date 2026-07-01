@@ -79,9 +79,6 @@ in
   '';
 
   # nushell extraEnv：设置后所有子进程（opencode / bash / 工具）自动继承
-  # 仅保留编译期 + SDK 定位变量：
-  #   - 运行期 libssl.so.3 → nix-ld 托管（services.nix programs.nix-ld.libraries）
-  #   - cargo git fetch 行为 → ~/.cargo/config.toml [net] 托管
   programs.nushell.extraEnv = ''
     $env.PATH = ($env.PATH | prepend $"($env.HOME)/.cargo/bin")
     # openssl 编译期定位（openssl-sys crate + cc 链接器读，NixOS 不暴露 openssl）
@@ -89,6 +86,9 @@ in
     $env.OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib"
     $env.OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include"
     $env.LIBRARY_PATH = "${pkgs.openssl.out}/lib"
+    # 运行期动态链接器搜索路径
+    # cargo install 的二进制 interpreter 是 nix glibc ld（不走 nix-ld），需要此变量找 libssl.so.3
+    $env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib"
     # cargo 用 git CLI fetch（你的 git insteadOf 把 https→ssh，libgit2 不读 ~/.ssh/config）
     $env.CARGO_NET_GIT_FETCH_WITH_CLI = "true"
     # Android SDK 定位（avdmanager / sdkmanager / emulator / adb 读这些）

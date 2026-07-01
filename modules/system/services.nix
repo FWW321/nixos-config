@@ -19,13 +19,13 @@
     }];
   };
 
-  # 运行非 NixOS 二进制文件（cargo install 装的、下载的闭源软件等）
-  # libraries → NIX_LD_LIBRARY_PATH，预编译二进制运行时自动找库（一处配置全局生效）
-  # 替代 development.nix 里的 LD_LIBRARY_PATH：cargo-makepad 等运行时找 libssl.so.3
+  # 运行非 NixOS 二进制文件（下载的闭源软件、patchelf 过 interpreter 的二进制）
+  # 注意：只对 interpreter 设为 nix-ld 的二进制生效；cargo install 的二进制
+  # interpreter 是 nix glibc ld（不走 nix-ld），仍需 LD_LIBRARY_PATH（见 development.nix）
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
-      openssl # libssl.so.3（cargo-makepad 运行时依赖）
+      openssl # libssl.so.3
       stdenv.cc.cc # libstdc++.so（C++ 预编译二进制常用）
       zlib # 常见压缩库依赖
     ];
