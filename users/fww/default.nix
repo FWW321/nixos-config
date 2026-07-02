@@ -22,8 +22,7 @@
   };
 
   imports = [
-    ./ai/opencode
-    ./ai/open-design.nix
+    ./ai
     ./browsers
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
