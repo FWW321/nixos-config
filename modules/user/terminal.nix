@@ -9,7 +9,7 @@
 
 {
   # Herdr - AI agent 终端复用器
-  home.packages = [ inputs.herdr.packages.${pkgs.system}.default ];
+  home.packages = [ inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default ];
 
   # Foot 终端
   programs.foot = {

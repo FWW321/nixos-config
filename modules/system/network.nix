@@ -200,6 +200,6 @@
   services.dae = {
     enable = true;
     configFile = config.sops.templates."dae/config.dae".path;
-    package = inputs.dae.packages.${pkgs.system}.dae-unstable;
+    package = inputs.dae.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
   };
 }
