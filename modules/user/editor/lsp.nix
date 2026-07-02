@@ -38,8 +38,15 @@ in
               chainingHints.enable = true;
               closureReturnTypeHints.enable = true;
             };
+            cargo = {
+              # rust-analyzer 用独立 target 目录，避免与终端里的 cargo build/run 抢 .package-cache 锁
+              targetDir = true;
+            };
+            # 保存时跑 cargo check（默认行为）：比 clippy 轻很多，只有 borrow checker 无 lint。
+            # 配合 cargo.targetDir 隔离 + rust-analyzer 内部 coalesce，auto-save 下也不会卡。
+            # 需要 lint 时在终端手动 cargo clippy。
             check = {
-              command = "clippy";
+              command = "check";
               onSave = true;
             };
           };
