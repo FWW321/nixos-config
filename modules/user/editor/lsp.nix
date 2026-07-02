@@ -276,6 +276,9 @@ in
           lsp_fallback = true;
           timeout_ms = 1000;
         };
+        # auto-save.nvim README 推荐：合并格式化与编辑到同一 undo 步骤
+        # 使 undo 一次性撤销「编辑 + 自动格式化」
+        undojoin = true;
         notify_on_error = false;
         formatters_by_ft = {
           nix = [ "nixfmt" ];

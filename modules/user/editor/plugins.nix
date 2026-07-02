@@ -19,6 +19,61 @@
       };
     };
 
+    # 自动保存：okuuva/auto-save.nvim 官方默认 + recommended excludes
+    # https://github.com/okuuva/auto-save.nvim
+    auto-save = {
+      enable = true;
+      settings = {
+        enabled = true;
+        trigger_events = {
+          # 官方默认 immediate_save 事件（含 QuitPre / VimSuspend）
+          immediate_save = [ "BufLeave" "FocusLost" "QuitPre" "VimSuspend" ];
+          defer_save = [ "InsertLeave" "TextChanged" ];
+          cancel_deferred_save = [ "InsertEnter" ];
+        };
+        write_all_buffers = false;
+        # README「Combine with formatting」章节官方建议：
+        # 设为 true，避免自动保存触发 format_on_save，仅手动 :w 才格式化
+        noautocmd = true;
+        lockmarks = false;
+        debounce_delay = 1000;
+        debug = false;
+        # README 推荐的 excluded_filetypes（含 gitcommit，避免误保存提交信息）
+        # 多数已是 non-modifiable / special-buffer，这里是 "extra safe"
+        condition = let
+          excluded_filetypes = [
+            "gitcommit"
+            "NvimTree"
+            "Outline"
+            "TelescopePrompt"
+            "alpha"
+            "dashboard"
+            "lazygit"
+            "neo-tree"
+            "oil"
+            "prompt"
+            "toggleterm"
+          ];
+          # 生成 Lua 合法的 table 字面量：{ "gitcommit", "NvimTree", ... }
+          lua_list = "{ " + builtins.concatStringsSep ", " (map (s: ''"${s}"'') excluded_filetypes) + " }";
+        in {
+          __raw = ''
+            function(buf)
+              local excluded_filetypes = ${lua_list}
+              if vim.tbl_contains(excluded_filetypes, vim.fn.getbufvar(buf, "&filetype")) then
+                return false
+              end
+              -- 排除 special-buffers（README 示例），buftype 为空才保存
+              if vim.fn.getbufvar(buf, "&buftype") ~= "" then
+                return false
+              end
+              return true
+            end
+          '';
+        };
+      };
+    };
+
     nvim-surround.enable = true;
     ts-comments.enable = true;
     lastplace.enable = true;
@@ -96,6 +151,22 @@
 
   programs.nixvim.extraConfigLua = ''
     require("multicursor-nvim").setup()
+
+    -- auto-save.nvim × snacks.toggle（README「snacks.toggle Integration」官方示例）
+    local autosave = require("auto-save")
+    require("snacks.toggle").new({
+      name = "Auto Save",
+      get = function()
+        return autosave.enabled()
+      end,
+      set = function(state)
+        if state then
+          autosave.on()
+        else
+          autosave.off()
+        end
+      end,
+    }):map("<leader>ua")
 
     local hl = vim.api.nvim_set_hl
     hl(0, "MultiCursorCursor", { reverse = true })
