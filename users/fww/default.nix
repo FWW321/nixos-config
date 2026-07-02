@@ -67,6 +67,8 @@
           "Arch Wiki" = { urls = [{ template = "https://wiki.archlinux.org/index.php?search={searchTerms}"; }]; definedAliases = [ "@arch" ]; };
           "Reddit Search" = { urls = [{ template = "https://www.reddit.com/search/?q={searchTerms}"; }]; definedAliases = [ "@reddit" ]; };
           "Docker Hub" = { urls = [{ template = "https://hub.docker.com/search?q={searchTerms}"; }]; definedAliases = [ "@docker" ]; };
+          "Bilibili" = { urls = [{ template = "https://search.bilibili.com/all?keyword={searchTerms}"; }]; definedAliases = [ "@bili" ]; };
+          "Hugging Face" = { urls = [{ template = "https://huggingface.co/search?q={searchTerms}"; }]; definedAliases = [ "@hf" ]; };
           "bing".metaData.hidden = false;
           "amazondotcom-us".metaData.hidden = true;
           "ebay".metaData.hidden = true;
