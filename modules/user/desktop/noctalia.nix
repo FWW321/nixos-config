@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/user/desktop/noctalia.nix
 # Noctalia Shell v5 配置：基于 C++/OpenGL ES 的轻量 Wayland 桌面 shell
-# 配色方案由 Stylix 统一管理
+# 配色方案、主题模式、字体、壁纸由 Stylix 统一管理(stylix.targets.noctalia)
 { config, pkgs, ... }:
 
 let
@@ -14,10 +14,9 @@ in
     enable = true;
 
     settings = {
-      # Shell 通用设置
+      # Shell 通用设置(font_family / theme 由 stylix 注入,不在此声明)
       shell = {
         lang = "zh-Hans";
-        font_family = "JetBrainsMono Nerd Font";
         polkit_agent = true;
         avatar_path = "${config.home.homeDirectory}/Pictures/Avatars/2131F1CB68E2BAA3698C8F87BB484FB8.jpg";
         clipboard_enabled = true;
@@ -65,17 +64,11 @@ in
         tint_intensity = 0.3;
       };
 
-      # 配色方案：Stylix 尚未适配 noctalia v5（缺少 target），
-      # 所以 Noctalia 暂时自己管理配色，从壁纸图片提取（M3 算法）
-      # 其余应用配色仍由 Stylix 统一管理
-      theme = {
-        mode = "dark";
-        source = "wallpaper";
-        wallpaper_scheme = "m3-content";
-        templates = {
-          enable_community_templates = true;
-          community_ids = [ "steam" ];
-        };
+      # 主题：mode / source / custom_palette 由 stylix 注入(stylix.targets.noctalia)
+      # 只保留 community templates(stylix 不管这个)
+      theme.templates = {
+        enable_community_templates = true;
+        community_ids = [ "steam" ];
       };
 
       # Dock
