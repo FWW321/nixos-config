@@ -26,11 +26,12 @@ in
         inputMethod = {
           "Groups/0" = {
             Name = "Default";
-            "Default Layout" = "us";
+            "Default Layout" = "us";       # 物理键盘布局（QWERTY），非输入法
             DefaultIM = "rime";
           };
-          "Groups/0/Items/0".Name = "keyboard-us";
-          "Groups/0/Items/1".Name = "rime";
+          # 仅保留 rime：雾凇拼音内置中英双模式，Shift 切换即可，
+          # 无需独立 keyboard-us（默认 IM 即 fallback）
+          "Groups/0/Items/0".Name = "rime";
           GroupOrder."0" = "Default";
         };
       };
