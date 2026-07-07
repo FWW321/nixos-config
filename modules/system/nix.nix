@@ -4,8 +4,6 @@
 
 {
   nixpkgs.config.allowUnfree = true;
-  # androidenv.composeAndroidPackages 需要（system-image / emulator 等 license）
-  nixpkgs.config.android_sdk.accept_license = true;
 
   nix = {
     settings = {

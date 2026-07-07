@@ -84,7 +84,7 @@ in
   };
 
   # 语言服务器（LSP server）——独立二进制，放 home.packages 而非 extraPackages；eglot 自动调用
-  # 例外：rust-analyzer 由 rustup 提供（见 development.nix activation 的 component add），不在此——避免与 rustup 的代理 shim 冲突
+  # 例外：rust-analyzer 由 fenix 工具链提供（见 development.nix home.packages），不在此——fenix latest.toolchain 已含 rust-analyzer 组件
   home.packages = with pkgs; [
     nil                            # Nix
     pyright                        # Python（提供 pyright-langserver）
@@ -100,7 +100,7 @@ in
     nixfmt                         # Nix
     ruff                           # Python（ruff format）
     prettier                       # JS / TS / JSON / YAML / Markdown / CSS
-    # rustfmt 不在此：rustup（见 development.nix）已提供 rustfmt / cargo-fmt，单装会 buildEnv 冲突
+    # rustfmt 不在此：fenix 工具链（见 development.nix）已提供 rustfmt / cargo-fmt
     # 字体（doom-modeline 图标用）
     nerd-fonts.symbols-only        # Symbols Nerd Font Mono（图标字形回退字体）
   ];

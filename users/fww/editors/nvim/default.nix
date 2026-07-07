@@ -52,6 +52,8 @@
       eslint_d
       # TOML
       taplo
+      # 汇编（NASM）
+      nasmfmt
       # 其他
       jq
     ];
@@ -85,6 +87,16 @@
           end
         '';
         desc = "Refresh inlay hints when diagnostics arrive (server ready)";
+      }
+      {
+        event = [ "BufRead" "BufNewFile" ];
+        pattern = [ "*.asm" "*.nasm" "*.fasm" ];
+        callback.__raw = ''
+          function()
+            vim.bo.filetype = vim.fn.expand("%:e") == "fasm" and "fasm" or "nasm"
+          end
+        '';
+        desc = "汇编 filetype（.fasm → fasm 走内置高亮，.asm/.nasm → nasm 走 treesitter，均触发 asm-lsp）";
       }
     ];
 

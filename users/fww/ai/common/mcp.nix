@@ -64,12 +64,4 @@
       env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile = "/run/secrets/github_token";
     };
   };
-
-  codegraph = {
-    guide = builtins.readFile ./guides/codegraph.md;
-    local = {
-      command = "npx";
-      args = [ "-y" "@colbymchenry/codegraph" "serve" "--mcp" ];
-    };
-  };
 }

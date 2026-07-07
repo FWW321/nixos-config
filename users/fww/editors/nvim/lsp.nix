@@ -221,6 +221,11 @@ in
         bashls.enable = true;
         dockerls.enable = true;
         marksman.enable = true;
+
+        asm_lsp = {
+          enable = true;
+          filetypes = [ "asm" "nasm" "fasm" "s" "S" ];
+        };
       };
 
       keymaps = {
@@ -257,6 +262,13 @@ in
           };
         };
       };
+    };
+
+    # Lean 4：原生 lean.nvim 包装（LSP 连接 + infoview 证明目标面板 + 缩写 + 高亮）
+    # lean.nvim 自管 LSP，勿另开 servers.leanls（会重复 attach）
+    lean = {
+      enable = true;
+      settings.mappings = true;
     };
 
     lint = {
@@ -316,6 +328,7 @@ in
           c = [ "clang-format" ];
           cpp = [ "clang-format" ];
           proto = [ "buf" ];
+          nasm = [ "nasmfmt" ];
           toml = [ "taplo" ];
           graphql = [ "prettier" ];
           jq = [ "jq" ];
@@ -334,6 +347,9 @@ in
           };
           google-java-format = {
             prepend_args = [ "--aosp" ];
+          };
+          nasmfmt = {
+            args = [ "-" ];
           };
         };
       };

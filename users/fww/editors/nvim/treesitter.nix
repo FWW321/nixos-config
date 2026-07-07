@@ -69,6 +69,8 @@
         make
         just
         helm
+        # 汇编（NASM）
+        nasm
         # 其他
         regex
         sql

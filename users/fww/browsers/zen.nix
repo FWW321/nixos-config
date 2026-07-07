@@ -48,4 +48,12 @@
         ];
     };
   };
+
+  # 默认浏览器：http(s) 链接 + HTML 文件 → Zen（home-manager 自动与 media.nix 的 xdg.mimeApps 合并）
+  xdg.mimeApps.defaultApplications = {
+    "x-scheme-handler/http" = "zen-beta.desktop";
+    "x-scheme-handler/https" = "zen-beta.desktop";
+    "text/html" = "zen-beta.desktop";
+    "application/xhtml+xml" = "zen-beta.desktop";
+  };
 }

@@ -54,7 +54,7 @@
 ;;; 自动格式化（保存时）
 ;; apheleia：保存时跑外部 formatter，用 RCS diff 回填——【不挪光标位置】
 ;; formatter 二进制见 default.nix 的 home.packages（nixfmt / ruff / prettier）
-;;   rustfmt 由 rustup 提供（development.nix）、clang-format 来自 clang-tools、taplo 已装
+;;   rustfmt 由 fenix 工具链提供（development.nix）、clang-format 来自 clang-tools、taplo 已装
 ;;   clang-format 来自 clang-tools（已装）、taplo 已装；某语言缺 formatter 时自动跳过（不报错）
 (use-package apheleia
   :hook (prog-mode . apheleia-mode)                  ; 所有编程模式：保存即格式化

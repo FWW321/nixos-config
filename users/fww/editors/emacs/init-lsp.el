@@ -4,7 +4,7 @@
 ;; 复用内建 flymake（诊断）/ xref（跳转）/ eldoc（签名）/ completion-at-point（补全）
 ;;   → 补全走 corfu，跳转走 consult-xref（init-completion 已设 xref-show-xrefs-function）
 ;; server 可执行文件见 emacs/default.nix 的 home.packages
-;;   例外：rust-analyzer 由 rustup 提供（见 development.nix activation 的 component add）
+;;   例外：rust-analyzer 由 fenix 工具链提供（见 development.nix home.packages）
 
 (use-package eglot
   :hook (;; 各语言 tree-sitter 模式（+ markdown）打开文件即自动连 LSP

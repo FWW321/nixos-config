@@ -28,7 +28,7 @@
     ./editors
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
-    ./development.nix
+    ./development
   ];
 
   # SOPS 密钥管理
