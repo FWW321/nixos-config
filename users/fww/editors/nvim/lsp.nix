@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/lsp.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/lsp.nix
 # LSP 语言服务器、诊断（nvim-lint）、格式化（conform-nvim）
 {
   pkgs,

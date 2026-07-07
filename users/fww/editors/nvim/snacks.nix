@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/snacks.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/snacks.nix
 # snacks.nvim 多合一 UI：dashboard、explorer、terminal、picker、indent 等
 let
   fwwLogo = ''

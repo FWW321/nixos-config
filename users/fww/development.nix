@@ -29,8 +29,15 @@ in
 {
   home.packages = with pkgs; [
     # ── Rust ──
-    # rustup 统一管理所有 Rust 工具链（stable + android targets）
+    # rustup 统一管理所有 Rust 工具链（stable + android targets + rust-analyzer 组件）
     # cargo-makepad 硬依赖 rustup，工具链由下方 activation script 自动下载
+    #
+    # 代理 shim 机制：nixpkgs 的 rustup 包在 bin/ 生成一批软链
+    #   （cargo / rustc / rustfmt / cargo-fmt / rust-analyzer / clippy-driver / rustdoc / ...），
+    #   全部 -> rustup 二进制。调用时 rustup 自动路由到激活工具链（default=stable）的对应组件。
+    #   - shim 文件【无条件存在】，但组件需 activation 安装才真能跑（如 rust-analyzer 非默认组件，需 component add）
+    #   - 后果：勿单装这些工具的独立 nix 包（rustfmt / rust-analyzer / clippy ...）——
+    #     会与 shim 在 bin/ 同路径 buildEnv 冲突；rust 工具一律走 rustup 组件
     rustup
     # C 工具链：Rust 编译带原生依赖的 crate（如 makepad-miniz）需要 cc linker
     gcc
@@ -72,7 +79,11 @@ in
         || $RUSTUP target add "$target" --toolchain stable || true
     done
 
-    # 2. cargo-makepad（未装就装，已装且 makepad dev 有新提交才重编译）
+    # 2. rust-analyzer 组件（rust-analyzer 代理 shim 需此组件才工作；给 emacs eglot / nvim 用）
+    $RUSTUP component list --installed --toolchain stable 2>/dev/null | grep -q "rust-analyzer" \
+      || $RUSTUP component add rust-analyzer --toolchain stable || true
+
+    # 3. cargo-makepad（未装就装，已装且 makepad dev 有新提交才重编译）
     $RUSTUP run stable cargo install cargo-makepad \
       --git https://github.com/makepad/makepad \
       --locked || true

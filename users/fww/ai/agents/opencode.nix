@@ -109,6 +109,7 @@ in
   # ── Motion AI Kit:只下载到中立目录,不全局 link ──
   # motion-ai-kit 的 defaultEnabled=false,靠 agent skill add 项目级 symlink 到 .agents/skills/
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    _install_motion_ai_kit() {
     TOKEN_PATH="/run/secrets/motion_plus_token"
     if [ ! -f "$TOKEN_PATH" ]; then
       echo "WARNING: $TOKEN_PATH not found, skipping Motion AI Kit installation"
@@ -117,11 +118,12 @@ in
 
     TOKEN=$(cat "$TOKEN_PATH")
     DATA_DIR="${config.xdg.dataHome}/motion-ai-kit/skills"
-    SCRIPT=$(${pkgs.curl}/bin/curl -sL "https://api.motion.dev/registry/skills/motion-ai-kit?token=$TOKEN")
+    SCRIPT=$(${pkgs.curl}/bin/curl -sL --retry 3 --retry-delay 2 \
+      "https://api.motion.dev/registry/skills/motion-ai-kit?token=$TOKEN") || true
 
     if [ -z "$SCRIPT" ]; then
-      echo "ERROR: Failed to download Motion AI Kit script"
-      return 1
+      echo "WARNING: motion-ai-kit 下载失败（网络/Token？），跳过本次安装"
+      return 0
     fi
 
     eval "$(echo "$SCRIPT" | grep -E '^SKILL_(COUNT|[0-9]+_(NAME|FILE_COUNT|FILE_[0-9]+_(PATH|B64)))=')"
@@ -155,6 +157,9 @@ in
       done
       i=$((i + 1))
     done
+    }
+    # 函数内 return 合法；任何异常被 || 兜住，不波及整个激活
+    _install_motion_ai_kit || echo "WARNING: motion-ai-kit 安装异常，已跳过"
     # 不再全局 symlink;motion 走 agent skill add 项目级 .agents/skills/
   '';
 

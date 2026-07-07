@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/treesitter.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/treesitter.nix
 # 语法高亮、缩进、折叠、增量选择、文本对象
 {
   pkgs,

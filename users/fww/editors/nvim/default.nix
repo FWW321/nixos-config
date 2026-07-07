@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/default.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/default.nix
 # Neovim 编辑器入口：全局选项、外部依赖、子模块汇总
 {
   pkgs,

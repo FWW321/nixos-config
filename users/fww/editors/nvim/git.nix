@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/git.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/git.nix
 # Git 增强显示与操作（gitsigns v2.0）
 { ... }:
 

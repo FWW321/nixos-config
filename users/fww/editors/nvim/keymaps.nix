@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/keymaps.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/keymaps.nix
 # 全局按键映射（LazyVim 风格命名空间）
 { ... }:
 

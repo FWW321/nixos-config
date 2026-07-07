@@ -24,10 +24,11 @@
   imports = [
     ./ai
     ./browsers
+    ./vcs
+    ./editors
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
-      ../../modules/user/editor
-      ./development.nix
+    ./development.nix
   ];
 
   # SOPS 密钥管理
@@ -67,18 +68,7 @@
 
   programs.bash.enable = true;
 
-  # Git 配置 (使用新的 settings 格式)
-  programs.git = {
-    enable = true;
-    settings = {
-      user = { name = "fww"; email = "3223400498@qq.com"; };
-      init.defaultBranch = "main";
-      core = { editor = "nvim"; ignorecase = false; };
-      pull.rebase = true;
-      push.autoSetupRemote = true;
-      url."git@github.com:".insteadOf = "https://github.com/";
-    };
-  };
+  # Git/Jujutsu 配置迁至 ./vcs/(见上方 imports)
 
   # SSH 配置
   programs.ssh = {

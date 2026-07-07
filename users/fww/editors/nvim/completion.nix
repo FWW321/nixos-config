@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/completion.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/completion.nix
 # 补全引擎（blink-cmp）
 { ... }:
 

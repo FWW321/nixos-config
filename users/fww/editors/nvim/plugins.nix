@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/editor/plugins.nix
+# filepath: ~/nixos-config/users/fww/editors/nvim/plugins.nix
 # 编辑增强、跳转、注释、Trouble、TODO、mini 系列
 { config, pkgs, inputs, ... }:
 {
