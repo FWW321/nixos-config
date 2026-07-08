@@ -125,6 +125,7 @@
           ./modules/system/network.nix
           ./modules/system/secrets.nix
           ./modules/system/theme.nix
+          ./modules/system/ssh.nix
 
           # Home Manager
           home-manager.nixosModules.home-manager

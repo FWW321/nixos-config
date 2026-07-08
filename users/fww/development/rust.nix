@@ -21,6 +21,14 @@
     inputs.fenix.packages.${pkgs.stdenv.hostPlatform.system}.latest.toolchain
   ];
 
+  # cargo 凭证:token-from-stdout provider 从 sops 读,token 不落盘
+  # ~/.cargo/config.toml 声明式(无 secret);cargo 需要 token 时执行 cat 读 /run/secrets/crates_token(tmpfs)
+  # 副作用:不支持 cargo login/logout(token 由 sops 管,无需 login)
+  home.file.".cargo/config.toml".text = ''
+    [registry]
+    global-credential-providers = ["cargo:token-from-stdout cat /run/secrets/crates_token"]
+  '';
+
   programs.nushell.extraEnv = ''
     $env.PATH = ($env.PATH | prepend $"($env.HOME)/.cargo/bin")
     $env.OPENSSL_DIR = "${pkgs.openssl.out}"

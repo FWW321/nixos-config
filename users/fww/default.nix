@@ -35,7 +35,7 @@
   sops = {
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
     defaultSopsFile = ../../secrets/secrets.yaml;
-    secrets.github_ssh_key.path = "${config.home.homeDirectory}/.ssh/github";
+    secrets.vcs_ssh_key.path = "${config.home.homeDirectory}/.ssh/vcs_key";
     secrets.zhipu_api_key = { };
   };
 
@@ -70,17 +70,9 @@
 
   # Git/Jujutsu 配置迁至 ./vcs/(见上方 imports)
 
-  # SSH 配置
+  # SSH 配置(forge host 块迁至 ./vcs/forge.nix,数据驱动与 insteadOf/username 同源)
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    settings = {
-      "github.com" = {
-        hostname = "github.com";
-        user = "git";
-        identityFile = config.sops.secrets.github_ssh_key.path;
-        identitiesOnly = true;
-      };
-    };
   };
 }

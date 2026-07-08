@@ -9,15 +9,16 @@ let
     name = "fww";
     email = "3223400498@qq.com";
     editor = "nvim";
-    # SSH 签名公钥路径(访问 GitHub 的同一把 key 也用于签 commit)
-    # ~/.ssh/github 是 sops 解密的私钥,对应 .pub 由下方 activation 从私钥导出
-    signingKey = "~/.ssh/github.pub";
+    # SSH 签名公钥路径(forge 认证 + commit 签名同一把 key)
+    # ~/.ssh/vcs_key 是 sops 解密的私钥,对应 .pub 由下方 activation 从私钥导出
+    signingKey = "~/.ssh/vcs_key.pub";
   };
 in
 {
   imports = [
     (import ./git.nix { inherit common; })
     (import ./jj.nix { inherit common; })
+    ./forge.nix                       # forge 访问层(数据驱动,不经 common)
   ];
 
   # ── 共享包(vcs 域工具集中管理,git.nix/jj.nix 不再各自声明包)──
@@ -33,14 +34,14 @@ in
   };
 
   # ── SSH 签名公钥生成 ──
-  # sops 只解密私钥(~/.ssh/github),公钥需运行时从私钥导出,供 git/jj 签名验证
+  # sops 只解密私钥(~/.ssh/vcs_key),公钥需运行时从私钥导出,供 git/jj 签名验证
   # 幂等:每次部署刷新;ssh-keygen 失败则不留空文件(tmp 清理)
-  home.activation.githubSigningPubkey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    GITHUB_KEY="$HOME/.ssh/github"
-    if [ -f "$GITHUB_KEY" ]; then
+  home.activation.vcsSigningPubkey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    VCS_KEY="$HOME/.ssh/vcs_key"
+    if [ -f "$VCS_KEY" ]; then
       tmp=$(mktemp)
-      if ${pkgs.openssh}/bin/ssh-keygen -y -f "$GITHUB_KEY" > "$tmp" 2>/dev/null; then
-        mv "$tmp" "$GITHUB_KEY.pub"
+      if ${pkgs.openssh}/bin/ssh-keygen -y -f "$VCS_KEY" > "$tmp" 2>/dev/null; then
+        mv "$tmp" "$VCS_KEY.pub"
       else
         rm -f "$tmp"
       fi

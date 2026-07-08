@@ -7,22 +7,6 @@
   :custom (magit-display-buffer-function
             #'magit-display-buffer-same-window-except-diff-v1)) ; 同窗口显示，diff 另开
 
-;;; GitHub issues / PRs（forge：magit 内管 GitHub）
-(use-package forge
-  :after magit
-  :config
-  ;; GitHub token 从 sops secret 读（/run/secrets/github_token）
-  ;; 绕过 auth-source：advice ghub--token 短路返回 token，无需预设 github.user
-  ;;   ghub 拿到 token 后反查 /user API 自动获取用户名
-  (when (file-readable-p "/run/secrets/github_token")
-    (advice-add 'ghub--token :before-until
-                (lambda (host &rest _)
-                  (when (string-prefix-p "api.github.com" (or host ""))
-                    (string-trim
-                     (with-temp-buffer
-                       (insert-file-contents "/run/secrets/github_token")
-                       (buffer-string))))))))
-
 ;;; 按键发现
 (use-package which-key
   :init (which-key-mode)                                   ; 全局开启

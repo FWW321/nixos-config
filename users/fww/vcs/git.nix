@@ -12,7 +12,6 @@
         email = common.email;
         signingkey = common.signingKey;  # SSH 签名 key(复用 ssh key)
       };
-      github.user = "FWW321";       # GitHub 用户名(forge/ghub/gh CLI 读此解析身份,非 git 内置)
       init.defaultBranch = "main";
       core = {
         editor = common.editor;
@@ -23,7 +22,6 @@
       commit.gpgsign = true;       # 自动签名所有 commit(GitHub 上传 Signing Key 后显示 ✅ Verified)
       pull.rebase = true;
       push.autoSetupRemote = true;
-      url."git@github.com:".insteadOf = "https://github.com/";
     };
   };
 }

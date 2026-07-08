@@ -26,6 +26,14 @@
     jq
   ];
 
+  # 如需切换到 KDE Plasma 桌面，在 flake inputs 加入 plasma-manager：
+  #   inputs.plasma-manager.url = "github:nix-community/plasma-manager";
+  # 然后在此处导入并启用：
+  #   imports = [ inputs.plasma-manager.homeManagerModules.plasma-manager ];
+  #   programs.plasma.enable = true;
+  # 即可声明式配置面板、小部件、KWin 窗口规则、快捷键、配色方案等。
+  # 详见：https://github.com/nix-community/plasma-manager
+
   # 截图标注工具
   programs.satty = {
     enable = true;
@@ -44,12 +52,15 @@
     GLFW_IM_MODULE = "ibus";
   };
 
-  # GitHub Token 配置
-  home.activation.writeNixConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  # nix.conf:声明式主体 + secret 片段 include 分离
+  # access-tokens 含 token(不能进 store),由 activation 单独写 access-tokens.conf
+  # nix.conf 主体声明式,将来可加非敏感设置不与 secret 冲突
+  xdg.configFile."nix/nix.conf".text = ''
+    include ${config.home.homeDirectory}/.config/nix/access-tokens.conf
+  '';
+
+  home.activation.nixAccessTokens = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     TOKEN=$(cat /run/secrets/github_token)
-    mkdir -p ~/.config/nix
-    cat > ~/.config/nix/nix.conf << EOF
-    access-tokens = github.com=$TOKEN
-    EOF
+    printf 'access-tokens = github.com=%s\n' "$TOKEN" > "$HOME/.config/nix/access-tokens.conf"
   '';
 }

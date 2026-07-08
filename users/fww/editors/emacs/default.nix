@@ -8,7 +8,7 @@
 #       · init-basics.el     文件/编辑/滚动/UI/历史/窗口/scratch/行号
 #       · init-completion.el 补全栈（orderless/vertico/marginalia/consult/corfu/cape/embark）
 #       · init-treesit.el    tree-sitter grammar 路径（nix 注入，由 ts-grammars 生成）
-#       · init-dev.el        magit/forge/which-key/helpful/vundo/treesit-auto/apheleia/popper/视觉
+#       · init-dev.el        magit/which-key/helpful/vundo/treesit-auto/apheleia/popper/视觉
 #       · init-lsp.el        eglot（LSP）
 #       · init-ai.el         gptel（LLM 客户端，zhipu 后端）
 #   - ts-grammars（let 绑定）：显式列 14 语言的 tree-sitter grammar，nix 预编译 .so
@@ -53,8 +53,8 @@ in
       # 补全栈（minad 系 + embark 上下文动作）
       vertico orderless marginalia consult corfu cape
       embark embark-consult
-      # Git / GitHub
-      magit forge
+      # Git
+      magit
       # 编辑 / 发现 / undo
       which-key helpful vundo
       # 格式化（保存时；外部 formatter 二进制见 home.packages）
