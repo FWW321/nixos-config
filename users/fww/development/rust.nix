@@ -1,9 +1,15 @@
 # filepath: ~/nixos-config/users/fww/development/rust.nix
-# Rust 语言生态：fenix nightly 纯 nix 工具链 + cargo/openssl 运行环境
+# Rust 语言生态：rust-overlay nightly 纯 nix 工具链 + cargo/openssl 运行环境
 #
-# - 工具链：fenix latest.toolchain = 最新 nightly 全套（rustc/cargo/rustfmt/clippy/rust-analyzer/rust-src）
+# - 工具链：rust-overlay selectLatestNightlyWith = 最新可用 nightly（自动跳过组件缺失的日期）
+#   default profile（rustc/cargo/rustfmt/clippy）+ rust-src/rust-analyzer 扩展
+#   只装 stable 也有的组件，不含 miri 等 nightly 专属实验组件
 #   声明式、可复现；删 home.packages 行即卸载，无 ~/.rustup 残留
 #   rust-analyzer 随工具链上 PATH → nvim(native lsp) / emacs(eglot) / opencode 直接复用
+# - 打包 Rust 应用（把 Cargo 项目编成 /nix/store derivation）：用 crane（github:ipetkov/crane）
+#   不在此装——crane 是 nix 库而非 CLI，无 crane 命令；在每个 repo 的 flake.nix 声明 inputs.crane 即按需拉取
+#   核心 buildPackage 编译 crate，配合 buildDepsOnly → cargoArtifacts 做依赖分层缓存（改代码不重编依赖）
+#   与本文件分工：这里管【开发工具链】（cargo build/run/test 交互式），crane 管【出可部署 nix 包】
 # - cc linker（gcc）不在此：gcc 是 C/C++ 域编译器，见 c-cpp.nix；Rust 借之作 linker（跨域构建依赖）
 # - nushell extraEnv 整体在此：以下每行都只服务 Rust 域
 #   · openssl_*：openssl-sys crate 编译期定位（NixOS 不暴露 openssl）
@@ -12,13 +18,20 @@
 #   (nodejs/bun 自带 openssl、zig 自含 cc、lean4/souffle 预编译 → 均不依赖这些)
 {
   pkgs,
-  inputs,
   ...
 }:
 
 {
   home.packages = with pkgs; [
-    inputs.fenix.packages.${pkgs.stdenv.hostPlatform.system}.latest.toolchain
+    # 最新 nightly 工具链（selectLatestNightlyWith 自动选组件齐全的最新日期，避免缺件构建失败）
+    # default profile 已含 rustc/cargo/rustfmt/clippy；rust-src/rust-analyzer 作为扩展补齐（stable 组件）
+    # 注意：列表里函数应用必须整体加括号——Nix 列表字面量用空格分元素，f (x) 会被拆成两个元素而非应用
+    (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+      extensions = [ "rust-src" "rust-analyzer" ];
+    }))
+    # cargo-dist：Rust 发布打包工具（生成各平台可分发产物 + 上传归档，配合 GitHub Release）
+    # 与 crane 分工：crane 出 /nix/store 的 derivation（可复现构建）；cargo-dist 出面向用户的安装包（发布用）
+    cargo-dist
   ];
 
   # cargo 凭证:token-from-stdout provider 从 sops 读,token 不落盘
