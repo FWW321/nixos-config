@@ -10,9 +10,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Rust 工具链（fenix nightly 纯 nix 声明式，替代 rustup）
-    fenix = {
-      url = "github:nix-community/fenix";
+    # Rust 工具链（rust-overlay nightly 纯 nix 声明式，替代 rustup）
+    # 注入为 nixpkgs overlay → pkgs.rust-bin 可用（见下方 nixpkgs.overlays）
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -96,6 +97,9 @@
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
+          # Rust 工具链 overlay（rust-bin → pkgs.rust-bin）
+          { nixpkgs.overlays = [ inputs.rust-overlay.overlays.default ]; }
+
           # 外部模块
           inputs.dae.nixosModules.dae
           inputs.disko.nixosModules.disko

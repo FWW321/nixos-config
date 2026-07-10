@@ -29,8 +29,9 @@
     (rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
       extensions = [ "rust-src" "rust-analyzer" ];
     }))
-    # cargo-dist：Rust 发布打包工具（生成各平台可分发产物 + 上传归档，配合 GitHub Release）
+    # cargo-dist（二进制名 dist）：Rust 发布打包工具（生成各平台可分发产物 + 上传归档，配合 GitHub Release）
     # 与 crane 分工：crane 出 /nix/store 的 derivation（可复现构建）；cargo-dist 出面向用户的安装包（发布用）
+    # 注：0.14+ 上游已将二进制从 cargo-dist 改名为 dist，直接用 `dist init/build/plan`
     cargo-dist
   ];
 
