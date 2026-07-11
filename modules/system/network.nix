@@ -153,7 +153,9 @@
       
               pname(steam, Counter-Strike) -> direct
               domain(geosite:category-games@cn) -> direct
-              domain(suffix: steamserver.net, steamcontent.com, cm.steampowered.com) -> direct
+              # Steam 创意工坊/社区走代理（steamcommunity.com 国内被墙），其余走直连
+              domain(suffix: steamcommunity.com) -> proxy
+              domain(geosite:steam) -> direct
       
               domain(geosite:apple@cn) -> direct
               domain(geosite:tencent) -> direct
