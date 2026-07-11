@@ -52,8 +52,6 @@
       eslint_d
       # TOML
       taplo
-      # 汇编（NASM）
-      nasmfmt
       # 其他
       jq
     ];

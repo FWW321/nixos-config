@@ -328,7 +328,6 @@ in
           c = [ "clang-format" ];
           cpp = [ "clang-format" ];
           proto = [ "buf" ];
-          nasm = [ "nasmfmt" ];
           toml = [ "taplo" ];
           graphql = [ "prettier" ];
           jq = [ "jq" ];
@@ -347,9 +346,6 @@ in
           };
           google-java-format = {
             prepend_args = [ "--aosp" ];
-          };
-          nasmfmt = {
-            args = [ "-" ];
           };
         };
       };

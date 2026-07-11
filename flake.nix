@@ -64,7 +64,6 @@
       url = "github:nix-community/nixvim";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
     # ── AI agent 工具 ──
     open-design = {
       url = "github:nexu-io/open-design";
