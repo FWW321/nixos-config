@@ -55,6 +55,7 @@ in
       model = modelMap.${p.defaultModel};
       small_model = modelMap.${p.smallModel};
       lsp = true;
+      snapshot = false;
       mcp = lib.mapAttrs toOpenCodeMcp common.mcp;
       provider."zhipuai-coding-plan" = {
         options.apiKey = "{file:${p.apiKey.secretFile}}";

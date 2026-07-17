@@ -8,6 +8,45 @@
     wifi.backend = "iwd"; # iwd 比 wpa_supplicant 更现代、更快
   };
 
+  # ── IPv6 公网地址说明 ──────────────────────────────────────────────
+  # 路由器（中兴问天 BE7000 Pro+）LAN 口设为 passthrough（穿透）模式。
+  # 原因：ISP 只分配了一个 /64 前缀，路由器 WAN 口已占用。IPv6 要求每个
+  #   接口用不同子网，无法把同一个 /64 同时分配给 WAN 和 LAN 做路由。passthrough
+  #   改为桥接，让 LAN 设备直接从 ISP 的 /64 获取公网地址，所有设备共享这个 /64
+  #   （/64 有 2^64 个地址，足够所有设备）。替代方案 NAT6 只给 ULA 翻译地址，非真公网。
+  #
+  # 问题：dae（lan_interface: podman0/virbr0）的 auto_config_kernel_parameter 设了
+  #   net.ipv6.conf.all.forwarding=1；NM 接管 enp7s0 时硬编码 accept_ra=0 +
+  #   addr_gen_mode=NONE（NM 想用 NDISC/libndp 在用户态处理 RA，但 NDISC 在此环境
+  #   不工作——实测无 AF_PACKET socket）。dae 只在 accept_ra==1 时升到 2，但 NM 先
+  #   设了 0 → dae 检查不匹配 → 跳过。结果内核无法处理 RA（accept_ra=0），NM 的
+  #   NDISC 也不工作 → IPv6 SLAAC 全断。
+  #
+  # 当前为何能用：开机时（NM/dae 启动前）内核用默认 accept_ra=1 处理了一次 RA，
+  #   缓存了公网前缀，生成的公网地址在前缀生命周期内（约 3 天）持续有效，临时地址
+  #   也会基于缓存前缀自动轮换。但前缀过期后内核无法续期（accept_ra=0），公网地址消失。
+  #
+  # 如果将来公网 IPv6 断了，用以下方案修复（任选其一）：
+  #
+  # 方案 A（推荐）：NM dispatcher 在连接激活后覆盖 sysctl，让内核持续处理 RA
+  #   accept_ra=2 含义：即使 forwarding=1 也处理 RA（0=从不, 1=仅 forwarding=0 时）
+  #   addr_gen_mode=0 含义：用 EUI64 从 RA 前缀生成 SLAAC 地址（1=不生成, NM 设的值）
+  #   networking.networkmanager.dispatcherScripts = [{
+  #     type = "basic";
+  #     source = pkgs.writeShellScript "ipv6-accept-ra" ''
+  #       case "$1:$2" in
+  #         enp7s0:up|enp7s0:reapply)
+  #           ${lib.getExe' pkgs.procps "sysctl"} -w net.ipv6.conf."$1".accept_ra=2
+  #           ${lib.getExe' pkgs.procps "sysctl"} -w net.ipv6.conf."$1".addr_gen_mode=0
+  #           ;;
+  #       esac
+  #     '';
+  #   }];
+  #
+  # 方案 B：手动临时修复（重启后失效）
+  #   sysctl -w net.ipv6.conf.enp7s0.accept_ra=2
+  #   sysctl -w net.ipv6.conf.enp7s0.addr_gen_mode=0
+
   # DNS 解析 (dae 会接管 DNS 路由)
   services.resolved.enable = true;
 
@@ -40,12 +79,8 @@
               tcp_check_url: 'http://cp.cloudflare.com,1.1.1.1,2606:4700:4700::1111'
               tcp_check_http_method: HEAD
               udp_check_dns: 'dns.google:53,8.8.8.8,2001:4860:4860::8888'
-              check_interval: 30s
+              check_interval: 10m
               check_tolerance: 50ms
-              # 抗审查：uTLS 伪装 Chrome 指纹 + TLS 分片规避 SNI/指纹检测（仅对 TCP 生效，配合下方 block QUIC）
-              tls_implementation: utls
-              utls_imitate: chrome_auto
-              tls_fragment: true
             }
       
             dns {
@@ -144,9 +179,6 @@
               dip(224.0.0.0/3, 'ff00::/8') -> direct
               dip(geoip:private) -> direct
 
-              # 阻止 QUIC/HTTP3，强制回退 TCP（TLS 分片仅对 TCP 生效；官方 example 推荐）
-              l4proto(udp) && dport(443) -> block
-
               domain(geosite:category-ads-all) -> block
       
               dscp(0x4) -> direct
@@ -164,7 +196,7 @@
       
               domain(geosite:cn) -> direct
               dip(geoip:cn) -> direct
-      
+
               domain(geosite:anthropic, suffix: claude.ai) -> us
               domain(geosite:openai) -> us
       
