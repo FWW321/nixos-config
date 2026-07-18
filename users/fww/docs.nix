@@ -16,11 +16,11 @@
 {
   home.packages = with pkgs; [
     # ── mdBook：Markdown → HTML 书 ──
+    # mdbook 0.5 已内置 admonitions（GFM `> [!NOTE]` 风格）+ sidebar heading nav（页面侧栏目录）
+    # 不再需要 mdbook-pagetoc（被 PR #2822 取代）/ mdbook-admonish（被 PR #2851 取代，且 issue #233 实测不兼容 0.5）
     mdbook            # 主程序：SUMMARY.md 驱动，mdbook build/serve
-    mdbook-toc        # 内联目录（{{#toc}}）
-    mdbook-pagetoc    # 侧边栏浮动目录（看长文必备）
-    mdbook-mermaid    # Mermaid 流程图代码块
-    mdbook-admonish   # Material 风格提示框
+    mdbook-toc        # 内联目录（`<!-- toc -->` 标记 → 当前页章节目录）
+    mdbook-mermaid    # Mermaid 流程图代码块（mdbook 无内置，仍需要）
 
     # ── Typst：纯原生排版引擎（替代 LaTeX，输出 PDF）──
     # 注：tinymist LSP 由 nixvim lsp.servers.tinymist.enable 自动注入 nvim PATH（无需装到 home.packages）
