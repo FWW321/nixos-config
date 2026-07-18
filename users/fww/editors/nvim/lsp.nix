@@ -226,6 +226,19 @@ in
           enable = true;
           filetypes = [ "asm" "nasm" "fasm" "s" "S" ];
         };
+
+        # Typst：tinymist 是 typst 官方 LSP（取代已 archived 的 typst-lsp）
+        # 内置 typstyle 格式化 + PDF 导出，无需 typst-vim / typst-preview / conform-nvim.typst
+        # semanticTokens=disable：交给 treesitter（与官方 neovim 文档一致）
+        # exportPdf=onSave：保存时导出 PDF（onType 太频繁；onSave 配合 auto-save 已够实时）
+        tinymist = {
+          enable = true;
+          settings = {
+            exportPdf = "onSave";
+            formatterMode = "typstyle";
+            semanticTokens = "disable";
+          };
+        };
       };
 
       keymaps = {

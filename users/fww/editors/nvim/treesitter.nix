@@ -62,6 +62,7 @@
         # 文档
         markdown
         markdown_inline
+        typst
         # DevOps / 配置
         dockerfile
         proto
