@@ -29,6 +29,7 @@
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
     ./development
+    ./docs.nix
   ];
 
   # SOPS 密钥管理
