@@ -126,6 +126,7 @@
           ./modules/system/gaming.nix
           ./modules/system/services.nix
           ./modules/system/network.nix
+          ./modules/system/torrents.nix
           ./modules/system/secrets.nix
           ./modules/system/theme.nix
           ./modules/system/ssh.nix

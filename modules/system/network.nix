@@ -184,6 +184,10 @@
               dscp(0x4) -> direct
       
               pname(steam, Counter-Strike) -> direct
+              # qBittorrent 必须直连：BT 是 P2P，走代理会因 uTP/DHT UDP 丢包、
+              # 代理限连接数/限速导致速度崩溃。代价是真实 IP 暴露给 peer/tracker
+              # （BT 本质，无解；要匿名只能切 BT 友好的 VPN 并绑 wg0 接口）
+              pname(qbittorrent-nox) -> direct
               domain(geosite:category-games@cn) -> direct
               # Steam 创意工坊/社区走代理（steamcommunity.com 国内被墙），其余走直连
               domain(suffix: steamcommunity.com) -> proxy
