@@ -159,6 +159,12 @@
                 filter: subtag(lxy) && name(keyword: '美国', keyword: 'US')
                 policy: min_moving_avg
               }
+              # AI 防封专用组：固定日本节点（policy:min 锁到延迟最低那一个，节点失效才切）
+              # 不能复用 jp 组（min_moving_avg 会飘 IP → 触发 OpenAI/Anthropic 风控首信号）
+              ai {
+                filter: subtag(lxy) && name(keyword: '日本', keyword: 'JP')
+                policy: min
+              }
               de {
                 filter: subtag(lxy) && name(keyword: '德国', keyword: 'DE')
                 policy: min_moving_avg
@@ -201,8 +207,8 @@
               domain(geosite:cn) -> direct
               dip(geoip:cn) -> direct
 
-              domain(geosite:anthropic, suffix: claude.ai) -> us
-              domain(geosite:openai) -> us
+              domain(geosite:anthropic, suffix: claude.ai) -> ai
+              domain(geosite:openai) -> ai
       
               domain(geosite:netflix) -> jp
               domain(geosite:spotify) -> jp
