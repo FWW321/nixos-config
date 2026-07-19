@@ -96,8 +96,11 @@
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
-          # Rust 工具链 overlay（rust-bin → pkgs.rust-bin）
-          { nixpkgs.overlays = [ inputs.rust-overlay.overlays.default ]; }
+          # Rust 工具链 overlay（rust-bin → pkgs.rust-bin）+ 自定义打包 overlay（pkgs/mdbook-svgbob 等）
+          { nixpkgs.overlays = [
+            inputs.rust-overlay.overlays.default
+            (import ./pkgs/default.nix)
+          ]; }
 
           # 外部模块
           inputs.dae.nixosModules.dae
