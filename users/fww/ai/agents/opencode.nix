@@ -76,6 +76,8 @@ in
         "${common.plugins.rtk.source}/hooks/opencode/rtk.ts";
       "opencode/plugins/herdr-agent-state.js".source =
         "${common.plugins.herdr.source}/src/integration/assets/opencode/herdr-agent-state.js";
+      "opencode/plugins/dcg-guard.js".source =
+        "${common.plugins.dcg.source}/dcg-guard.js";
     }
 
     # ── opencode 项目级渲染器(被 agent sync 调用) + ai/registry.json ──
@@ -167,6 +169,7 @@ in
   # ── 插件核心包 + skill 依赖包 ──
   home.packages = [
     common.plugins.rtk.package
+    common.plugins.dcg.package
   ] ++ skillPkgs;
 
   home.sessionVariables = skillEnv;
