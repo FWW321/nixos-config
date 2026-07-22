@@ -22,6 +22,7 @@
     mdbook-toc        # 内联目录（`<!-- toc -->` 标记 → 当前页章节目录）
     mdbook-mermaid    # Mermaid 流程图代码块（mdbook 无内置，仍需要）
     mdbook-svgbob     # ASCII 图表代码块 → SVG（nixpkgs 未收录，源码构建：见 pkgs/mdbook-svgbob/）
+    mdbook-katex      # LaTeX 数学公式 → 构建时渲染成静态 HTML（nixpkgs 0.9.4 不兼容 0.5，源码构建 0.10.0：见 pkgs/mdbook-katex/）
 
     # ── Typst：纯原生排版引擎（替代 LaTeX，输出 PDF）──
     # 注：tinymist LSP 由 nixvim lsp.servers.tinymist.enable 自动注入 nvim PATH（无需装到 home.packages）

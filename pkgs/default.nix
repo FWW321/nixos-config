@@ -5,5 +5,6 @@
 # 新增包：在 pkgs/ 下建 <name>/default.nix，然后在此 final 追加一行
 final: _prev: {
   mdbook-svgbob = final.callPackage ./mdbook-svgbob { };
+  mdbook-katex = final.callPackage ./mdbook-katex { };
   dcg = final.callPackage ./dcg { };
 }
