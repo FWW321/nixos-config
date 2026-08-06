@@ -26,7 +26,7 @@ in
     entryFile = "SKILL.md";
   };
   "herdr" = {
-    source = inputs.herdr;
+    source = "${inputs.herdr}/skills/herdr";
     entryFile = "SKILL.md";
   };
 
