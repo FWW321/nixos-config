@@ -17,6 +17,9 @@
     package = config.boot.kernelPackages.nvidiaPackages.latest;
   };
 
+  # NVIDIA Container Toolkit — 让 podman 容器能用 GPU
+  hardware.nvidia-container-toolkit.enable = true;
+
   # NVIDIA 早期加载 - 确保在 display manager 前加载驱动
   boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
 

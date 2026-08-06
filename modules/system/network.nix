@@ -71,7 +71,7 @@
       
             global {
               wan_interface: auto
-              lan_interface: podman0, virbr0
+              # lan_interface: podman0, virbr0  # rootless podman 不创建网桥；将来启用 libvirt 再加回
               dial_mode: domain
               log_level: info
               allow_insecure: false
