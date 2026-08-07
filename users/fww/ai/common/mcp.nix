@@ -52,8 +52,7 @@
 
   nixos = {
     local = {
-      command = "${pkgs.uv}/bin/uvx";
-      args = [ "mcp-nixos" ];
+      command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
     };
   };
 

@@ -35,6 +35,7 @@
     ./lean.nix
     ./datalog.nix
     ./assembly.nix
+    ./python.nix
   ];
 
   # devenv：per-repo 开发环境 CLI（devenv.nix/yaml/lock 模型，devenv shell/up/test）
