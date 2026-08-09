@@ -173,4 +173,10 @@ in
       };
     };
   };
+
+  # niri config.kdl 每次 switch 都变(home-manager 生成),旧 .backup 残留导致下次 switch 报 clobber
+  # 在 checkLinkTargets 之前清掉,避免手动 rm
+  home.activation.cleanupNiriBackup = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+    rm -f "${config.xdg.configHome}/niri/config.kdl.backup" || true
+  '';
 }

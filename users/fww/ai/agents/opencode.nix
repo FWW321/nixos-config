@@ -167,9 +167,9 @@ in
   '';
 
   # ── 插件核心包 + skill 依赖包 ──
+  # dcg 二进制 + 配置在 dcg.nix(agent 无关)
   home.packages = [
     common.plugins.rtk.package
-    common.plugins.dcg.package
   ] ++ skillPkgs;
 
   home.sessionVariables = skillEnv;

@@ -26,16 +26,16 @@ let
 in
 rustPlatform.buildRustPackage rec {
   pname = "dcg";
-  version = "0.6.9";
+  version = "0.10.0";
 
   src = fetchFromGitHub {
     owner = "Dicklesworthstone";
     repo = "destructive_command_guard";
     rev = "v${version}";
-    hash = "sha256-z9GK8YuFR+b/zNsJVXDnO4TR6eneDhcR78v15yn4aXo=";
+    hash = "sha256-ix7jmL1ONMLu1AGAtlvUdgWjm2zpCyGQ4NRlkk39awk=";
   };
 
-  cargoHash = "sha256-XjyUVeVnZR+vfbrR9qmZ0AoYPTXhOkbTx0GxFErrtFA=";
+  cargoHash = "sha256-mkJAPALDzhPLjdiJxk15JBHWmDNt+4lylvsznRvAKKc=";
 
   # vergen-gix (build.rs) 构建期读 git 元数据嵌入 --version
   nativeBuildInputs = [ pkgs.git ];

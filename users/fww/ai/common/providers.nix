@@ -22,4 +22,15 @@
     defaultModel = "glm-5.2";
     smallModel = "glm-5.1";
   };
+
+  # SiliconFlow(硅基流动):OpenAI 兼容平台,代金券抵扣
+  # 当前仅用于 jcode 远程 embedding(jcode embedding backend 硬编码读 OPENAI_API_KEY)
+  siliconflow = {
+    endpoints.openai = "https://api.siliconflow.cn/v1";
+    apiKey.secretFile = "/run/secrets/siliconflow_api_key";
+    embedding = {
+      model = "Qwen/Qwen3-Embedding-8B";  # MTEB 榜首;代金券覆盖
+      dim = 4096;
+    };
+  };
 }

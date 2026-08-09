@@ -7,4 +7,5 @@ final: _prev: {
   mdbook-svgbob = final.callPackage ./mdbook-svgbob { };
   mdbook-katex = final.callPackage ./mdbook-katex { };
   dcg = final.callPackage ./dcg { };
+  jcode = final.callPackage ./jcode { };
 }

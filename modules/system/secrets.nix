@@ -10,6 +10,7 @@
       # codeberg_token.owner = "fww";  # 备用,暂未接消费者
       crates_token.owner = "fww";
       zhipu_api_key.owner = "fww";
+      siliconflow_api_key.owner = "fww";
       context7_key.owner = "fww";
       # hf_token.owner = "fww";
       # civitai_token.owner = "fww";
