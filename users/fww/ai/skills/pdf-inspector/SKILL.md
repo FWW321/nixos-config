@@ -76,19 +76,21 @@ pdf2md <file> out.md                 # write to a file instead of stdout
 | 2 | PDF requires OCR (scanned / image-based) | Do not retry extraction; report `pages_needing_ocr` |
 | 1 | Error (corrupt, encrypted without password, etc.) | Read stderr; offer `--password` if encrypted |
 
-## Large documents — protect your context window
+## Extraction vs. your context window
 
-`detect-pdf --json` tells you `page_count` up front. A 200-page spec dumped via `pdf2md --raw` can be 80 KB+ of Markdown — flooding your own context, crowding out the actual task, and likely triggering a compaction that loses detail. Two ways to keep that out of your context:
+`detect-pdf --json` tells you `page_count` up front. A 200-page spec via `pdf2md --raw` can be 80 KB+ of Markdown; even a 20-page paper is several KB. Extracted text is raw material for the task, not the task itself — dumping it into your working memory crowds out the actual reasoning and invites a compaction that drops detail. The default move is to isolate extraction from your context.
 
-**Prefer a subagent.** When the user asks a specific question about a large PDF ("does this contract have a termination clause?", "summarize the methodology"), spawn a subagent (e.g. the `Task` tool with a `general` agent) to run the extraction in *its* context and return only the answer. Tell the subagent the file path and the question; let it call `pdf2md` / `detect-pdf` itself. The subagent's context absorbs the full document; yours receives a few sentences. This is the right move whenever the document is long and the user's need is narrow — isolate the bulk, pass back the distillate.
+**Default: let a subagent do the extraction.** Spawn a subagent (e.g. the `Task` tool with a `general` agent), hand it the file path and what the user needs, and let it run `pdf2md` / `detect-pdf` in *its* context. It returns only the result; the full document lives in the subagent's context, not yours. This holds whether the user's need is narrow ("does this contract have a termination clause?") or broad ("summarize this report") — any time the extracted text would consume more of your context than the final answer warrants. That is most of the time, so default to the subagent unless the document is small.
 
-**Fall back to `--select-pages`** when you can't spawn a subagent, or the user wants specific pages. `detect-pdf --analyze --json` flags `pages_with_tables` and `pages_with_columns` so you can target the pages that matter instead of pulling all of them:
+**Read small documents directly** when the whole thing fits comfortably — a 2-page memo the user wants in full is faster to extract inline than to round-trip through a subagent. The trigger for a subagent is not "large + specific question"; it is "the extraction will bury your working memory".
+
+**`--select-pages`** narrows the extraction itself — useful inside a subagent, or when you read directly and only some pages matter. `detect-pdf --analyze --json` flags `pages_with_tables` and `pages_with_columns` to aim it:
 
 ```bash
 pdf2md <file> --raw --select-pages 5,8-10     # only the pages that bear on the question
 ```
 
-The principle behind both: a PDF is a haystack, the user's question is the needle — don't load the haystack into your working memory when you can have a subagent search it, or scope the extraction to where the needle is.
+The unifying principle: a PDF is a haystack, the user's need is the needle — don't load the haystack into your working memory. Let a subagent do the digging, or scope the extraction to where the needle is.
 
 ## Constraints — important
 
