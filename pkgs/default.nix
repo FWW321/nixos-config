@@ -8,4 +8,5 @@ final: _prev: {
   mdbook-katex = final.callPackage ./mdbook-katex { };
   dcg = final.callPackage ./dcg { };
   jcode = final.callPackage ./jcode { };
+  pdf-inspector = final.callPackage ./pdf-inspector { };
 }

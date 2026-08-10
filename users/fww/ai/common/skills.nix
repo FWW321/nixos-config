@@ -29,6 +29,13 @@ in
     source = "${inputs.herdr}/skills/herdr";
     entryFile = "SKILL.md";
   };
+  # 本地 skill(仓库内,非 flake input): pdf-inspector CLI + SKILL.md
+  # package 绑 pkgs.pdf-inspector → pdf2md/detect-pdf 进 skill 上下文 PATH
+  "pdf-inspector" = {
+    source = ../skills/pdf-inspector;
+    entryFile = "SKILL.md";
+    package = pkgs.pdf-inspector;
+  };
 
   # 目录 skill(整个目录递归)
   "git-workflow" = {
