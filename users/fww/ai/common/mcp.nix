@@ -9,46 +9,46 @@
     };
   };
 
-  "zai-mcp-server" = {
-    local = {
-      command = "bunx";
-      args = [ "-y" "@z_ai/mcp-server" ];
-      env = {
-        Z_AI_API_KEY.secretFile = "/run/secrets/zhipu_api_key";
-        Z_AI_MODE = "ZHIPU";
-      };
-    };
-  };
+  # "zai-mcp-server" = {
+  #   local = {
+  #     command = "bunx";
+  #     args = [ "-y" "@z_ai/mcp-server" ];
+  #     env = {
+  #       Z_AI_API_KEY.secretFile = "/run/secrets/zhipu_api_key";
+  #       Z_AI_MODE = "ZHIPU";
+  #     };
+  #   };
+  # };
 
-  "web-search-prime" = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/web_search_prime/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # "web-search-prime" = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/web_search_prime/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
-  "web-reader" = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/web_reader/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # "web-reader" = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/web_reader/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
-  zread = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/zread/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # zread = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/zread/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
   nixos = {
     local = {

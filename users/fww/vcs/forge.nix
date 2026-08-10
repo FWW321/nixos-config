@@ -19,6 +19,7 @@ let
   ];
 
   forgeName = f: builtins.head (lib.splitString "." f.host);  # github.com → github
+  ghUser = (lib.findFirst (f: f.host == "github.com") { } forges).username or "";
 in
 {
   # ssh host 块(transport + 认证)→ git/jj 共用 ~/.ssh/config
@@ -44,4 +45,31 @@ in
       name = forgeName f;          # github / codeberg → git config section
       value.user = f.username;     # [github] user = ...  (ghub/magit forge 读,git 本身忽略)
     }) forges);
+
+  # gh CLI:GitHub 官方命令行(与 github MCP server 共用同一 forge 身份)
+  # 认证由下方 ghAuth activation 从 sops token 注入,无需 gh auth login
+  programs.gh = {
+    enable = true;
+    settings = {
+      git_protocol = "ssh";  # 与 forge.nix 的 https→ssh 重写一致
+      editor = "nvim";
+    };
+  };
+
+  # gh 认证:从 sops github_token 生成 ~/.config/gh/hosts.yml(幂等,每次部署刷新)
+  home.activation.ghAuth = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    TOKEN_FILE="/run/secrets/github_token"
+    if [ -f "$TOKEN_FILE" ]; then
+      mkdir -p "$HOME/.config/gh"
+      cat > "$HOME/.config/gh/hosts.yml" <<EOF
+github.com:
+    oauth_token: $(cat "$TOKEN_FILE")
+    user: ${ghUser}
+    git_protocol: ssh
+EOF
+      chmod 600 "$HOME/.config/gh/hosts.yml"
+    else
+      echo "WARNING: $TOKEN_FILE not found, gh auth skipped"
+    fi
+  '';
 }

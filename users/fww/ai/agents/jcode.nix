@@ -96,18 +96,15 @@ in
       local jq="${pkgs.jq}/bin/jq"
 
       # ── 收集 secret(activation 时读 /run/secrets)──
-      local gh_token="" zai_token=""
+      local gh_token=""
       [ -f "${common.mcp.github.local.env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile}" ] \
         && gh_token=$(cat "${common.mcp.github.local.env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile}" 2>/dev/null || true)
-      [ -f "${common.mcp."zai-mcp-server".local.env.Z_AI_API_KEY.secretFile}" ] \
-        && zai_token=$(cat "${common.mcp."zai-mcp-server".local.env.Z_AI_API_KEY.secretFile}" 2>/dev/null || true)
 
       "$jq" -n \
         --arg nixos_cmd "${common.mcp.nixos.local.command}" \
         --arg gh_cmd "${common.mcp.github.local.command}" \
         --argjson gh_args '${builtins.toJSON (common.mcp.github.local.args or [ ])}' \
         --arg gh_token "$gh_token" \
-        --arg zai_token "$zai_token" \
         '{
           mcpServers: {
             nixos: { command: $nixos_cmd },
@@ -115,11 +112,6 @@ in
               command: $gh_cmd,
               args: $gh_args,
               env: { GITHUB_PERSONAL_ACCESS_TOKEN: $gh_token }
-            } else {} end),
-            "zai-mcp-server": (if $zai_token != "" then {
-              command: "bunx",
-              args: ["-y","@z_ai/mcp-server"],
-              env: { Z_AI_API_KEY: $zai_token, Z_AI_MODE: "ZHIPU" }
             } else {} end)
           }
         }' > "$out"
