@@ -1,5 +1,5 @@
 # filepath: ~/nixos-config/modules/user/terminal.nix
-# 终端环境：Foot、Nushell、Herdr、现代化 CLI 工具
+# 终端环境：Foot、Brush、Herdr、现代化 CLI 工具
 {
   lib,
   pkgs,
@@ -16,7 +16,7 @@
     enable = true;
     server.enable = true;
     settings = {
-      main = { term = "xterm-256color"; shell = "nu"; pad = "12x12"; };
+      main = { term = "xterm-256color"; shell = lib.getExe pkgs.brush; pad = "12x12"; };
       mouse.hide-when-typing = "yes";
       csd.preferred = "none";
       url = { launch = "\${BROWSER:-zen-beta} \${url}"; osc8-underline = "url-mode"; };
@@ -24,23 +24,12 @@
     };
   };
 
-  # Nushell - 现代化 shell
-  programs.nushell = {
+  # Bash 配置(brush 兼容 bash,读 .bashrc 复用此配置:aliases/initExtra/各集成 hook)
+  programs.bash = {
     enable = true;
-    extraConfig = lib.mkMerge [
-      ''
-        $env.config.show_banner = false
-        $env.config.edit_mode = "vi"
-        $env.config.error_style = "fancy"
-        $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
-      ''
-      (lib.mkAfter ''
-        $env.config.completions.external.completer = {|spans|
-          do $carapace_completer $spans
-          | where { ($in.value? | default "") !~ "ERR" }
-        }
-      '')
-    ];
+    initExtra = ''
+      set -o vi
+    '';
     shellAliases = {
       vi = "nvim";
       vim = "nvim";
@@ -53,31 +42,35 @@
     };
   };
 
-  # Carapace - 跨 shell 智能补全
-  programs.carapace = {
-    enable = true;
-    enableNushellIntegration = true;
-    enableBashIntegration = true;
-  };
+  # brush: 启用 reedline 语法高亮(nixpkgs default features 构建不含 experimental,
+  # 运行时默认关闭,需 config.toml 显式开)
+  xdg.configFile."brush/config.toml".text = ''
+    [ui]
+    syntax-highlighting = true
+  '';
 
   # Starship prompt
   programs.starship = {
     enable = true;
-    enableNushellIntegration = true;
-    settings = { add_newline = false; format = "$all"; };
+    enableBashIntegration = true;
+    settings = {
+      add_newline = false;
+      format = "$all";
+      command_timeout = 2000;
+    };
   };
 
   # Zoxide - 智能 cd
   programs.zoxide = {
     enable = true;
-    enableNushellIntegration = true;
+    enableBashIntegration = true;
     options = [ "--cmd cd" ];
   };
 
   # Direnv - 自动加载环境
   programs.direnv = {
     enable = true;
-    enableNushellIntegration = true;
+    enableBashIntegration = true;
     nix-direnv.enable = true;
   };
 
@@ -87,7 +80,7 @@
   # Yazi - 现代文件管理器
   programs.yazi = {
     enable = true;
-    enableNushellIntegration = true;
+    enableBashIntegration = true;
     shellWrapperName = "y";
   };
 }

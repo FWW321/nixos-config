@@ -12,7 +12,7 @@
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "sops-keys" "kvm" ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
-    shell = pkgs.nushell;
+    shell = pkgs.brush;
   };
 
   # 共享数据目录
@@ -33,5 +33,5 @@
   security.polkit.enable = true;
 
   # 注册 shell 到 /etc/shells（pkexec 需要）
-  environment.shells = with pkgs; [ nushell bash ];
+  environment.shells = with pkgs; [ brush bash ];
 }

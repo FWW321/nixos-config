@@ -18,7 +18,7 @@
 # 跨域构建依赖不改变归属：如 Rust 借 c-cpp.nix 的 gcc 作 cc linker —— 各域工具都上 PATH，互相可用。
 #
 # ── shell 环境变量归属 ──
-# nushell extraEnv 现整体在 rust.nix：其每一行（openssl 定位 / cargo PATH / LD_LIBRARY_PATH）
+# bash initExtra 现整体在 rust.nix：其每一行（openssl 定位 / cargo PATH / LD_LIBRARY_PATH）
 # 都只服务 Rust 域（nodejs/bun 自带 openssl、zig 自含工具链、lean4/souffle 预编译均不需这些）。
 # LSP：lean 内置（lean --server）、rust-analyzer 随 rust-overlay 上 PATH；nvim/emacs/opencode 走 PATH 复用
 {

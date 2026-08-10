@@ -3,7 +3,7 @@
 # 用 HM 26.05+ 原生 programs.jujutsu module(settings attrset → 自动生成 config.toml)
 # jj 不读 git config,需独立配 user/editor;ssh 仍走 ~/.ssh/config 共用
 # delta:复用 git 侧 delta(delta 启动时读 git config [delta] 段渲染,样式自动一致)
-# 补全:已全局开 carapace + nushell 集成(terminal.nix),装上即自动有 jj 补全
+# 补全:brush 兼容 bash-completion,nixpkgs 工具自带补全,装上即自动有 jj 补全
 { common }:
 { ... }:
 {

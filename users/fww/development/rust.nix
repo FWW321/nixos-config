@@ -13,7 +13,7 @@
 #   核心 buildPackage 编译 crate，配合 buildDepsOnly → cargoArtifacts 做依赖分层缓存（改代码不重编依赖）
 #   与本文件分工：这里管【开发工具链】（cargo build/run/test 交互式），crane 管【出可部署 nix 包】
 # - cc linker（gcc）不在此：gcc 是 C/C++ 域编译器，见 c-cpp.nix；Rust 借之作 linker（跨域构建依赖）
-# - nushell extraEnv 整体在此：以下每行都只服务 Rust 域
+# - bash initExtra 整体在此：以下每行都只服务 Rust 域
 #   · openssl_*：openssl-sys crate 编译期定位（NixOS 不暴露 openssl）
 #   · LD_LIBRARY_PATH：cargo install 二进制 interpreter=nix glibc ld（不走 nix-ld），需此找 libssl.so.3
 #   · CARGO_NET_GIT_FETCH_WITH_CLI：git insteadOf https→ssh，libgit2 不读 ~/.ssh/config
@@ -51,15 +51,15 @@
     global-credential-providers = ["cargo:token-from-stdout cat /run/secrets/crates_token"]
   '';
 
-  programs.nushell.extraEnv = ''
-    $env.PATH = ($env.PATH | prepend $"($env.HOME)/.cargo/bin")
-    $env.OPENSSL_DIR = "${pkgs.openssl.out}"
-    $env.OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib"
-    $env.OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include"
-    $env.LIBRARY_PATH = "${pkgs.openssl.out}/lib"
+  programs.bash.initExtra = ''
+    export PATH="$HOME/.cargo/bin:$PATH"
+    export OPENSSL_DIR="${pkgs.openssl.out}"
+    export OPENSSL_LIB_DIR="${pkgs.openssl.out}/lib"
+    export OPENSSL_INCLUDE_DIR="${pkgs.openssl.dev}/include"
+    export LIBRARY_PATH="${pkgs.openssl.out}/lib"
     # cargo install 的二进制 interpreter 是 nix glibc ld（不走 nix-ld），需此变量找 libssl.so.3
-    $env.LD_LIBRARY_PATH = "${pkgs.openssl.out}/lib"
+    export LD_LIBRARY_PATH="${pkgs.openssl.out}/lib"
     # cargo 用 git CLI fetch（git insteadOf 把 https→ssh，libgit2 不读 ~/.ssh/config）
-    $env.CARGO_NET_GIT_FETCH_WITH_CLI = "true"
+    export CARGO_NET_GIT_FETCH_WITH_CLI=true
   '';
 }
