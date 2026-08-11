@@ -52,7 +52,6 @@
       wireshark-cli
       nh
       xwayland-satellite
-      nvtopPackages.nvidia
     ];
 
   programs.bash.enable = true;

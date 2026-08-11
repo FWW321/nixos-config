@@ -1,6 +1,10 @@
 # filepath: ~/nixos-config/hosts/FWW-Desktop/nvidia.nix
 # NVIDIA GPU 配置 (RTX 4070 Ti Super / Ada Lovelace)
-{ config, ... }:
+{
+  config,
+  pkgs,
+  ...
+}:
 
 {
   # 加载 nvidia 驱动
@@ -50,4 +54,7 @@
     PROTON_ENABLE_NVAPI = "1"; # 暴露 NVAPI 接口给游戏
     DXVK_NVAPIHACK = "0"; # 关闭 GPU 伪装，让真 NVAPI/DLSS 路径生效
   };
+
+  # NVIDIA 专用监控工具，仅在此主机装
+  home-manager.users.fww.home.packages = [ pkgs.nvtopPackages.nvidia ];
 }
