@@ -103,12 +103,6 @@ in
     }
   ];
 
-  # ── Plugins：opencode 专属 npm ──
-  programs.opencode.settings.plugin = [
-    "opencode-pty"
-    "opencode-handoff"
-  ];
-
   # ── Motion AI Kit:只下载到中立目录,不全局 link ──
   # motion-ai-kit 的 defaultEnabled=false,靠 agent skill add 项目级 symlink 到 .agents/skills/
   home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
