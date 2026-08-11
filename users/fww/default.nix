@@ -49,6 +49,9 @@
       curl
       btop
       ripgrep
+      dust
+      hyperfine
+      ouch
       wireshark-cli
       nh
       xwayland-satellite

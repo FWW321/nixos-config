@@ -6,7 +6,10 @@
   inputs,
   ...
 }:
-
+let
+  # fzf 文件/目录查找底座:复用 fd(尊重 .gitignore + 含隐藏文件)
+  fd = "${lib.getExe pkgs.fd} --hidden --follow --exclude .git";
+in
 {
   # Herdr - AI agent 终端复用器
   home.packages = [ inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default ];
@@ -16,7 +19,7 @@
     enable = true;
     server.enable = true;
     settings = {
-      main = { term = "xterm-256color"; shell = lib.getExe pkgs.brush; pad = "12x12"; };
+      main = { term = "foot"; shell = lib.getExe pkgs.brush; pad = "12x12"; };
       mouse.hide-when-typing = "yes";
       csd.preferred = "none";
       url = { launch = "\${BROWSER:-zen-beta} \${url}"; osc8-underline = "url-mode"; };
@@ -33,7 +36,11 @@
     shellAliases = {
       vi = "nvim";
       vim = "nvim";
-      ll = "ls -l";
+      # eza 替代 ls（见下方 programs.eza）
+      ls = "eza";
+      ll = "eza -lh --git";
+      la = "eza -lah --git";
+      lt = "eza --tree --level=2";
       cat = "bat";
       cls = "clear";
       # Emacs（连 daemon，-n 不阻塞终端；见 editors/emacs 的 services.emacs）
@@ -77,10 +84,48 @@
   # Bat - 更好的 cat
   programs.bat.enable = true;
 
+  # Eza - 现代化 ls（icons/git/表头/目录优先）
+  programs.eza = {
+    enable = true;
+    enableBashIntegration = true;
+    icons = "auto";
+    git = true;
+    extraOptions = [
+      "--group-directories-first"
+      "--header"
+      "--time-style=long-iso"
+    ];
+  };
+
   # Yazi - 现代文件管理器
   programs.yazi = {
     enable = true;
     enableBashIntegration = true;
     shellWrapperName = "y";
   };
+
+  # fzf - 模糊查找器(Ctrl-R 历史/Ctrl-T 文件/Alt-C 目录)
+  # 底座 fd(比 find 快),preview 复用 bat(文件)/eza(目录树)
+  programs.fzf = {
+    enable = true;
+    enableBashIntegration = true;
+    defaultCommand = "${fd} --type f";
+    defaultOptions = [
+      "--height=40%"
+      "--layout=reverse"
+      "--border"
+      "--info=inline"
+    ];
+    fileWidgetCommand = "${fd} --type f";
+    fileWidgetOptions = [
+      "--preview='${lib.getExe pkgs.bat} --color=always --style=numbers {}'"
+    ];
+    changeDirWidgetCommand = "${fd} --type d";
+    changeDirWidgetOptions = [
+      "--preview='${lib.getExe pkgs.eza} --tree --color=always --level=2 {}'"
+    ];
+  };
+
+  # jq - JSON 命令行处理器
+  programs.jq.enable = true;
 }

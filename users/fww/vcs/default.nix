@@ -18,6 +18,7 @@ in
   imports = [
     (import ./git.nix { inherit common; })
     (import ./jj.nix { inherit common; })
+    (import ./lazygit.nix { inherit common; })
     ./forge.nix                       # forge 访问层(数据驱动,不经 common)
   ];
 
