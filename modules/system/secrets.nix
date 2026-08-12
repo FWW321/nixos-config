@@ -15,6 +15,8 @@
       # hf_token.owner = "fww";
       # civitai_token.owner = "fww";
       motion_plus_token.owner = "fww";
+      exa_api_key.owner = "fww";
+      lxy_url = { };
     };
   };
 }

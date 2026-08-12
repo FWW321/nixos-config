@@ -60,8 +60,6 @@
     };
   };
 
-  sops.secrets.lxy_url = { };
-
   sops.templates."dae/config.dae" = {
     path = "/etc/dae/config.dae";
     mode = "0400";

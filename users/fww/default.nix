@@ -30,15 +30,8 @@
     ../../modules/user/terminal.nix
     ./development
     ./docs.nix
+    ./secrets.nix
   ];
-
-  # SOPS 密钥管理
-  sops = {
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    secrets.vcs_ssh_key.path = "${config.home.homeDirectory}/.ssh/vcs_key";
-    secrets.zhipu_api_key = { };
-  };
 
   # 系统工具
   home.packages =

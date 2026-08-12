@@ -169,4 +169,8 @@ in
   home.sessionVariables = skillEnv // {
     OPENCODE_ENABLE_EXA = "1";
   };
+
+  programs.bash.initExtra = ''
+    [ -f /run/secrets/exa_api_key ] && export EXA_API_KEY="$(cat /run/secrets/exa_api_key)"
+  '';
 }
