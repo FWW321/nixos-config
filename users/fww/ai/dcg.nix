@@ -22,8 +22,6 @@ in
       "database.sqlite",
       "database.redis",
       "database.mongodb",
-      "containers.docker",
-      "containers.compose",
       "platform.github",
       "system.permissions",
     ]
