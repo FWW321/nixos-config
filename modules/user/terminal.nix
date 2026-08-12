@@ -9,6 +9,8 @@
 let
   # fzf 文件/目录查找底座:复用 fd(尊重 .gitignore + 含隐藏文件)
   fd = "${lib.getExe pkgs.fd} --hidden --follow --exclude .git";
+  # eza 公共参数(brush 不递归展开 alias,各别名需自带完整 flags)
+  ezaOpts = "--icons=always --git --group-directories-first --header";
 in
 {
   # Herdr - AI agent 终端复用器
@@ -36,11 +38,11 @@ in
     shellAliases = {
       vi = "nvim";
       vim = "nvim";
-      # eza 替代 ls（见下方 programs.eza）
-      ls = "eza";
-      ll = "eza -lh --git";
-      la = "eza -lah --git";
-      lt = "eza --tree --level=2";
+      # eza 替代 ls（brush 不递归展开 alias,各别名自带 ezaOpts）
+      ls = "eza ${ezaOpts}";
+      ll = "eza ${ezaOpts} -lh";
+      la = "eza ${ezaOpts} -lah";
+      lt = "eza ${ezaOpts} --tree --level=2";
       cat = "bat";
       cls = "clear";
       # Emacs（连 daemon，-n 不阻塞终端；见 editors/emacs 的 services.emacs）
@@ -85,15 +87,16 @@ in
   programs.bat.enable = true;
 
   # Eza - 现代化 ls（icons/git/表头/目录优先）
+  # icons=always: 已装 JetBrainsMono Nerd Font(stylix),无需 auto 检测
+  # 不用 --time-style=long-iso: HM alias 会给带=的选项加引号,brush 不兼容
   programs.eza = {
     enable = true;
     enableBashIntegration = true;
-    icons = "auto";
+    icons = "always";
     git = true;
     extraOptions = [
       "--group-directories-first"
       "--header"
-      "--time-style=long-iso"
     ];
   };
 
@@ -116,12 +119,12 @@ in
       "--border"
       "--info=inline"
     ];
-    fileWidgetCommand = "${fd} --type f";
-    fileWidgetOptions = [
+    fileWidget.command = "${fd} --type f";
+    fileWidget.options = [
       "--preview='${lib.getExe pkgs.bat} --color=always --style=numbers {}'"
     ];
-    changeDirWidgetCommand = "${fd} --type d";
-    changeDirWidgetOptions = [
+    changeDirWidget.command = "${fd} --type d";
+    changeDirWidget.options = [
       "--preview='${lib.getExe pkgs.eza} --tree --color=always --level=2 {}'"
     ];
   };
