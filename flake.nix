@@ -80,7 +80,7 @@
     surreal-skills = { url = "github:24601/surreal-skills"; flake = false; };    # surrealdb
     git-workflow-skill = { url = "github:netresearch/git-workflow-skill"; flake = false; }; # git-workflow
     understand-anything = { url = "github:Egonex-AI/Understand-Anything"; flake = false; }; # understand-* (8)
-    matt-skills = { url = "github:mattpocock/skills"; flake = false; };          # grill/grilling/domain-modeling
+    matt-skills = { url = "github:mattpocock/skills"; flake = false; };          # grilling, writing-for-agents
     agent-browser-skill = { url = "github:vercel-labs/agent-browser"; flake = false; }; # agent-browser
     humanizer-zh = { url = "github:op7418/Humanizer-zh"; flake = false; };       # humanizer-zh
     makepad-skills = { url = "github:ZhangHanDong/makepad-skills"; flake = false; }; # makepad-* (14)

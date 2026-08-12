@@ -41,14 +41,11 @@ in
   "git-workflow" = {
     source = inputs.git-workflow-skill;
   };
-  "grill-with-docs" = {
-    source = "${inputs.matt-skills}/skills/engineering/grill-with-docs";
-  };
   "grilling" = {
     source = "${inputs.matt-skills}/skills/productivity/grilling";
   };
-  "domain-modeling" = {
-    source = "${inputs.matt-skills}/skills/engineering/domain-modeling";
+  "writing-for-agents" = {
+    source = "${inputs.matt-skills}/skills/productivity/writing-for-agents";
   };
 }
 // (lib.genAttrs understandDirs (dir: {
