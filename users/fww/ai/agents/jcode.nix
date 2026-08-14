@@ -34,8 +34,11 @@
 # ║  herdr/dcg.js)  ║   jcode 有自己的工具系统,plugin adapter 不兼容      ║
 # ╚═════════════════╩═════════════════════════════════════════════════════╝
 #
-# Provider(GLM):走 openai-compatible,programs.jcode.settings 声明式管理(pkgs/jcode/hm-module.nix)
-# API key 通过 env_file 机制:config.toml 写变量名,~/.config/jcode/openai-compatible.env 写值
+# Provider(GLM):命名 profile [providers.zhipu](v0.54+ 已入 failover 链,可作 default_provider)
+# context_window 是核心:上游静态表 glm-5* 只认 5.2=1M,glm-5.3 误落 200K 泛匹配 →
+# compaction 按 1/5 窗口提前压缩;命名 profile 的 per-model context_window 灌入
+# 全局缓存(issue #366/#421),优先级高于静态家族表,TUI 表/压缩预算/模型切换全生效
+# API key 仍走 env_file:config.toml 写变量名,activation 从 /run/secrets 读值落盘
 { config, pkgs, lib, inputs, ... }:
 
 let
@@ -57,20 +60,63 @@ let
 
   skillPkgs = lib.catAttrs "package" (lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills));
   skillEnv = lib.foldl' (acc: s: acc // (s.env or { })) { } (lib.attrValues selectedSkills);
+
+  # ── GLM coding plan 接入 jcode 的三个名字(全部由 profile 单点派生)──
+  # 全部为了规避内置 zai(Z.AI 国际版)的认领,任一撞名都会被劫持到 api.z.ai:
+  #  - profile 名:catalog.rs 别名表认领 "zhipu",命中即套用内置 zai,
+  #    命名 profile 被遮蔽 → 启动 not configured → 空仓回落 claude-opus-5
+  #  - key 变量:zai 凭据探测认领 ZHIPU_API_KEY(并从 zai.env 读 ZAI_API_KEY 兜底)
+  #  - env 文件:相对 app_config_dir() = ~/.config/jcode 解析,不是 ~/.jcode
+  glm = rec {
+    profile = "bigmodel"; # 对应域名 open.bigmodel.cn,无任何内置认领
+    keyEnv = "${lib.toUpper profile}_API_KEY";
+    envFile = "${profile}.env";
+  };
+
+  # ── jcode 命名 provider profile:从中立 providers.nix 全量派生 ──
+  # base_url/models/context_window/default_model 单一来源,与 opencode 同源永不漂移
+  # maxOutput 无处安放(jcode model config 仅 context_window 字段),输出上限交给服务端
+  glmProfile = {
+    type = "openai-compatible";
+    base_url = p.endpoints.openai;
+    api_key_env = glm.keyEnv;
+    env_file = glm.envFile;
+    default_model = p.defaultModel;
+    models = lib.mapAttrsToList (id: m: {
+      inherit id;
+      context_window = m.contextWindow;
+    }) p.models;
+  };
+
+  # ── jcode MCP:从中立 common.mcp 派生(仅 local stdio;remote 跳过 — issue #761)──
+  # enabled = defaultEnabled:项目级服务器注册但 enabled:false 不 spawn,项目 renderer 翻 true
+  # zai-mcp-server 显式排除:bunx 每次冷启动拉包,会话启动延迟不可接受
+  mcpExcluded = [ "zai-mcp-server" ];
+  mcpLocal = lib.filterAttrs (n: m: m ? local && !builtins.elem n mcpExcluded) common.mcp;
+  mcpTemplate = pkgs.writeText "jcode-mcp-template" (builtins.toJSON {
+    mcpServers = lib.mapAttrs (_: m: {
+      inherit (m.local) command;
+      args = m.local.args or [ ];
+      enabled = m.defaultEnabled or false;
+      # secret 占位 null,activation 时从 /run/secrets 读出内联
+      env = lib.mapAttrs (_: v: if v ? secretFile then null else v) (m.local.env or { });
+    }) mcpLocal;
+  });
+  mcpSecrets = lib.concatLists (lib.mapAttrsToList (name: m:
+    lib.mapAttrsToList (key: v: { inherit name key; file = toString v.secretFile; })
+      (lib.filterAttrs (_: v: v ? secretFile) (m.local.env or { }))
+  ) mcpLocal);
 in
 {
   # ── jcode 模块:二进制(wrapper 内置)+ config.toml 声明式 ──
   programs.jcode = {
     enable = true;
     settings = {
-      # ── Provider:用内置 openai-compatible 类型(在 failover 链里)──
-      # 不用自定义 [providers.xxx](不在 failover 链,发送时被忽略)
-      # 不用内置 zai(zai 硬编码 api.z.ai 国际域名,非 open.bigmodel.cn 国内 coding plan)
-      # endpoint/model/key 通过 openai-compatible.env 注入(见下方 activation 脚本)
       provider = {
-        default_provider = "openai-compatible";
+        default_provider = glm.profile;
         default_model = p.defaultModel;
       };
+      providers.${glm.profile} = glmProfile;
 
       # ── Embedding / 记忆系统 ──
       # 默认本地 ONNX(MiniLM-L6-v2,384 维,tract 纯 Rust CPU 推理),无需配置
@@ -84,80 +130,79 @@ in
   home.packages = skillPkgs;
 
   # ── Skills(静态 symlink → ~/.jcode/skills/) + 全局规则 ──
+  # 全局规则走 prompt-overlay.md:jcode 不读 ~/.jcode/AGENTS.md(它只认 ~/AGENTS.md
+  # 和 <项目>/AGENTS.md);在默认 system prompt 之上叠加指引的官方钩子是
+  # ~/.jcode/prompt-overlay.md(prompt.rs load_prompt_overlay_files_from_dir)
   home.file = lib.mkMerge [
     (lib.mergeAttrsList (lib.mapAttrsToList linkSkill selectedSkills))
-    { ".jcode/AGENTS.md".source = common.project.globalAgentsMd; }
+    { ".jcode/prompt-overlay.md".source = common.project.globalAgentsMd; }
   ];
 
   # ── 全局 MCP:~/.jcode/mcp.json ──
-  # jcode 的 env 不支持 {file:...} 引用,secret 需 activation 时读 /run/secrets 内联
-  # 仅 local stdio server;remote MCP 跳过(jcode issue #761 待合并 Streamable HTTP/SSE)
+  # jcode env 不支持 {file:...} 引用,secret 在 activation 时从 /run/secrets 读出内联;
+  # secret 文件缺失 → 该服务器 enabled=false(env 值置空),注册保留但跳过 spawn
   home.activation.generateJcodeMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     _gen_jcode_mcp() {
       mkdir -p "$HOME/.jcode"
       local out="$HOME/.jcode/mcp.json"
       local jq="${pkgs.jq}/bin/jq"
-
-      # ── 收集 secret(activation 时读 /run/secrets)──
-      local gh_token=""
-      [ -f "${common.mcp.github.local.env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile}" ] \
-        && gh_token=$(cat "${common.mcp.github.local.env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile}" 2>/dev/null || true)
-
-      "$jq" -n \
-        --arg nixos_cmd "${common.mcp.nixos.local.command}" \
-        --arg gh_cmd "${common.mcp.github.local.command}" \
-        --argjson gh_args '${builtins.toJSON (common.mcp.github.local.args or [ ])}' \
-        --arg gh_token "$gh_token" \
-        '{
-          mcpServers: {
-            nixos: { command: $nixos_cmd },
-            github: (if $gh_token != "" then {
-              command: $gh_cmd,
-              args: $gh_args,
-              env: { GITHUB_PERSONAL_ACCESS_TOKEN: $gh_token }
-            } else {} end)
-          }
-        }' > "$out"
+      cp "${mcpTemplate}" "$out"
+      ${lib.concatMapStringsSep "\n      " (s: ''
+        _sec_v=""
+        [ -f "${s.file}" ] && _sec_v=$(cat "${s.file}" 2>/dev/null || true)
+        if [ -n "$_sec_v" ]; then
+          "$jq" --arg n "${s.name}" --arg k "${s.key}" --arg v "$_sec_v" \
+            '.mcpServers[$n].env[$k] = $v' "$out" > "$out.tmp" && mv "$out.tmp" "$out"
+        else
+          "$jq" --arg n "${s.name}" --arg k "${s.key}" \
+            '.mcpServers[$n].enabled = false | .mcpServers[$n].env[$k] = ""' "$out" > "$out.tmp" && mv "$out.tmp" "$out"
+        fi
+      '') mcpSecrets}
     }
     _gen_jcode_mcp || echo "WARNING: jcode mcp.json 生成失败,跳过"
   '';
 
-  # ── Provider env: ~/.config/jcode/openai-compatible.env (chat) ──
+  # ── Provider key 落盘:~/.config/jcode/${glm.envFile} ──
+  # 目录依据与命名约束见上方 glm 注释;值从 /run/secrets 读出
   home.activation.generateJcodeProvider = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     _gen_jcode_provider() {
-      local chat_dir="${config.xdg.configHome}/jcode"
-      mkdir -p "$chat_dir"
+      local dir="${config.xdg.configHome}/jcode"
+      local out="$dir/${glm.envFile}"
+      mkdir -p "$dir"
 
       # Provider key(智谱 GLM coding plan)
-      local zhipu_key=""
+      local glm_key=""
       [ -f "${p.apiKey.secretFile}" ] \
-        && zhipu_key=$(cat "${p.apiKey.secretFile}" 2>/dev/null || true)
+        && glm_key=$(cat "${p.apiKey.secretFile}" 2>/dev/null || true)
 
       (umask 077; {
-        printf 'JCODE_OPENAI_COMPAT_API_BASE=${p.endpoints.openai}\n'
-        printf 'JCODE_OPENAI_COMPAT_DEFAULT_MODEL=${p.defaultModel}\n'
-        [ -n "$zhipu_key" ] && printf 'OPENAI_COMPAT_API_KEY=%s\n' "$zhipu_key"
-      } > "$chat_dir/openai-compatible.env")
-
-      # 清理旧格式 env 文件
-      rm -f "$chat_dir/zhipu.env" "$chat_dir/zai.env" "$HOME/.jcode/openai.env" 2>/dev/null || true
+        [ -n "$glm_key" ] && printf '${glm.keyEnv}=%s\n' "$glm_key"
+      } > "$out")
     }
     _gen_jcode_provider || echo "WARNING: jcode provider env 生成失败,跳过"
   '';
 
   # ── 项目级渲染器(被 agent sync 调用)──
   # 契约:$1 = manifest 路径, $2 = 项目根
-  # 读 manifest 的 mcp 列表,在项目根 .jcode/mcp.json 标记 shared:true
+  # jcode 项目文件整体覆盖同名全局条目(无深合并),孤立的 {shared:true} 会被
+  # merge 逻辑当非 stdio 条目丢弃 → 必须从全局 ~/.jcode/mcp.json 取完整定义,
+  # 连同 enabled:true 一起写入项目根 .jcode/mcp.json
+  # 注意:定义已内联 secret → .jcode/ 应加入项目 .gitignore
   xdg.configFile."ai/renderers/jcode.sh" = {
     source = pkgs.writeShellScript "jcode-render" ''
       MANIFEST="''${1:-$PWD/.agents/manifest.json}"
       ROOT="''${2:-$PWD}"
       CFG="$ROOT/.jcode/mcp.json"
+      GLOBAL="$HOME/.jcode/mcp.json"
+      [ -f "$GLOBAL" ] || { echo "[jcode-render] warning: no global mcp.json, skip" >&2; exit 0; }
+      [ -f "$CFG" ] || echo '{"mcpServers":{}}' > "$CFG"
       for name in $(jq -r '.mcp[]?' "$MANIFEST" 2>/dev/null); do
-        if [ -f "$CFG" ]; then
-          jq --arg n "$name" '.mcpServers[$n].shared = true' "$CFG" > tmp && mv tmp "$CFG"
+        def=$(jq --arg n "$name" '.mcpServers[$n] // empty' "$GLOBAL" 2>/dev/null)
+        if [ -n "$def" ]; then
+          jq --arg n "$name" --argjson d "$def" \
+            '.mcpServers[$n] = ($d + {enabled:true})' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
         else
-          echo '{"mcpServers":{}}' | jq --arg n "$name" '.mcpServers[$n].shared = true' > "$CFG"
+          echo "[jcode-render] warning: '$name' not in global mcp.json" >&2
         fi
       done
     '';
