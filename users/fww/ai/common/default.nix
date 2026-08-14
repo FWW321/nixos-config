@@ -9,7 +9,7 @@ let
     (lib.mapAttrs (_: m: m // { defaultEnabled = true; })
       (import ./mcp.nix { inherit pkgs; }))
     // (lib.mapAttrs (_: m: m // { defaultEnabled = false; })
-      (import ./mcp-project.nix { }));
+      (import ./mcp-project.nix { inherit lib config; }));
 
   skills =
     (lib.mapAttrs (_: s: s // { defaultEnabled = true; })

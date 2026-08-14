@@ -107,66 +107,10 @@ in
         '';
         executable = true;
       };
-      "ai/registry.json".source = common.project.registry;
-    }
-  ];
+       "ai/registry.json".source = common.project.registry;
+     }
+   ];
 
-  # ── Motion AI Kit:只下载到中立目录,不全局 link ──
-  # motion-ai-kit 的 defaultEnabled=false,靠 agent skill add 项目级 symlink 到 .agents/skills/
-  home.activation.installMotionAiKit = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    _install_motion_ai_kit() {
-    TOKEN_PATH="/run/secrets/motion_plus_token"
-    if [ ! -f "$TOKEN_PATH" ]; then
-      echo "WARNING: $TOKEN_PATH not found, skipping Motion AI Kit installation"
-      return 0
-    fi
-
-    TOKEN=$(cat "$TOKEN_PATH")
-    DATA_DIR="${config.xdg.dataHome}/motion-ai-kit/skills"
-    SCRIPT=$(${pkgs.curl}/bin/curl -sL --retry 3 --retry-delay 2 \
-      "https://api.motion.dev/registry/skills/motion-ai-kit?token=$TOKEN") || true
-
-    if [ -z "$SCRIPT" ]; then
-      echo "WARNING: motion-ai-kit 下载失败（网络/Token？），跳过本次安装"
-      return 0
-    fi
-
-    eval "$(echo "$SCRIPT" | grep -E '^SKILL_(COUNT|[0-9]+_(NAME|FILE_COUNT|FILE_[0-9]+_(PATH|B64)))=')"
-
-    # 1. 清理旧内容(中立目录 + opencode/skills 里旧的 symlink,迁移期兼容)
-    i=1
-    while [ "$i" -le "$SKILL_COUNT" ]; do
-      eval "skill_name=\$SKILL_''${i}_NAME"
-      rm -rf "$DATA_DIR/$skill_name"
-      rm -rf "${config.xdg.configHome}/opencode/skills/$skill_name"
-      i=$((i + 1))
-    done
-
-    # 2. 下载到中立目录(唯一一份真实内容,agent skill add 时 symlink 到 .agents/skills/)
-    mkdir -p "$DATA_DIR"
-    i=1
-    while [ "$i" -le "$SKILL_COUNT" ]; do
-      eval "skill_name=\$SKILL_''${i}_NAME"
-      eval "file_count=\$SKILL_''${i}_FILE_COUNT"
-      skill_dir="$DATA_DIR/$skill_name"
-
-      j=1
-      while [ "$j" -le "$file_count" ]; do
-        eval "rel_path=\$SKILL_''${i}_FILE_''${j}_PATH"
-        eval "file_data=\$SKILL_''${i}_FILE_''${j}_B64"
-        full_path="$skill_dir$rel_path"
-
-        mkdir -p "$(dirname "$full_path")"
-        printf '%s' "$file_data" | base64 -d > "$full_path"
-        j=$((j + 1))
-      done
-      i=$((i + 1))
-    done
-    }
-    # 函数内 return 合法；任何异常被 || 兜住，不波及整个激活
-    _install_motion_ai_kit || echo "WARNING: motion-ai-kit 安装异常，已跳过"
-    # 不再全局 symlink;motion 走 agent skill add 项目级 .agents/skills/
-  '';
 
   # ── 插件核心包 + skill 依赖包 ──
   # dcg 二进制 + 配置在 dcg.nix(agent 无关)

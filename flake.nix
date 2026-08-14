@@ -84,6 +84,9 @@
     agent-browser-skill = { url = "github:vercel-labs/agent-browser"; flake = false; }; # agent-browser
     humanizer-zh = { url = "github:op7418/Humanizer-zh"; flake = false; };       # humanizer-zh
     makepad-skills = { url = "github:ZhangHanDong/makepad-skills"; flake = false; }; # makepad-* (14)
+    # motion-ai-kit 走 ssh:motiondivision org 禁止 >366 天寿命的 fine-grained PAT
+    # 访问其 REST API(github: URL 依赖 api.github.com → 403),SSH 协议不受限
+    motion-ai-kit = { url = "git+ssh://git@github.com/motiondivision/ai-kit"; flake = false; }; # motion skill (→ skills-project.nix)
     # 工具/编辑器
     rtk = { url = "github:rtk-ai/rtk"; flake = false; };                         # rtk CLI (→ plugins.nix)
     multicursor-nvim = { url = "github:jake-stewart/multicursor.nvim"; flake = false; }; # nvim (→ editor/plugins.nix)

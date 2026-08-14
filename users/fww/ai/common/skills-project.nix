@@ -31,11 +31,11 @@ in
   source = "${inputs.makepad-skills}/skills/${dir}";
 }))
 // {
-  # 运行时下载 skill(motion-ai-kit):非 nix store,activation script 下到中立目录
-  "motion-ai-kit" = {
-    runtime = {
-      url = "https://api.motion.dev/registry/skills/motion-ai-kit";
-      tokenFile = "/run/secrets/motion_plus_token";
-    };
+  # Motion AI Kit skill(官方单 skill 结构,含 best-practices/codex/css-spring/
+  # performance-audit/transition-preview 五个子模块)
+  # 来源即官方仓库 plugins/motion/skills/,与 npx motion-ai 安装器所装内容同源;
+  # MCP 部分在 mcp-project.nix(motion/motion-plus 托管端点),此处只是静态指引
+  motion = {
+    source = "${inputs.motion-ai-kit}/plugins/motion/skills/motion";
   };
 }
