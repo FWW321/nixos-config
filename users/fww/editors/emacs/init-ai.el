@@ -2,7 +2,7 @@
 ;;; -*- lexical-binding: t; -*-
 ;; 供应商 = zhipu（镜像 users/fww/ai/common/providers.nix 的 zhipu 配置）
 ;;   endpoint（coding，OpenAI 兼容）: https://open.bigmodel.cn/api/coding/paas/v4
-;;   models: glm-5.2 / glm-5.1
+;;   models: glm-5.3 / glm-5.2
 ;;   api key 从 /run/secrets/zhipu_api_key 读（sops 管理；系统契约见 modules/system/secrets.nix）
 
 (require 'subr-x)                                  ; string-trim
@@ -23,6 +23,6 @@
                         (insert-file-contents "/run/secrets/zhipu_api_key")
                         (buffer-string)))
                    ""))                            ; secret 未就绪时返回空（gptel 报 auth 错，不崩 emacs）
-          :models '("glm-5.2" "glm-5.1"))
-        gptel-model "glm-5.2"                      ; 默认模型
+          :models '("glm-5.3" "glm-5.2"))
+        gptel-model "glm-5.3"                      ; 默认模型
         gptel-default-mode 'org-mode))             ; 聊天 buffer 用 org（折叠 / 编辑 / 分叉对话）

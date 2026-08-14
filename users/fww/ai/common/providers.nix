@@ -8,19 +8,19 @@
     };
     apiKey.secretFile = "/run/secrets/zhipu_api_key";
     models = {
+      "glm-5.3" = {
+        contextWindow = 1000000;
+        maxOutput = 131072;
+        supportsVision = false;
+      };
       "glm-5.2" = {
         contextWindow = 1000000;
         maxOutput = 131072;
         supportsVision = false;
       };
-      "glm-5.1" = {
-        contextWindow = 200000;
-        maxOutput = 131072;
-        supportsVision = false;
-      };
     };
-    defaultModel = "glm-5.2";
-    smallModel = "glm-5.1";
+    defaultModel = "glm-5.3";
+    smallModel = "glm-5.2";
   };
 
   # SiliconFlow(硅基流动):OpenAI 兼容平台,代金券抵扣

@@ -11,11 +11,8 @@ let
 
   p = common.providers.zhipu;
 
-  # opencode 内置 provider 名映射
-  modelMap = {
-    "glm-5.2" = "zhipuai-coding-plan/glm-5.2";
-    "glm-5.1" = "zhipuai-coding-plan/glm-5.1";
-  };
+  # opencode 内置 provider 名映射：model id → provider/id（自动从 providers 派生）
+  modelMap = lib.mapAttrs (id: _: "zhipuai-coding-plan/${id}") p.models;
 
   # ── MCP 格式转换：中立 → opencode ──
   toOpenCodeHeader = v:
@@ -36,6 +33,16 @@ let
         if v ? secretFile then "{file:${v.secretFile}}" else v
       ) (s.local.env or { });
     };
+
+  # ── 中立 model 能力 → opencode model 定义 ──
+  # opencode 内置 provider 未收录的新模型（如 glm-5.3）需在此显式声明 name + limit
+  toOpenCodeModel = id: m: {
+    name =
+      let parts = lib.splitString "-" id;
+      in lib.concatStringsSep " " ([ (lib.toUpper (lib.head parts)) ] ++ (lib.tail parts));
+    limit.context = m.contextWindow;
+    limit.output = m.maxOutput;
+  };
 
   # ── Skill 链接：entryFile 单文件 vs 目录递归 ──
   linkSkill = name: s:
@@ -59,6 +66,7 @@ in
       mcp = lib.mapAttrs toOpenCodeMcp common.mcp;
       provider."zhipuai-coding-plan" = {
         options.apiKey = "{file:${p.apiKey.secretFile}}";
+        models = lib.mapAttrs toOpenCodeModel p.models;
       };
     };
   };
