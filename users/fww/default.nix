@@ -28,6 +28,7 @@
     ./editors
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
+    ../../pkgs/jcode/hm-module.nix
     ./development
     ./docs.nix
     ./secrets.nix

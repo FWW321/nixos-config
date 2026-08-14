@@ -17,7 +17,7 @@
 }:
 
 let
-  version = "0.72.0";
+  version = "0.75.5";
   suffix =
     if stdenv.hostPlatform.isAarch64 then "linux-aarch64"
     else "linux-x86_64";
@@ -28,7 +28,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://github.com/1jehuang/jcode/releases/download/v${version}/jcode-${suffix}.tar.gz";
-    hash = "sha256-YPy/q2yS5j4y2Kf/dXtWlkebM43kVeTrFxgM/JJ3Q+0=";
+    hash = "sha256-HDrk3JsObqqYI4NZxEEQ49w0fJbXNpOag5NH6VqRRZ4=";
   };
 
   sourceRoot = ".";

@@ -34,30 +34,13 @@
 # ║  herdr/dcg.js)  ║   jcode 有自己的工具系统,plugin adapter 不兼容      ║
 # ╚═════════════════╩═════════════════════════════════════════════════════╝
 #
-# Provider(GLM):走 openai-compatible,config.toml 声明式管理(同 opencode 思路)
-# API key 通过 env_file 机制:config.toml 写变量名,~/.config/jcode/zhipu.env 写值
+# Provider(GLM):走 openai-compatible,programs.jcode.settings 声明式管理(pkgs/jcode/hm-module.nix)
+# API key 通过 env_file 机制:config.toml 写变量名,~/.config/jcode/openai-compatible.env 写值
 { config, pkgs, lib, inputs, ... }:
 
 let
   common = import ../common { inherit pkgs inputs lib config; };
   p = common.providers.zhipu;
-
-  # ── config.toml:用内置 openai-compatible 类型(在 failover 链里)──
-  # 不用自定义 [providers.xxx](不在 failover 链,发送时被忽略)
-  # 不用内置 zai(zai 硬编码 api.z.ai 国际域名,非 open.bigmodel.cn 国内 coding plan)
-  # endpoint/model/key 通过 openai-compatible.env 注入(见 activation 脚本)
-  configToml = ''
-    [provider]
-    default_provider = "openai-compatible"
-    default_model = "${p.defaultModel}"
-
-    # ── Embedding / 记忆系统 ──
-    # 本地 ONNX(MiniLM-L6-v2,384 维,tract 纯 Rust CPU 推理)
-    # 远程 embedding 需注入 OPENAI_API_KEY 到进程环境(jcode 多子系统硬编码检查)
-    # 副作用:model catalog sweeper 拿此 key 刷 api.openai.com → 401 噪音
-    # 且 memory sidecar 也依赖此变量判断 LLM 可达性,不设则记忆系统休眠
-    # 综合考量:本地 embedding 够用,不折腾
-  '';
 
   # ── 全局 skill:与 opencode 同选择逻辑 ──
   selectedSkills = lib.filterAttrs (_: s: (s.defaultEnabled or false) && !(s ? runtime))
@@ -76,14 +59,34 @@ let
   skillEnv = lib.foldl' (acc: s: acc // (s.env or { })) { } (lib.attrValues selectedSkills);
 in
 {
-  # ── jcode 二进制(含 --no-update + JCODE_NO_TELEMETRY wrapper)──
-  home.packages = [ pkgs.jcode ] ++ skillPkgs;
+  # ── jcode 模块:二进制(wrapper 内置)+ config.toml 声明式 ──
+  programs.jcode = {
+    enable = true;
+    settings = {
+      # ── Provider:用内置 openai-compatible 类型(在 failover 链里)──
+      # 不用自定义 [providers.xxx](不在 failover 链,发送时被忽略)
+      # 不用内置 zai(zai 硬编码 api.z.ai 国际域名,非 open.bigmodel.cn 国内 coding plan)
+      # endpoint/model/key 通过 openai-compatible.env 注入(见下方 activation 脚本)
+      provider = {
+        default_provider = "openai-compatible";
+        default_model = p.defaultModel;
+      };
 
-  # ── Skills(静态 symlink → ~/.jcode/skills/) + 全局规则 + Provider ──
+      # ── Embedding / 记忆系统 ──
+      # 默认本地 ONNX(MiniLM-L6-v2,384 维,tract 纯 Rust CPU 推理),无需配置
+      # 远程 embedding 需注入 OPENAI_API_KEY 到进程环境(jcode 多子系统硬编码检查):
+      # 副作用是 model catalog sweeper 拿此 key 刷 api.openai.com → 401 噪音,
+      # 且 memory sidecar 也依赖此变量判断 LLM 可达性。综合考量:本地够用,不折腾
+    };
+  };
+
+  # ── Skill 运行时依赖包(skills 自带 package 字段时;jcode 二进制由模块提供)──
+  home.packages = skillPkgs;
+
+  # ── Skills(静态 symlink → ~/.jcode/skills/) + 全局规则 ──
   home.file = lib.mkMerge [
     (lib.mergeAttrsList (lib.mapAttrsToList linkSkill selectedSkills))
     { ".jcode/AGENTS.md".source = common.project.globalAgentsMd; }
-    { ".jcode/config.toml".text = configToml; }
   ];
 
   # ── 全局 MCP:~/.jcode/mcp.json ──
