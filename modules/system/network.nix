@@ -244,4 +244,23 @@
     configFile = config.sops.templates."dae/config.dae".path;
     package = inputs.dae.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
   };
+
+  # 每天拉一次订阅：dae reload 会重新 fetch 订阅（写入 persist.d/），不断连、不卸 eBPF
+  systemd.services.dae-reload = {
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${config.services.dae.package}/bin/dae reload";
+    };
+  };
+
+  systemd.timers.dae-reload = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      RandomizedDelaySec = "10m"; # 避开整点，防止订阅端限流
+      # dae.service 开机启动时本就会拉一次订阅，这里的补跑实为冗余；
+      # 留作兜底：开机时网络未就绪导致拉取失败（回退 persist.d 旧缓存）时多一次重试
+      Persistent = true;
+    };
+  };
 }
