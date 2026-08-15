@@ -34,16 +34,6 @@ let
       ) (s.local.env or { });
     };
 
-  # ── 中立 model 能力 → opencode model 定义 ──
-  # opencode 内置 provider 未收录的新模型（如 glm-5.3）需在此显式声明 name + limit
-  toOpenCodeModel = id: m: {
-    name =
-      let parts = lib.splitString "-" id;
-      in lib.concatStringsSep " " ([ (lib.toUpper (lib.head parts)) ] ++ (lib.tail parts));
-    limit.context = m.contextWindow;
-    limit.output = m.maxOutput;
-  };
-
   # ── Skill 链接：entryFile 单文件 vs 目录递归 ──
   linkSkill = name: s:
     if s ? entryFile then
@@ -64,10 +54,8 @@ in
       lsp = true;
       snapshot = false;
       mcp = lib.mapAttrs toOpenCodeMcp common.mcp;
-      provider."zhipuai-coding-plan" = {
-        options.apiKey = "{file:${p.apiKey.secretFile}}";
-        models = lib.mapAttrs toOpenCodeModel p.models;
-      };
+      # glm-5.3/5.2 已收录 models.dev 目录,仅注入 apiKey,模型元数据用目录内置值
+      provider."zhipuai-coding-plan".options.apiKey = "{file:${p.apiKey.secretFile}}";
     };
   };
 
