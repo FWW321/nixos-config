@@ -3,21 +3,17 @@
 { config, pkgs, ... }:
 
 {
-  users.groups = {
-    shared = { };
-    sops-keys = { };
-  };
+  users.groups.shared = { };
 
   users.users.fww = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "sops-keys" "kvm" ];
+    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "kvm" ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
     shell = pkgs.brush;
   };
 
   # 共享数据目录
   systemd.tmpfiles.rules = [
-    "z /etc/ssh/ssh_host_ed25519_key 0640 root sops-keys - -"
     "d /data/public 2775 root shared - -"
     "d /data/public/games 2775 root shared - -"
     "d /data/public/games/steam 2775 root shared - -"

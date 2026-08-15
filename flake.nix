@@ -150,7 +150,6 @@
               backupFileExtension = "backup";
               extraSpecialArgs = { inherit inputs; };
               sharedModules = [
-                inputs.sops-nix.homeManagerModules.sops
                 inputs.open-design.homeManagerModules.default
               ];
               users.fww = import ./users/fww/default.nix;

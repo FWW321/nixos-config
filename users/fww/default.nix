@@ -31,7 +31,6 @@
     ../../pkgs/jcode/hm-module.nix
     ./development
     ./docs.nix
-    ./secrets.nix
   ];
 
   # 系统工具

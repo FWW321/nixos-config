@@ -1,5 +1,9 @@
+keys:
+  - &admin_fww age13facj3y8huxqe4pe2myutc0d30vc9nxd59td4uvrpl7stuh3hvass0e6ue
+  - &host_fww_desktop age1vqfxdk2c4adxxk0snr6uhy5q3lcznxuemken04d9thenmjpr7d6sgxd86g
 creation_rules:
   - path_regex: secrets\.yaml$
     key_groups:
       - age:
-          - age1vqfxdk2c4adxxk0snr6uhy5q3lcznxuemken04d9thenmjpr7d6sgxd86g
+          - *admin_fww
+          - *host_fww_desktop

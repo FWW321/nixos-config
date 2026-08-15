@@ -1,8 +1,8 @@
 # filepath: ~/nixos-config/users/fww/vcs/default.nix
 # 版本控制系统：Git + Jujutsu
-# 公共配置(common 变量 + 共享包 + delta + 签名公钥生成)集中在此
+# 公共配置(common 变量 + 共享包 + delta + 签名公钥)集中在此
 # git.nix/jj.nix 只保留各自特有的 settings,引用 common
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 let
   # ── 公共身份 + 偏好(所有 VCS 共享)──
   common = {
@@ -10,7 +10,7 @@ let
     email = "3223400498@qq.com";
     editor = "nvim";
     # SSH 签名公钥路径(forge 认证 + commit 签名同一把 key)
-    # ~/.ssh/vcs_key 是 sops 解密的私钥,对应 .pub 由下方 activation 从私钥导出
+    # 私钥由系统 sops 解密为 ~/.ssh/vcs_key,公钥见下方 home.file(非秘密,进仓库)
     signingKey = "~/.ssh/vcs_key.pub";
   };
 in
@@ -34,18 +34,8 @@ in
     enableGitIntegration = true;
   };
 
-  # ── SSH 签名公钥生成 ──
-  # sops 只解密私钥(~/.ssh/vcs_key),公钥需运行时从私钥导出,供 git/jj 签名验证
-  # 幂等:每次部署刷新;ssh-keygen 失败则不留空文件(tmp 清理)
-  home.activation.vcsSigningPubkey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    VCS_KEY="$HOME/.ssh/vcs_key"
-    if [ -f "$VCS_KEY" ]; then
-      tmp=$(mktemp)
-      if ${pkgs.openssh}/bin/ssh-keygen -y -f "$VCS_KEY" > "$tmp" 2>/dev/null; then
-        mv "$tmp" "$VCS_KEY.pub"
-      else
-        rm -f "$tmp"
-      fi
-    fi
-  '';
+  # ── SSH 签名/认证公钥(声明式) ──
+  # 私钥:系统 sops 解密为 ~/.ssh/vcs_key(symlink→/run/secrets,见 modules/system/secrets.nix)
+  # 公钥:非秘密,直接进仓库;换钥时更新 secrets.yaml 与 ./vcs_key.pub 两处
+  home.file.".ssh/vcs_key.pub".source = ./vcs_key.pub;
 }

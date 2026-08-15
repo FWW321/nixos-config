@@ -3,7 +3,6 @@
 {
   config,
   pkgs,
-  lib,
   inputs,
   ...
 }:
@@ -53,14 +52,8 @@
   };
 
   # nix.conf:声明式主体 + secret 片段 include 分离
-  # access-tokens 含 token(不能进 store),由 activation 单独写 access-tokens.conf
-  # nix.conf 主体声明式,将来可加非敏感设置不与 secret 冲突
+  # access-tokens.conf 由系统 sops 模板渲染(见 modules/system/secrets.nix),token 不经手 shell
   xdg.configFile."nix/nix.conf".text = ''
     include ${config.home.homeDirectory}/.config/nix/access-tokens.conf
-  '';
-
-  home.activation.nixAccessTokens = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    TOKEN=$(cat /run/secrets/github_token)
-    printf 'access-tokens = github.com=%s\n' "$TOKEN" > "$HOME/.config/nix/access-tokens.conf"
   '';
 }

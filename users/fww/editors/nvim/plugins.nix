@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/users/fww/editors/nvim/plugins.nix
 # 编辑增强、跳转、注释、Trouble、TODO、mini 系列
-{ config, pkgs, inputs, ... }:
+{ pkgs, inputs, ... }:
 {
 
   programs.nixvim.plugins = {
@@ -137,7 +137,7 @@
   };
 
   programs.nixvim.extraConfigLuaPre = ''
-    vim.env.ZHIPU_API_KEY = vim.fn.readfile("${config.sops.secrets.zhipu_api_key.path}")[1] or ""
+    vim.env.ZHIPU_API_KEY = vim.fn.readfile("/run/secrets/zhipu_api_key")[1] or ""
   '';
 
   programs.nixvim.extraPlugins = [
