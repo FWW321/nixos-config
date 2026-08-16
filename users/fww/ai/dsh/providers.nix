@@ -29,8 +29,9 @@ in
       models = lib.mapAttrsToList toDshModel p.models;
     };
 
-    # 默认模型选择(dsh-agent-default-model 命名空间段,schema 实测于源码)
-    settings."agent-default-model" = {
+    # 默认模型选择(typed;渲染进 agent-default-model 命名空间段,
+    # schema 实测于源码)
+    defaultModel = {
       provider = "zhipu-coding-plan";
       model = p.defaultModel;
     };
