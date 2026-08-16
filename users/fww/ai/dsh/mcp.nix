@@ -12,6 +12,17 @@ let
     v:
     if builtins.isString v then { secretFile = v; }
     else { inherit (v) secretFile; } // lib.optionalAttrs (v ? prefix) { inherit (v) prefix; };
+
+  # common 的 source 是 opencode 语义(整目录递归,可能指 skill 集合仓库根);
+  # dsh 需要目录内有 SKILL.md。探测:<source>/SKILL.md 直取,否则试
+  # skill 集合布局 <source>/skills/<名>/(git-workflow 等实测);
+  # 都不中保持原值交给 nixdsh validateSkills throw(报错可见原始路径)。
+  # entryFile(common)恒为 SKILL.md = 目录束语义,无须特判
+  skillSource = name: s:
+    let src = toString s.source; in
+    if builtins.pathExists "${src}/SKILL.md" then s.source
+    else if builtins.pathExists "${src}/skills/${name}/SKILL.md" then "${src}/skills/${name}"
+    else s.source;
 in
 {
   programs.dsh.mcpServers = lib.mapAttrs
@@ -30,7 +41,8 @@ in
     # jcode 只取 local(issue #761);dsh 两种 transport 都原生支持,全取
     (lib.filterAttrs (_: s: s.defaultEnabled) common.mcp);
 
-  programs.dsh.skills = lib.mapAttrs (_: s: { inherit (s) source; })
+  programs.dsh.skills = lib.mapAttrs
+    (name: s: { source = skillSource name s; })
     (lib.filterAttrs (_: s: s.defaultEnabled) common.skills);
 
   # skill 绑定的工具进 PATH(agent-browser/pdf-inspector 等)
