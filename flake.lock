@@ -615,11 +615,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1786901060,
-        "narHash": "sha256-Z5ZQ+SQchEQLAtmzdW7lHDBObIbcWyh6eM01QPQ1EJk=",
+        "lastModified": 1786901427,
+        "narHash": "sha256-7KAeK2za2kzKJmp4aCQVoRKrSmx7f4vrbNAIP/bWMT4=",
         "ref": "refs/heads/main",
-        "rev": "3f24e873958340035df581f418e07a8740d7674d",
-        "revCount": 32,
+        "rev": "21273a0240a82425dcca0cee1ea7487bff8b554c",
+        "revCount": 33,
         "type": "git",
         "url": "file:///home/fww/code/FWW321/nixdsh"
       },
