@@ -9,4 +9,5 @@ final: _prev: {
   dcg = final.callPackage ./dcg { };
   jcode = final.callPackage ./jcode { };
   pdf-inspector = final.callPackage ./pdf-inspector { };
+  # dsh/dshPlugins 已迁独立仓库 nixdsh(flake input overlay 提供 pkgs.dsh)
 }

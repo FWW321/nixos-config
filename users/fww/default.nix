@@ -29,6 +29,7 @@
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
     ../../pkgs/jcode/hm-module.nix
+    # dsh 模块经 flake.nix sharedModules 挂载(inputs.nixdsh.homeManagerModules.dsh)
     ./development
     ./docs.nix
   ];

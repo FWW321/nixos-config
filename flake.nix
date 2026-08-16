@@ -65,6 +65,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # ── AI agent 工具 ──
+    # dsh 打包 + nixvim 式声明配置(独立仓库;本地开发期用 path,发版后改 github:FWW321/nixdsh)
+    nixdsh = {
+      url = "git+file:///home/fww/code/FWW321/nixdsh";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     open-design = {
       url = "github:nexu-io/open-design";
       # nixpkgs 钉在 nodejs_24=24.18.1:24.19.0 有 RemoveEnvironmentCleanupHook 断言回归
@@ -98,6 +103,9 @@
   outputs =
     { nixpkgs, home-manager, ... }@inputs:
     {
+      # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
+      # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
+
       nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
@@ -106,6 +114,7 @@
           { nixpkgs.overlays = [
             inputs.rust-overlay.overlays.default
             (import ./pkgs/default.nix)
+            inputs.nixdsh.overlays.default
           ]; }
 
           # 外部模块
@@ -151,6 +160,7 @@
               extraSpecialArgs = { inherit inputs; };
               sharedModules = [
                 inputs.open-design.homeManagerModules.default
+                inputs.nixdsh.homeManagerModules.dsh
               ];
               users.fww = import ./users/fww/default.nix;
             };
