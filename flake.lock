@@ -615,11 +615,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1786891983,
-        "narHash": "sha256-si2ZWELWVfvXCTVatT7t8fKY7UGMHB+SMM0+BcvcYn4=",
+        "lastModified": 1786900580,
+        "narHash": "sha256-C6xZRFBXnDYZ22eUD71Sqz+tbR+haZh5K3Nw/EKXk50=",
         "ref": "refs/heads/main",
-        "rev": "38b90531d0de4502fe777ab8fbe09ba04ae51252",
-        "revCount": 17,
+        "rev": "2d895e1574929f4d0f59ea293257a6c274630f8f",
+        "revCount": 31,
         "type": "git",
         "url": "file:///home/fww/code/FWW321/nixdsh"
       },
@@ -974,7 +974,6 @@
         "noctalia-greeter": "noctalia-greeter",
         "open-design": "open-design",
         "proton-cachyos-nix": "proton-cachyos-nix",
-        "rtk": "rtk",
         "rust-overlay": "rust-overlay_2",
         "shadcn-ui": "shadcn-ui",
         "sops-nix": "sops-nix",
@@ -982,22 +981,6 @@
         "surreal-skills": "surreal-skills",
         "understand-anything": "understand-anything",
         "zen-browser": "zen-browser"
-      }
-    },
-    "rtk": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1786579646,
-        "narHash": "sha256-wu6IdA3L/qdHSfF/h8rKc0ujHRtxJ6+RGjd1IyiBs+E=",
-        "owner": "rtk-ai",
-        "repo": "rtk",
-        "rev": "6f0b0cad29bca345ecf05212c6d14d2276d964f0",
-        "type": "github"
-      },
-      "original": {
-        "owner": "rtk-ai",
-        "repo": "rtk",
-        "type": "github"
       }
     },
     "rust-overlay": {
