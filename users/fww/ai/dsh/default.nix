@@ -14,6 +14,7 @@
     ./providers.nix
     ./settings.nix
     ./plugins.nix
+    ./mcp.nix
   ];
   programs.dsh = {
     enable = true;
