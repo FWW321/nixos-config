@@ -26,6 +26,10 @@
       autoStart = true;
     };
 
+    # 只用 zhipu-coding-plan:禁掉 in-box 的 deepseek 官方路由
+    # (模型选择器不再显示;实测 cordis loader 行级 disabled 语义)
+    disabledPlugins = [ "llm-deepseek" ];
+
     # API key 等给常驻服务;sops 里尚无 deepseek secret,需要时:
     # environmentFiles = [ config.osConfig.sops.secrets.dsh-env.path ];
   };
