@@ -13,7 +13,7 @@
     inputs.nixdsh.homeManagerModules.dsh-status-rotator # per-plugin typed module(按需逐个 import)
     ./providers.nix
     ./settings.nix
-    ./profiles
+    ./plugins.nix
   ];
   programs.dsh = {
     enable = true;
