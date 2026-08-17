@@ -47,6 +47,7 @@
     # 已清)。liangshen:dsh-tui excludedPresets 黑名单,不接管不进 farm。
 
     # 默认 preset:全局 standard,所有 face 树回落它(tui 不再特化)
+    defaultPreset = "standard";
 
     # 新会话默认权限(宿主组合层行):全局 workspace-write,所有 face 一致
     permissionMode = "workspace-write";
