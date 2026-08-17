@@ -764,22 +764,6 @@
         "url": "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst"
       }
     },
-    "nixpkgs_6": {
-      "locked": {
-        "lastModified": 1785350989,
-        "narHash": "sha256-zXsp+22Ki1ubVleUXCvV087DcPfJIfFPOLOpDIMZ30U=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "624bdb74f414f1f8bf96a774f7db67a883c0ec1d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "624bdb74f414f1f8bf96a774f7db67a883c0ec1d",
-        "type": "github"
-      }
-    },
     "nixvim": {
       "inputs": {
         "flake-parts": "flake-parts_3",
@@ -868,14 +852,16 @@
         "dream2nix": "dream2nix",
         "flake-utils": "flake-utils",
         "home-manager": "home-manager_2",
-        "nixpkgs": "nixpkgs_6"
+        "nixpkgs": [
+          "nixpkgs"
+        ]
       },
       "locked": {
-        "lastModified": 1786712303,
-        "narHash": "sha256-Irdgn3Sr1yW3hVATC8I8sxrMJdSZvi9b5+OZH1EtgeI=",
+        "lastModified": 1786861188,
+        "narHash": "sha256-IYyOq52V0127B8JHfXeebz+DNtlsrn362O2LK/IYWZE=",
         "owner": "nexu-io",
         "repo": "open-design",
-        "rev": "30fc648f6f615fde5b162cbee1177f94ea2dba6c",
+        "rev": "62483a1947b5c5e7b3fffe24b52b685d93ad9209",
         "type": "github"
       },
       "original": {

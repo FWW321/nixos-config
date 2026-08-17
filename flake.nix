@@ -72,10 +72,7 @@
     };
     open-design = {
       url = "github:nexu-io/open-design";
-      # nixpkgs 钉在 nodejs_24=24.18.1:24.19.0 有 RemoveEnvironmentCleanupHook 断言回归
-      # (nodejs/node#63642 × better-sqlite3/node-pty → daemon 随机 ABRT, open-design#6462)
-      # 624bdb7 = 24.18.1 入库提交;官方修复落地后移除此钉即可
-      inputs.nixpkgs.url = "github:NixOS/nixpkgs/624bdb74f414f1f8bf96a774f7db67a883c0ec1d";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     herdr = {
       url = "github:ogulcancelik/herdr";
