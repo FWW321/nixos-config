@@ -12,7 +12,11 @@
     # ── 交互面(face/registry 全自动)──
     web-app.enable = true;   # → face "web"(上游 dsh web 原生子命令)
     headless.enable = true;  # → face "headless"(in-box 表推导)
-    dsh-tui.enable = true;   # → face "tui"(registry 键名反查 + face= 元数据,零 source)
+    dsh-tui = {
+      enable = true;                       # → face "tui"(registry 键名反查 + face= 元数据,零 source)
+      excludedPresets = [ "liangshen" ];   # 接管黑名单:不进 farm 不重放;上游播种照旧(UI 仍可选),默认不再指向它
+      # defaultPreset/permissionMode 不设 → 回落全局(standard / workspace-write,见 search.nix)
+    };
   };
 
   # typed 短路径模块(dsh-status-rotator)的声明面

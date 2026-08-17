@@ -27,8 +27,11 @@ in
   programs.dsh = {
     # 手声明路由:zhipu coding plan 的 anthropic 兼容端点(dsh 走
     # anthropic-messages 线协议,同 Claude Code;模型元数据不进 Nix 之外的
-    # 任何 catalog —— common/providers.nix 是唯一数据源)
-    providers."zhipu-coding-plan" = {
+    # 任何 catalog —— common/providers.nix 是唯一数据源)。
+    # id 是本地路由键(zai-ai-cn),与上游 pi-ai 内置的 zai-coding-cn
+    # (coding paas 端点,不同协议)无关;改名后 settings.yaml 旧键
+    # zhipu-coding-plan 会残留(yq merge 只覆盖不删),须一次性手清
+    providers."zai-ai-cn" = {
       apiKeyEnv = "ZHIPU_API_KEY";
       secretFile = p.apiKey.secretFile;  # 声明内 env 桥,与消费者同处一行
       api = "anthropic-messages";
@@ -39,7 +42,7 @@ in
     # 默认模型选择(typed;渲染进 agent-default-model 命名空间段,
     # schema 实测于源码)
     defaultModel = {
-      provider = "zhipu-coding-plan";
+      provider = "zai-ai-cn";
       model = p.defaultModel;
     };
   };

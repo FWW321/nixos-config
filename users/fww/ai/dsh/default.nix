@@ -13,6 +13,7 @@
     inputs.nixdsh.homeManagerModules.dsh-status-rotator # per-plugin typed module(按需逐个 import)
     ./providers.nix
     ./settings.nix
+    ./search.nix
     ./plugins.nix
     ./mcp.nix
   ];
@@ -27,10 +28,8 @@
       autoStart = true;
     };
 
-    # 只用 zhipu-coding-plan:关掉 in-box 的 deepseek 官方路由
-    # (模型选择器不再显示;行级 disabled 是 cordis loader 原生语义,可反向
-    # 启用默认关闭的条目,见 inBoxPlugins 选项文档)
-    inBoxPlugins."llm-deepseek".enable = false;
+    # 只用 zai-ai-cn(手声明 anthropic 路由):llmDeepseek 默认 null(禁,
+    # 模型选择器不显示 deepseek 死条目)已是此语义;需要时 llmDeepseek = {} 显式启用
 
     # API key 等给常驻服务;sops 里尚无 deepseek secret,需要时:
     # environmentFiles = [ config.osConfig.sops.secrets.dsh-env.path ];

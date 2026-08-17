@@ -44,14 +44,11 @@
 
     # preset:roster 接管(nixdsh README「roster 接管」节)—— farm 全量
     # 重放,shipped standard 本体即带 fetch:true,无需换名 fork(fww 化石
-    # 已清)。liangshen:零声明 —— dsh-tui enabled 即自动发现接管进 farm。
+    # 已清)。liangshen:dsh-tui excludedPresets 黑名单,不接管不进 farm。
 
-    # 默认 preset(per-face + 全局兜底):全局 standard;web 树回落它;
-    # tui 树显式 liangshen(见 plugins.nix 的 dsh-tui.defaultPreset)
-    defaultPreset = "standard";
+    # 默认 preset:全局 standard,所有 face 树回落它(tui 不再特化)
 
-    # 新会话默认权限(宿主组合层行,per-face 物理成立):全局 workspace-write;
-    # tui 面交互在,read-only 兜住误操作(见 plugins.nix 的 per-face 值)
+    # 新会话默认权限(宿主组合层行):全局 workspace-write,所有 face 一致
     permissionMode = "workspace-write";
   };
 }
