@@ -9,7 +9,7 @@
 # exa 备案待命(声明未选中 = 合法,切后端改一个字符串)。
 # 凭据:secretFile 声明内桥 —— wrapper 现读文件 export ZHIPU_API_KEY
 #   (文件名大写约定;search/fetch/providers 三处声明同 env 同文件去重)。
-{ ... }:
+{ pkgs, inputs, ... }:
 
 {
   programs.dsh = {
@@ -41,5 +41,17 @@
         secretFile = "/run/secrets/zhipu_api_key"; # 同 env 同文件,与 search 去重
       };
     };
+
+    # preset:roster 接管(nixdsh README「roster 接管」节)—— farm 全量
+    # 重放,shipped standard 本体即带 fetch:true,无需换名 fork(fww 化石
+    # 已清)。liangshen:零声明 —— dsh-tui enabled 即自动发现接管进 farm。
+
+    # 默认 preset(per-face + 全局兜底):全局 standard;web 树回落它;
+    # tui 树显式 liangshen(见 plugins.nix 的 dsh-tui.defaultPreset)
+    defaultPreset = "standard";
+
+    # 新会话默认权限(宿主组合层行,per-face 物理成立):全局 workspace-write;
+    # tui 面交互在,read-only 兜住误操作(见 plugins.nix 的 per-face 值)
+    permissionMode = "workspace-write";
   };
 }
