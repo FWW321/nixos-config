@@ -1307,11 +1307,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787183220,
-        "narHash": "sha256-RBFmRyoWIa1oOFiY/Fo5g9ibfy54BO26IQigBDydo3M=",
+        "lastModified": 1787183674,
+        "narHash": "sha256-ECVp8CiwguZswvdj/9LNFzQhS8+Qr+u3HUSP8ZtqPXE=",
         "owner": "FWW321",
         "repo": "zcode-nix",
-        "rev": "e84794a968fee30496613932c1de33d241aa85cf",
+        "rev": "5897e53e8559caa9d0837daef8d58fd426f318cf",
         "type": "github"
       },
       "original": {
