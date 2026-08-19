@@ -23,6 +23,7 @@ in
       # codeberg_token.owner = "fww";  # 备用,暂未接消费者
       crates_token.owner = "fww";
       zhipu_api_key.owner = "fww";
+      minimax_api_key.owner = "fww";
       siliconflow_api_key.owner = "fww";
       context7_key.owner = "fww";
       # hf_token.owner = "fww";
@@ -49,6 +50,15 @@ in
               oauth_token: ${config.sops.placeholder.github_token}
               user: ${ghUser}
               git_protocol: ssh
+        '';
+      };
+      # Open Design daemon 的媒体调度器凭证（systemd EnvironmentFile 格式）。
+      # OD 不经手 LLM key，但内置媒体 provider 需要；MiniMax 订阅 key 与
+      # agents 侧 /run/secrets/minimax_api_key 同源，单一 sops 条目双消费。
+      open-design-env = {
+        owner = "fww";
+        content = ''
+          OD_MINIMAX_API_KEY=${config.sops.placeholder.minimax_api_key}
         '';
       };
       # nix 二进制缓存的 GitHub access token（nix.conf include 此文件；替代原 HM activation）

@@ -201,7 +201,10 @@
               domain(geosite:tencent) -> direct
               domain(geosite:category-ai-cn) -> direct
               domain(geosite:category-bank-cn, geosite:category-finance) -> direct
-      
+
+              # linux.do 走美国（需在 geosite:cn 直连规则之前，避免被收录后命中直连）
+              domain(suffix: linux.do) -> us
+
               domain(geosite:cn) -> direct
               dip(geoip:cn) -> direct
 

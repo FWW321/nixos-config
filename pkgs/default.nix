@@ -6,8 +6,12 @@
 final: _prev: {
   mdbook-svgbob = final.callPackage ./mdbook-svgbob { };
   mdbook-katex = final.callPackage ./mdbook-katex { };
-  dcg = final.callPackage ./dcg { };
-  jcode = final.callPackage ./jcode { };
+  opencode2 = final.callPackage ./opencode2 { };
   pdf-inspector = final.callPackage ./pdf-inspector { };
+  # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见 mmx-cli/default.nix 头注释)
+  mmx-cli = final.callPackage ./mmx-cli { };
   # dsh/dshPlugins 已迁独立仓库 nixdsh(flake input overlay 提供 pkgs.dsh)
+  # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见 pkgs/chatgpt/package.nix 头注释
+  # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
+  chatgpt = final.callPackage ./chatgpt { codexPackage = final.codex; };
 }

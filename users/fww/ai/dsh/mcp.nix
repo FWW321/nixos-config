@@ -1,5 +1,5 @@
 # filepath: ~/nixos-config/users/fww/ai/dsh/mcp.nix
-# dsh MCP + skills:从中立 common 层派生(同 opencode/jcode 的 adapter 模式)
+# dsh MCP + skills:从中立 common 层派生(同 opencode 的 adapter 模式)
 # 密钥:secretFile 形态 → nixdsh 占位符 + wrapper 启动期注入(store 工件零密钥)
 { config, pkgs, lib, inputs, ... }:
 
@@ -38,7 +38,7 @@ in
           if v ? secretFile then { inherit (v) secretFile; } else v
         ) (s.local.env or { });
       })
-    # jcode 只取 local(issue #761);dsh 两种 transport 都原生支持,全取
+    # dsh 两种 transport 都原生支持,全取
     (lib.filterAttrs (_: s: s.defaultEnabled) common.mcp);
 
   programs.dsh.skills = lib.mapAttrs

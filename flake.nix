@@ -65,9 +65,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # ── AI agent 工具 ──
-    # dsh 打包 + nixvim 式声明配置(独立仓库;本地开发期用 path,发版后改 github:FWW321/nixdsh)
+    # dsh 打包 + nixvim 式声明配置(独立仓库)
     nixdsh = {
-      url = "git+file:///home/fww/code/FWW321/nixdsh";
+      url = "github:FWW321/nixdsh";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     open-design = {
@@ -93,7 +93,6 @@
     # 访问其 REST API(github: URL 依赖 api.github.com → 403),SSH 协议不受限
     motion-ai-kit = { url = "git+ssh://git@github.com/motiondivision/ai-kit"; flake = false; }; # motion skill (→ skills-project.nix)
     # 工具/编辑器
-    rtk = { url = "github:rtk-ai/rtk"; flake = false; };                         # rtk CLI (→ plugins.nix)
     multicursor-nvim = { url = "github:jake-stewart/multicursor.nvim"; flake = false; }; # nvim (→ editor/plugins.nix)
   };
 

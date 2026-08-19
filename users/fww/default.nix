@@ -28,7 +28,6 @@
     ./editors
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
-    ../../pkgs/jcode/hm-module.nix
     # dsh 模块经 flake.nix sharedModules 挂载(inputs.nixdsh.homeManagerModules.dsh)
     ./development
     ./docs.nix
@@ -49,6 +48,8 @@
       wireshark-cli
       nh
       xwayland-satellite
+      # MiniMax Token Plan CLI(终端直接可用;opencode skill 侧见 ai/common/skills.nix)
+      mmx-cli
     ];
 
   programs.bash.enable = true;

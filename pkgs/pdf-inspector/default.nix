@@ -7,7 +7,6 @@
 # opencode skill (users/fww/ai/skills/pdf-inspector) 经 skills.nix 的 package 字段绑定此包
 #
 # 无 MSRV 约束 (rust_version: null, edition 2021),用 nixpkgs 默认 stable rustPlatform
-# 不像 dcg 需要 makeRustPlatform 注入特定 nightly
 { lib, rustPlatform, fetchCrate }:
 
 rustPlatform.buildRustPackage rec {
