@@ -28,6 +28,8 @@
     ./editors
     ../../modules/user/desktop
     ../../modules/user/terminal.nix
+    # programs.zcode 通用模块(机制层);数据适配器在 ./ai/agents/zcode/
+    ../../modules/user/zcode.nix
     # dsh 模块经 flake.nix sharedModules 挂载(inputs.nixdsh.homeManagerModules.dsh)
     ./development
     ./docs.nix

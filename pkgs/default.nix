@@ -14,4 +14,6 @@ final: _prev: {
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见 pkgs/chatgpt/package.nix 头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
   chatgpt = final.callPackage ./chatgpt { codexPackage = final.codex; };
+  # ZCode(智谱 GLM 官方 ADE):.deb 解包 + autoPatchelf,见 pkgs/zcode/default.nix 头注释
+  zcode = final.callPackage ./zcode { };
 }
