@@ -60,11 +60,32 @@ in
     source = ../skills/song-lyrics;
     entryFile = "SKILL.md";
   };
+  # 本地 skill: Nix 判断层(工作流约束/防坑),vendored 自 wimpysworld/nix-config(2026-08-19)
+  # 适配:mcp-nixos v3 统一接口(nix/nix_versions);补 devenv 优先约束(与全局 AGENTS.md 一致)
+  # 与 nixpkgs 分工:nix = 判断/约束层,nixpkgs = 打包 API 参考;包名/选项查证走 mcp.nix 的 nixos
+  "nix" = {
+    source = ../skills/nix;
+    entryFile = "SKILL.md";
+  };
+  # 本地 skill: nixpkgs 打包参考(callPackage/builders/fetchers/overrides/overlays),
+  # vendored 自 Jylhis/claude-marketplace plugins/nix-dev(2026-08-19,属性名均为新式
+  # build-system/dependencies/hash 无 legacy 痕迹)
+  # 适配:删 OpenCode/codex 均不识别的 frontmatter user-invocable 字段
+  "nixpkgs" = {
+    source = ../skills/nixpkgs;
+    entryFile = "SKILL.md";
+  };
+  # 目录 skill: NixOS 系统运维(rebuild/generation/装机/disko/LUKS/impermanence/监控/反模式),
+  # vendored 自 michalzubkowicz/nixos-management-skill nixos-managing/(2026-08-19,9 文件,
+  # SKILL.md 决策表索引 + 8 专题)。适配:mcp-nixos 改为直接用(本环境常驻)
+  # 与 nix/nixpkgs 分工:本条 = 系统运维,nix = 判断/约束层,nixpkgs = 打包参考
+  "nixos-managing" = {
+    source = ../skills/nixos-managing;
+  };
 
   # 目录 skill(整个目录递归)
-  "git-workflow" = {
-    source = inputs.git-workflow-skill;
-  };
+  # (git-workflow 已移除 2026-08-19:上游无 frontmatter codex 拒载,内容与
+  #  git-workflow skill 生态重叠度低,不再维护)
   "grilling" = {
     source = "${inputs.matt-skills}/skills/productivity/grilling";
   };
