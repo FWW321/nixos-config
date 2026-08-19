@@ -74,9 +74,13 @@
               log_level: info
               allow_insecure: false
               auto_config_kernel_parameter: true
-              tcp_check_url: 'http://cp.cloudflare.com,1.1.1.1,2606:4700:4700::1111'
-              tcp_check_http_method: HEAD
-              udp_check_dns: 'dns.google:53,8.8.8.8,2001:4860:4860::8888'
+              # dae 给自身 UDP 打 mark（默认 0x100）防自劫持回环；显式写 0 消除每次
+              # 启动/reload 的 "so_mark_from_dae is unset" WARN，行为不变（官方示例同款）
+              so_mark_from_dae: 0
+              # 域名形式的 DNS 上游（alidns）需先解析；显式声明 bootstrap，免依赖
+              # 内置默认（119.29.29.29→223.5.5.5）。国内域名国内解析，明文无污染风险
+              bootstrap_resolver: '223.5.5.5:53'
+              # tcp_check_url / tcp_check_http_method / udp_check_dns 用内置默认值，不显式写
               check_interval: 10m
               check_tolerance: 50ms
             }
@@ -84,11 +88,23 @@
             dns {
               upstream {
                 alidns: 'udp://dns.alidns.com:53'
-                googledns: 'tcp+udp://dns.google:53'
+                # 明文 53 出境会被 GFW 注入假答案（曾把 chatgpt.com 解析到 Twitter/Meta
+                # 段的垃圾 IP，全靠 dial_mode:domain 兜底才没全断）。改 DoH 且直接写 IP：
+                # 免 bootstrap_resolver；配合 routing 里 dip(8.8.8.8, 8.8.4.4) -> proxy
+                # 让 DNS 查询走代理隧道，同时避开明文注入和 DoH 直连封锁（已实测连通+证书 OK）
+                googledns: 'https://8.8.8.8/dns-query'
               }
               routing {
                 request {
                   qname(geosite:category-ads-all) -> reject
+                  # 禁 ECH（官方 dns.md 现行示例）：HTTPS RR 携带 ECHConfig 会让浏览器加密
+                  # ClientHello → dae 嗅探不到 SNI → dial_mode:domain 退化为按 IP 拨号、
+                  # domain 分流全部失效（AI 域名会掉进 fallback:proxy 飘 IP）。拒答后客户端
+                  # 回落明文 SNI，嗅探和分流保住
+                  qtype(https) -> reject
+                  # AI 域名拒 AAAA：dae 对 tcp4/tcp6 分栈选节点，双栈会话 = 同时两个
+                  # 出口 IP，触发 OpenAI/Anthropic 风控掐长连接。只留 A → 单栈单出口
+                  qtype(28) && qname(geosite:openai, geosite:anthropic, suffix: claude.ai) -> reject
                   qname(geosite:cn) -> alidns
                   fallback: googledns
                 }
@@ -159,9 +175,13 @@
               }
               # AI 防封专用组：固定日本节点（policy:min 锁到延迟最低那一个，节点失效才切）
               # 不能复用 jp 组（min_moving_avg 会飘 IP → 触发 OpenAI/Anthropic 风控首信号）
+              # check_tolerance 组级覆盖全局 50ms：容差太小导致 24h 内 codex 飘过 5 个
+              # 节点（日本高速01-05 都被选中过）。250ms = 当前节点劣化超 250ms 才切换，
+              # 健康时锁死单节点，真故障仍会切换
               ai {
                 filter: subtag(lxy) && name(keyword: '日本', keyword: 'JP')
                 policy: min
+                check_tolerance: 250ms
               }
               de {
                 filter: subtag(lxy) && name(keyword: '德国', keyword: 'DE')
@@ -179,9 +199,19 @@
       
             routing {
               dport(22) -> direct
-              pname(NetworkManager, systemd-resolved) -> must_direct
+              # 只放行 NM 且用普通 direct：must_direct 会连 DNS 一起豁免劫持
+              # （dae 文档：direct 仍劫持 DNS 走 dns 段分流，must_direct 不劫持）。
+              # systemd-resolved 必须留在劫持范围内，否则本机 DNS 明文直发路由器，
+              # dns 段的 DoH/广告 reject/AAAA reject 全部失效（GFW 污染就是这么漏进来的）
+              pname(NetworkManager) -> direct
               dip(224.0.0.0/3, 'ff00::/8') -> direct
               dip(geoip:private) -> direct
+
+              # 禁 QUIC/h3（官方示例规则，默认不开）：强制浏览器回落 TCP+明文 SNI，
+              # 嗅探/分流更稳、省 CPU/内存；代价是 YouTube 等失去 h3。当前选择保留 h3
+              # 速度——SNI 嗅探已有 dns 段 qtype(https) -> reject（禁 ECH）保障；
+              # 若日后分流出现嗅探失败（连接走 fallback:proxy 飘 IP），取消下一行注释
+              # l4proto(udp) && dport(443) -> block
 
               domain(geosite:category-ads-all) -> block
       
@@ -205,11 +235,16 @@
               # linux.do 走美国（需在 geosite:cn 直连规则之前，避免被收录后命中直连）
               domain(suffix: linux.do) -> us
 
-              domain(geosite:cn) -> direct
-              dip(geoip:cn) -> direct
+              # dae 自身 DoH 上游（8.8.8.8/8.8.4.4）走代理，见 dns.upstream 注释
+              dip(8.8.8.8, 8.8.4.4) -> proxy
 
+              # AI 规则必须排在 geosite:cn / geoip:cn 直连之前：DNS 污染会把 openai 域名
+              # 解析到垃圾 IP，若某个垃圾 IP 恰好落国内段，会被 dip(geoip:cn) 抢先直连假 IP
               domain(geosite:anthropic, suffix: claude.ai) -> ai
               domain(geosite:openai) -> ai
+
+              domain(geosite:cn) -> direct
+              dip(geoip:cn) -> direct
       
               domain(geosite:netflix) -> jp
               domain(geosite:spotify) -> jp
