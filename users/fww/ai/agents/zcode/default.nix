@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/zcode/default.nix
 # zcode 适配器:common 中立层 → programs.zcode 选项(纯数据,零机制)
-# 机制见 modules/user/zcode.nix;本文件只做词汇翻译
+# 机制见独立仓库 zcode-nix 的 modules/zcode.nix;本文件只做词汇翻译
 { config, pkgs, lib, inputs, ... }:
 
 let

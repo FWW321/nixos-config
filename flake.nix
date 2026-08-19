@@ -70,6 +70,11 @@
       url = "github:FWW321/nixdsh";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # ZCode(智谱 GLM ADE)打包 + programs.zcode HM 模块(独立仓库)
+    zcode-nix = {
+      url = "github:FWW321/zcode-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     open-design = {
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -110,6 +115,7 @@
             inputs.rust-overlay.overlays.default
             (import ./pkgs/default.nix)
             inputs.nixdsh.overlays.default
+            inputs.zcode-nix.overlays.default
           ]; }
 
           # 外部模块
