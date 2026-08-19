@@ -414,6 +414,27 @@
     "home-manager_3": {
       "inputs": {
         "nixpkgs": [
+          "zcode-nix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787176219,
+        "narHash": "sha256-djoRr6jBpe35q/0JwAvXpFXg1Ktf+X54NU2RLR7wnHw=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "c53d643b3737e2fcd04e6cb3b3580ef50b2087a0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager_4": {
+      "inputs": {
+        "nixpkgs": [
           "zen-browser",
           "nixpkgs"
         ]
@@ -599,11 +620,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1787074684,
-        "narHash": "sha256-mU/Qexq89U6Hy5Q2dm5PBEw/nkVqZZZ6xUpC8sviDhk=",
+        "lastModified": 1787182951,
+        "narHash": "sha256-iMoisHBf3JduJEe/XA2hV76cGYuTnzpsK9fD+6JmpbA=",
         "owner": "FWW321",
         "repo": "nixdsh",
-        "rev": "16f55c39df49d853ba05fbc4f6d30afca703634e",
+        "rev": "28aa87553ad558c57c42117de94b367f32e750e6",
         "type": "github"
       },
       "original": {
@@ -1280,16 +1301,17 @@
     },
     "zcode-nix": {
       "inputs": {
+        "home-manager": "home-manager_3",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1787181917,
-        "narHash": "sha256-rGeR5meXuQkhNsbdnVs4NM7Xwj9o1rRbWrfayZKbHbE=",
+        "lastModified": 1787183220,
+        "narHash": "sha256-RBFmRyoWIa1oOFiY/Fo5g9ibfy54BO26IQigBDydo3M=",
         "owner": "FWW321",
         "repo": "zcode-nix",
-        "rev": "d7dbbcb627e105e8f36fe8bbb9b4d6ae80b7da92",
+        "rev": "e84794a968fee30496613932c1de33d241aa85cf",
         "type": "github"
       },
       "original": {
@@ -1300,7 +1322,7 @@
     },
     "zen-browser": {
       "inputs": {
-        "home-manager": "home-manager_3",
+        "home-manager": "home-manager_4",
         "nixpkgs": [
           "nixpkgs"
         ]
