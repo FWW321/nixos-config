@@ -15,7 +15,7 @@ let
 
   # common 的 source 是 opencode 语义(整目录递归,可能指 skill 集合仓库根);
   # dsh 需要目录内有 SKILL.md。探测:<source>/SKILL.md 直取,否则试
-  # skill 集合布局 <source>/skills/<名>/(git-workflow 等实测);
+  # skill 集合布局 <source>/skills/<名>/(集合仓库实测);
   # 都不中保持原值交给 nixdsh validateSkills throw(报错可见原始路径)。
   # entryFile(common)恒为 SKILL.md = 目录束语义,无须特判
   skillSource = name: s:

@@ -33,11 +33,8 @@ let
       (baseNameOf (toString file)));
 
   # ── 全局 skill:与 opencode 同选择逻辑 ──
-  # codex 严格校验 SKILL.md 必须有 YAML frontmatter(name/description),缺则拒载:
-  # git-workflow(netresearch)上游无 frontmatter(opencode/jcode 宽容可读) → codex 侧排除
-  codexSkillExcluded = [ "git-workflow" ];
-  selectedSkills = lib.filterAttrs (n: s: (s.defaultEnabled or false) && !(s ? runtime)
-    && !(builtins.elem n codexSkillExcluded))
+  # (曾因 git-workflow 上游无 frontmatter 设排除列表,该 skill 移除后已无排除项)
+  selectedSkills = lib.filterAttrs (_: s: (s.defaultEnabled or false) && !(s ? runtime))
     common.skills;
 
   # ── Skill:entryFile 单文件(值=path→file,模块生成 <name>/SKILL.md) vs 目录(symlink) ──
