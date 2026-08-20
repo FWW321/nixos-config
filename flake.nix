@@ -84,25 +84,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # ── 源码引用(flake=false;nix flake update xxx 追踪最新)──
-    # AI agent skills → users/fww/ai/common/skills.nix
-    shadcn-ui = { url = "github:shadcn-ui/ui"; flake = false; };                 # shadcn
-    surreal-skills = { url = "github:24601/surreal-skills"; flake = false; };    # surrealdb
-    understand-anything = { url = "github:Egonex-AI/Understand-Anything"; flake = false; }; # understand-* (8)
-    matt-skills = { url = "github:mattpocock/skills"; flake = false; };          # grilling, writing-for-agents
-    agent-browser-skill = { url = "github:vercel-labs/agent-browser"; flake = false; }; # agent-browser
-    humanizer-zh = { url = "github:op7418/Humanizer-zh"; flake = false; };       # humanizer-zh
-    makepad-skills = { url = "github:ZhangHanDong/makepad-skills"; flake = false; }; # makepad-* (14)
-    # motion-ai-kit 走 ssh:motiondivision org 禁止 >366 天寿命的 fine-grained PAT
-    # 访问其 REST API(github: URL 依赖 api.github.com → 403),SSH 协议不受限
-    motion-ai-kit = { url = "git+ssh://git@github.com/motiondivision/ai-kit"; flake = false; }; # motion skill (→ skills-project.nix)
-    # 工具/编辑器
-    multicursor-nvim = { url = "github:jake-stewart/multicursor.nvim"; flake = false; }; # nvim (→ editor/plugins.nix)
+    # ── 源码引用登记表:全部 flake=false 源码树移入 sources/flake.nix,
+    # 主锁仍完整钉每个源的 rev;更新 nix flake update sources/<name>
+    # (主文件内 mapAttrs 去重被求值器拒绝 —— 只吃字面 attrset,
+    # 结构外移是唯一消音路径,2026-08-21 lab 实测)──
+    sources = { url = "path:./sources"; };
   };
 
   outputs =
     { nixpkgs, home-manager, ... }@inputs:
     let
+      # 登记表摊平:sources/flake.nix 里的源码树以原名进入 inputs 命名空间,
+      # 消费者零改动(冲突面 = 主输入名,登记表内不与之同名即可)
+      inputs' = inputs // inputs.sources.pins;
       # checks 专用轻量 pkgs:不叠 overlay,只需 runCommand
       checkPkgs = import nixpkgs { system = "x86_64-linux"; };
     in
@@ -117,7 +111,7 @@
 
       nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        specialArgs = { inputs = inputs'; };
         modules = [
           # Rust 工具链 overlay（rust-bin → pkgs.rust-bin）+ 自定义打包 overlay（pkgs/mdbook-svgbob 等）
           { nixpkgs.overlays = [
@@ -180,7 +174,7 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "backup";
-              extraSpecialArgs = { inherit inputs; };
+              extraSpecialArgs = { inputs = inputs'; };
               sharedModules = [
                 inputs.open-design.homeManagerModules.default
                 inputs.nixdsh.homeManagerModules.dsh
