@@ -20,7 +20,8 @@ let
 
   # ── codex 可用 provider:声明了 responses 端点的(codex 0.84+ 仅支持 responses)──
   # siliconflow(仅 embedding/openai 端点)被此过滤自动排除
-  codexProviders = lib.filterAttrs (_: v: v.endpoints ? responses) common.providers;
+  # schema 后端点键恒在(未声明 = null),旧 `?` 存在性探测会恒真
+  codexProviders = lib.filterAttrs (_: v: v.endpoints.responses != null) common.providers;
   # 默认 provider 与默认模型(zhipu coding plan)
   defaultProvider = "zhipu";
   p = codexProviders.${defaultProvider};
@@ -157,34 +158,44 @@ let
   # codex 内置目录无 GLM,无声明则模型选择器不显示/参数错误
   # context_window 从 providers.nix 单一来源派生;字段照抄官方文档模板
   # (priority/experimental_supported_tools 等都是必填,缺一个 codex 直接报解析错误)
-  catalogEntry = idx: id: {
-    slug = id;
-    display_name = id;
-    description = "Z.ai coding model";
-    default_reasoning_level = "max";
-    supported_reasoning_levels = [
-      { effort = "low"; description = "Light reasoning"; }
-      { effort = "high"; description = "Enhanced reasoning"; }
-      { effort = "max"; description = "Deep reasoning"; }
-    ];
-    shell_type = "shell_command";
-    visibility = "list";
-    supported_in_api = true;
-    priority = idx; # 模型选择器排序
-    base_instructions = "";
-    supports_reasoning_summaries = true;
-    default_reasoning_summary = "none";
-    support_verbosity = false;
-    apply_patch_tool_type = "freeform";
-    truncation_policy.mode = "bytes";
-    truncation_policy.limit = 10000;
-    context_window = p.models.${id}.contextWindow;
-    max_context_window = p.models.${id}.contextWindow;
-    effective_context_window_percent = 95;
-    supports_parallel_tool_calls = true;
-    experimental_supported_tools = [ ];
-    input_modalities = [ "text" ];
+  # 推理档亦从 thinking.responses 派生(此前硬编码 low/high/max,与中立层
+  # 同值 —— 纯迁移无行为变化)
+  effortDesc = {
+    minimal = "Minimal reasoning";
+    low = "Light reasoning";
+    medium = "Balanced reasoning";
+    high = "Enhanced reasoning";
+    xhigh = "Extra deep reasoning";
+    max = "Deep reasoning";
   };
+  catalogEntry = idx: id:
+    let e = p.models.${id}.thinking.responses; in
+    {
+      slug = id;
+      display_name = id;
+      description = "Z.ai coding model";
+      default_reasoning_level = e.default;
+      supported_reasoning_levels = map
+        (lvl: { effort = lvl; description = effortDesc.${lvl} or "Reasoning"; })
+        (builtins.attrNames e.levels);
+      shell_type = "shell_command";
+      visibility = "list";
+      supported_in_api = true;
+      priority = idx; # 模型选择器排序
+      base_instructions = "";
+      supports_reasoning_summaries = true;
+      default_reasoning_summary = "none";
+      support_verbosity = false;
+      apply_patch_tool_type = "freeform";
+      truncation_policy.mode = "bytes";
+      truncation_policy.limit = 10000;
+      context_window = p.models.${id}.contextWindow;
+      max_context_window = p.models.${id}.contextWindow;
+      effective_context_window_percent = 95;
+      supports_parallel_tool_calls = true;
+      experimental_supported_tools = [ ];
+      input_modalities = [ "text" ];
+    };
   modelsJson = pkgs.writeText "codex-models.json" (builtins.toJSON {
     # 只声明默认模型 glm-5.3(providers.nix 已只留 5.3,5.2 全线退役)
     models = [ (catalogEntry 0 p.defaultModel) ];

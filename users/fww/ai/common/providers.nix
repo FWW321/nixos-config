@@ -13,6 +13,45 @@
         contextWindow = 1000000;
         maxOutput = 131072;
         supportsVision = false;
+        # 思考控制(按端点独立;default = 省略参数时端点行为,官方文档+实测):
+        # anthropic(Claude Code 通路): wire = thinking.type=adaptive +
+        #   output_config.effort,实档仅 low/high/max;medium→high、xhigh→max
+        #   官方自动转换不单列;GLM-5.3 强制思考,disabled 被端点转 low(无法真关)
+        #   (2026-08-21 差分实测:low→0 思考块/high 1491 字/max 2333 字)
+        # openai(coding paas): wire = thinking.type=enabled + reasoning_effort
+        #   (官方 API 文档;2026-08-21 mainland 端点差分实测生效:
+        #   low→0 reasoning tokens/max→322,推翻 6 月 z.ai 国际端"无效"
+        #   的 glm-for-copilot#7 结论 —— 那是不同端点且可能已修);
+        #   GLM-5.3 仅 low/high/max(none/minimal 是 5.2 语义),无 off
+        # responses(/api/v1): wire = reasoning.effort(Responses API);
+        #   档位同 openai,来源 = 官方 codex 接入文档(codex.nix 同源消费)
+        thinking = {
+          anthropic = {
+            default = "max";
+            levels = {
+              off = "disabled"; # 端点转 low 轻思考(5.3 不能真关)
+              low = "low";
+              high = "high";
+              max = "max";
+            };
+          };
+          openai = {
+            default = "max";
+            levels = {
+              low = "low";
+              high = "high";
+              max = "max";
+            };
+          };
+          responses = {
+            default = "max";
+            levels = {
+              low = "low";
+              high = "high";
+              max = "max";
+            };
+          };
+        };
       };
     };
     defaultModel = "glm-5.3";
@@ -36,6 +75,41 @@
         contextWindow = 1000000;
         maxOutput = 128000;
         supportsVision = true;
+        # 思考控制(按端点独立;default = 省略参数时端点行为,官方文档):
+        # 三端点默认各不相同 —— anthropic 省略=关、openai 省略=开、
+        # responses 省略=关(官方三段 Thinking/reasoning 控制原文),
+        # 跨端点迁移时最易踩的坑
+        # anthropic: adaptive=开/disabled=关;无 effort 档(与 glm 的
+        #   output_config.effort 语义不同);Claude Code 内默认开是客户端
+        #   行为(Claude Code 主动发参数),裸 SDK 省略即关
+        # openai: 另有 reasoning_split 只控输出拆分(reasoning_content/
+        #   reasoning_details)不控开关;M2.x 系列不可关(非本路由模型,备注)
+        # responses: wire = reasoning.effort;none=关(默认),
+        #   minimal/low/medium/high 兼容接收但**不调深度**(纯开关)——
+        #   单开档取 low(最弱语义,不虚标深度);effort=none 显式关
+        thinking = {
+          anthropic = {
+            default = "off";
+            levels = {
+              off = null; # 不发参数 = 关(端点默认)
+              on = "adaptive";
+            };
+          };
+          openai = {
+            default = "on";
+            levels = {
+              off = "disabled";
+              on = "adaptive";
+            };
+          };
+          responses = {
+            default = "off";
+            levels = {
+              off = "none";
+              low = "low"; # 四个开启值等价,low 语义最弱不虚标
+            };
+          };
+        };
       };
     };
     defaultModel = "MiniMax-M3";

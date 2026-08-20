@@ -20,8 +20,10 @@ let
 
   # zhipu 主用 BigModel oauth(编程套餐)不注入;恢复 API-key 模式:
   # 删掉下面的 zhipu 排除条件,custom:zhipu 条目随下次 switch 自动重建
+  # schema 后键恒在:models 未声明 = {},apiKey 未声明 = null
+  # (旧 `?` 存在性探测会恒真)
   eligible = lib.filterAttrs
-    (name: p: (p ? endpoints) && (p ? apiKey) && (p ? models) && name != "zhipu")
+    (name: p: p.models != { } && p.apiKey.secretFile != null && name != "zhipu")
     common.providers;
 
   providers = lib.mapAttrs (name: p:

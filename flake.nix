@@ -102,9 +102,18 @@
 
   outputs =
     { nixpkgs, home-manager, ... }@inputs:
+    let
+      # checks 专用轻量 pkgs:不叠 overlay,只需 runCommand
+      checkPkgs = import nixpkgs { system = "x86_64-linux"; };
+    in
     {
       # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
       # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
+
+      # 中立 provider 层 schema 守护(动机/断言见 providers-schema-check.nix;
+      # 与 nixdsh 的 checks 同一验证入口)
+      checks.x86_64-linux.providers-schema =
+        import ./users/fww/ai/common/providers-schema-check.nix checkPkgs nixpkgs.lib;
 
       nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
