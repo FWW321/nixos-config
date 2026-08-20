@@ -1,6 +1,7 @@
-# 中立数据聚合层:mcp/skills/providers/rules/project
+# 中立数据聚合层:mcp/skills/providers/subagents/rules/project
 # 文件名即分类器:mcp.nix/skills.nix = 通用(defaultEnabled=true)
 #                   mcp-project.nix/skills-project.nix = 项目级(defaultEnabled=false)
+# subagents 纯意图数据无分级概念,直接导出
 # project 需要 config(xdg.configHome),调用方需传 config
 # (plugins.nix 已删:dcg 移除 + herdr 插件改 agents/opencode-plugins/ 本地维护)
 { pkgs, inputs, lib, config, ... }:
@@ -21,6 +22,7 @@ in
 {
   inherit mcp skills;
   providers = import ./providers.nix;
+  subagents = import ./subagents.nix;
   rules = ./rules.md;
   project = import ./project.nix {
     inherit pkgs lib config mcp skills;

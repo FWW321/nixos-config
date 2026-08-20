@@ -75,34 +75,22 @@ in
     inherit providers skills;
     mcp.servers = mcpServers;
 
-    # 识图 subagent(MiniMax M3 原生视觉;glm 无视觉):description 是主模型的
-    # 委派路由信号,调整触发词在此改、勿另设他处(与 opencode 侧 vision 对齐)
+    # 识图子 agent:核心定义在 common/subagents.nix(与 zcode 同源);
+    # model 意图 → zcode 引用格式 custom:<urlencoded custom:provider>:<model>
+    # (url 编码实证:custom%3A = "custom:" 的 %3A,勿手拼易错)
+    # tools 硬白名单是 zcode 端能力(自定义 tools 连 MCP/技能工具一并禁),
+    # 对齐"只读分析者"职责:prompt 约束只是软边界,截图可能携带注入,
+    # 不给 Bash/Edit/Write 等可写工具
     agents.vision = {
-      description = "识图专用视觉 agent:OCR 转录、报错截图诊断、UI 审查与设计稿对比、图表读数、架构图解读。主模型无视觉,凡图像/截图理解一律委托本 agent";
-      model = "custom:custom%3Aminimax:MiniMax-M3";
-      # 硬白名单对齐"只读分析者"职责:prompt 约束只是软边界,截图内容本身
-      # 可能携带注入,不给 Bash/Edit/Write 等可写工具(官方文档:自定义
-      # tools 会一并禁掉 MCP/技能工具 —— 识图场景本就不需要)
+      inherit (common.subagents.vision) description prompt;
+      model =
+        "custom:" + lib.strings.escapeURL "custom:${common.subagents.vision.model.provider}"
+        + ":${common.subagents.vision.model.model}";
       tools = [
         "Read"  # 读取图像文件
         "Glob"  # 按名定位文件
         "Grep"  # 按内容定位文本(图表 CSV 源等)
       ];
-      prompt = ''
-        你是视觉分析专家。
-
-        职责与准则:
-
-        - **精确转述,不脑补**:只报告图像中确实可见的内容。文字、数字、颜色、布局要逐字/如实引用,不确定就说不确定。
-        - **场景适配输出**:
-          - 报错截图 → 完整转录错误文本 + 指出关键行
-          - UI 截图 → 布局结构、组件状态、异常元素(溢出/遮挡/错位)
-          - 图表/数据 → 数值与趋势的精确读数
-          - 设计稿对比 → 差异清单,按显著度排序
-        - **多图任务**:逐图分析再给汇总,保持图序与指代清晰。
-        - **输出语言**跟随用户提问语言;引用界面文字时保留原文,不翻译。
-        - 你是只读分析者:不改文件、不跑命令,专注把"看见的"变成"可用的文字"。
-      '';
     };
   };
 }

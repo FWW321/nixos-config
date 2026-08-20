@@ -14,7 +14,7 @@
     headless.enable = true;  # → face "headless"(in-box 表推导)
     dsh-tui = {
       enable = true;                       # → face "tui"(registry 键名反查 + face= 元数据,零 source)
-      excludedPresets = [ "liangshen" ];   # 接管黑名单:不进 farm 不重放;上游播种照旧(UI 仍可选),默认不再指向它
+      excludedPresets = [ "liangshen" ];   # 物理剥离:不进 farm、播种器无从种出、菜单不可见不可选(user 根旧副本已手动清)
       # defaultPreset/permissionMode 不设 → 回落全局(standard / workspace-write,见 search.nix)
     };
   };
