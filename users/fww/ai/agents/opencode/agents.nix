@@ -22,18 +22,34 @@ let
     if lib.isInt v || lib.isBool v then toString v
     else "\"" + lib.strings.escape [ "\"" "\\" ] (toString v) + "\"";
 
-  # 端特有字段(不进 common):mode/color/steps 是 opencode 的调节旋钮
+  # 端特有字段(不进 common):mode/color/steps 是 opencode 的调节旋钮;
+  # permissions 是 v2 的硬权限(v1 的 tools 白名单已废弃,文档明令勿用)——
+  # deny 全部再放行只读三件,等价 zcode 端 tools: [Read Glob Grep] 白名单
+  # (最后匹配规则赢,宽规则在前例外在后;与 zcode 端同一"权限编码在声明
+  # 而非 prompt"原则,两端保持同等硬边界)
   extras = {
     vision = {
       mode = "subagent";
       color = "#e0a458";
       steps = 12;
+      permissions = [
+        { action = "*"; resource = "*"; effect = "deny"; }
+        { action = "read"; resource = "*"; effect = "allow"; }
+        { action = "glob"; resource = "*"; effect = "allow"; }
+        { action = "grep"; resource = "*"; effect = "allow"; }
+      ];
     };
   };
 
   # 意图 → opencode frontmatter md
   renderAgent =
     name: sa: e:
+    let
+      permBlock = lib.optionalString ((e.permissions or [ ]) != [ ]) (
+        "permissions:\n"
+        + lib.concatMapStrings (p: "  - action: ${yamlScalar p.action}\n    resource: ${yamlScalar p.resource}\n    effect: ${yamlScalar p.effect}\n") e.permissions
+      );
+    in
     pkgs.writeText "${name}.md" ''
       ---
       description: ${yamlScalar sa.description}
@@ -41,7 +57,7 @@ let
       model: ${yamlScalar "${providerId.${sa.model.provider}}/${sa.model.model}"}
       color: ${yamlScalar e.color}
       steps: ${toString e.steps}
-      ---
+      ${permBlock}---
 
       ${sa.prompt}
     '';
