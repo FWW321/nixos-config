@@ -10,8 +10,8 @@ let
     email = "3223400498@qq.com";
     editor = "nvim";
     # SSH 签名公钥路径(forge 认证 + commit 签名同一把 key)
-    # 私钥由系统 sops 解密为 ~/.ssh/vcs_key,公钥见下方 home.file(非秘密,进仓库)
-    signingKey = "~/.ssh/vcs_key.pub";
+    # 私钥由系统 sops 解密为 ~/.ssh/id_ed25519,公钥见下方 home.file(非秘密,进仓库)
+    signingKey = "~/.ssh/id_ed25519.pub";
   };
 in
 {
@@ -35,7 +35,7 @@ in
   };
 
   # ── SSH 签名/认证公钥(声明式) ──
-  # 私钥:系统 sops 解密为 ~/.ssh/vcs_key(symlink→/run/secrets,见 modules/system/secrets.nix)
-  # 公钥:非秘密,直接进仓库;换钥时更新 secrets.yaml 与 ./vcs_key.pub 两处
-  home.file.".ssh/vcs_key.pub".source = ./vcs_key.pub;
+  # 私钥:系统 sops 解密为 ~/.ssh/id_ed25519(symlink→/run/secrets,见 modules/system/secrets.nix)
+  # 公钥:非秘密,直接进仓库;换钥时更新 secrets.yaml 与 ./id_ed25519.pub 两处
+  home.file.".ssh/id_ed25519.pub".source = ./id_ed25519.pub;
 }

@@ -30,12 +30,13 @@ in
       # civitai_token.owner = "fww";
       motion_plus_token.owner = "fww";
       exa_api_key.owner = "fww";
-      lxy_url = { };
-      # ssh 私钥：symlink 到 ~/.ssh/vcs_key，git/jj 认证与签名同源
-      # 对应公钥非秘密，已提交 users/fww/vcs/vcs_key.pub；换钥时两处同步更新
-      vcs_ssh_key = {
+      dae_tuic_url = { };
+      dae_anytls_url = { };
+      # 用户唯一 SSH 身份钥（id_ed25519）：forge 认证 + git/jj 签名 + 所有 ssh 连接（Host * 兜底）
+      # 对应公钥非秘密，已提交 users/fww/vcs/id_ed25519.pub；换钥时两处同步更新
+      ssh_key = {
         owner = "fww";
-        path = "/home/fww/.ssh/vcs_key";
+        path = "/home/fww/.ssh/id_ed25519";
       };
     };
 

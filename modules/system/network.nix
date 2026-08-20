@@ -80,8 +80,9 @@
               # 域名形式的 DNS 上游（alidns）需先解析；显式声明 bootstrap，免依赖
               # 内置默认（119.29.29.29→223.5.5.5）。国内域名国内解析，明文无污染风险
               bootstrap_resolver: '223.5.5.5:53'
-              # tcp_check_url / tcp_check_http_method / udp_check_dns 用内置默认值，不显式写
-              check_interval: 10m
+              # 使用官方默认的 Cloudflare TCP / Google DNS UDP 端到端探测；30 秒可在
+              # UDP 被封或链路故障后及时切到 AnyTLS，两个自建节点的探测开销可以忽略
+              check_interval: 30s
               check_tolerance: 50ms
             }
       
@@ -116,83 +117,16 @@
               }
             }
       
-            subscription {
-              lxy: 'https-file://${config.sops.placeholder.lxy_url}'
+            node {
+              linode_tuic: '${config.sops.placeholder.dae_tuic_url}'
+              linode_anytls: '${config.sops.placeholder.dae_anytls_url}'
             }
       
             group {
               proxy {
-                filter: subtag(lxy)
-                policy: min_moving_avg
-              }
-              hk {
-                filter: subtag(lxy) && name(keyword: '香港', keyword: 'HK')
-                policy: min_moving_avg
-              }
-              tw {
-                filter: subtag(lxy) && name(keyword: '台湾', keyword: 'TW')
-                policy: min_moving_avg
-              }
-              sg {
-                filter: subtag(lxy) && name(keyword: '新加坡', keyword: 'SG')
-                policy: min_moving_avg
-              }
-              jp {
-                filter: subtag(lxy) && name(keyword: '日本', keyword: 'JP')
-                policy: min_moving_avg
-              }
-              kr {
-                filter: subtag(lxy) && name(keyword: '韩国', keyword: 'KR')
-                policy: min_moving_avg
-              }
-              vn {
-                filter: subtag(lxy) && name(keyword: '越南', keyword: 'VN')
-                policy: min_moving_avg
-              }
-              my {
-                filter: subtag(lxy) && name(keyword: '马来西亚', keyword: 'MY')
-                policy: min_moving_avg
-              }
-              th {
-                filter: subtag(lxy) && name(keyword: '泰国', keyword: 'TH')
-                policy: min_moving_avg
-              }
-              in {
-                filter: subtag(lxy) && name(keyword: '印度', keyword: 'IN')
-                policy: min_moving_avg
-              }
-              au {
-                filter: subtag(lxy) && name(keyword: '澳大利亚', keyword: 'AU')
-                policy: min_moving_avg
-              }
-              ca {
-                filter: subtag(lxy) && name(keyword: '加拿大', keyword: 'CA')
-                policy: min_moving_avg
-              }
-              us {
-                filter: subtag(lxy) && name(keyword: '美国', keyword: 'US')
-                policy: min_moving_avg
-              }
-              # AI 防封专用组：固定日本节点（policy:min 锁到延迟最低那一个，节点失效才切）
-              # 不能复用 jp 组（min_moving_avg 会飘 IP → 触发 OpenAI/Anthropic 风控首信号）
-              # check_tolerance 组级覆盖全局 50ms：容差太小导致 24h 内 codex 飘过 5 个
-              # 节点（日本高速01-05 都被选中过）。250ms = 当前节点劣化超 250ms 才切换，
-              # 健康时锁死单节点，真故障仍会切换
-              ai {
-                filter: subtag(lxy) && name(keyword: '日本', keyword: 'JP')
-                policy: min
-                check_tolerance: 250ms
-              }
-              de {
-                filter: subtag(lxy) && name(keyword: '德国', keyword: 'DE')
-                policy: min_moving_avg
-              }
-              fr {
-                filter: subtag(lxy) && name(keyword: '法国', keyword: 'FR')
-                policy: min_moving_avg
-              }
-              uk {
-                filter: subtag(lxy) && name(keyword: '英国', keyword: 'UK')
+                filter: name(linode_tuic)
+                # 同一静态出口下 TUIC 主用、AnyTLS 备用；偏置只影响选择，不影响健康检查
+                filter: name(linode_anytls) [add_latency: 1s]
                 policy: min_moving_avg
               }
             }
@@ -232,35 +166,35 @@
               domain(geosite:category-ai-cn) -> direct
               domain(geosite:category-bank-cn, geosite:category-finance) -> direct
 
-              # linux.do 走美国（需在 geosite:cn 直连规则之前，避免被收录后命中直连）
-              domain(suffix: linux.do) -> us
+              # linux.do 需在 geosite:cn 直连规则之前，避免被收录后命中直连
+              domain(suffix: linux.do) -> proxy
 
               # dae 自身 DoH 上游（8.8.8.8/8.8.4.4）走代理，见 dns.upstream 注释
               dip(8.8.8.8, 8.8.4.4) -> proxy
 
               # AI 规则必须排在 geosite:cn / geoip:cn 直连之前：DNS 污染会把 openai 域名
               # 解析到垃圾 IP，若某个垃圾 IP 恰好落国内段，会被 dip(geoip:cn) 抢先直连假 IP
-              domain(geosite:anthropic, suffix: claude.ai) -> ai
-              domain(geosite:openai) -> ai
+              domain(geosite:anthropic, suffix: claude.ai) -> proxy
+              domain(geosite:openai) -> proxy
 
               domain(geosite:cn) -> direct
               dip(geoip:cn) -> direct
       
-              domain(geosite:netflix) -> jp
-              domain(geosite:spotify) -> jp
-              domain(geosite:twitch) -> us
+              domain(geosite:netflix) -> proxy
+              domain(geosite:spotify) -> proxy
+              domain(geosite:twitch) -> proxy
       
-              domain(geosite:youtube) -> us
-              domain(geosite:reddit) -> us
-              domain(geosite:twitter) -> us
-              domain(geosite:facebook) -> us
-              domain(geosite:instagram) -> us
-              domain(geosite:telegram) -> us
-              domain(suffix: discord.com, discord.gg) -> us
-              domain(suffix: t.me, telegram.org) -> us
+              domain(geosite:youtube) -> proxy
+              domain(geosite:reddit) -> proxy
+              domain(geosite:twitter) -> proxy
+              domain(geosite:facebook) -> proxy
+              domain(geosite:instagram) -> proxy
+              domain(geosite:telegram) -> proxy
+              domain(suffix: discord.com, discord.gg) -> proxy
+              domain(suffix: t.me, telegram.org) -> proxy
       
-              domain(geosite:google) -> jp
-              domain(suffix: esjzone.one, esjzone.cc) -> tw
+              domain(geosite:google) -> proxy
+              domain(suffix: esjzone.one, esjzone.cc) -> proxy
       
               fallback: proxy
             }
@@ -268,37 +202,9 @@
   };
 
   # ── dae 代理 ──────────────────────────────────────────────
-  # ⚠️ 已知坑：nixpkgs 的 services/networking/dae.nix 用 systemd LoadCredential 把配置注入
-  #    只读 tmpfs（${CREDENTIALS_DIRECTORY}/config.dae）。但 dae 拉订阅需要在 config 同目录
-  #    创建 persist.d 缓存 → 只读导致 mkdir 失败 → 订阅全部解析失败 → "no dialer in this
-  #    group"，proxy 组无节点，网络全断。
-  # 解决：用 daeuniverse/flake.nix 的 module（它 disabledModules 主动禁用 nixpkgs 版本，
-  #    改用可写 /etc/dae/config.dae，无此坑）+ unstable 包跟进最新 main 提交。
-  # 若将来切回 nixpkgs：必须 override ExecStart/ExecStartPre，用 list ["" "新命令"]
-  #    （第一个 "" 是 systemd 清空指令，避免 "more than one ExecStart" 冲突），把 -c 指回
-  #    可写的 /etc/dae/config.dae。定期 nix flake update dae 可拉新 unstable。
   services.dae = {
     enable = true;
     configFile = config.sops.templates."dae/config.dae".path;
     package = inputs.dae.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
-  };
-
-  # 每天拉一次订阅：dae reload 会重新 fetch 订阅（写入 persist.d/），不断连、不卸 eBPF
-  systemd.services.dae-reload = {
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${config.services.dae.package}/bin/dae reload";
-    };
-  };
-
-  systemd.timers.dae-reload = {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "daily";
-      RandomizedDelaySec = "10m"; # 避开整点，防止订阅端限流
-      # dae.service 开机启动时本就会拉一次订阅，这里的补跑实为冗余；
-      # 留作兜底：开机时网络未就绪导致拉取失败（回退 persist.d 旧缓存）时多一次重试
-      Persistent = true;
-    };
   };
 }

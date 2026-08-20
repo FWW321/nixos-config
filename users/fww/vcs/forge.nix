@@ -11,8 +11,8 @@
 # known_hosts(publicKey 不可推导)在系统层 modules/system/ssh.nix 独立声明
 { lib, osConfig, ... }:
 let
-  # 私钥由系统 sops 解密为 ~/.ssh/vcs_key(见 modules/system/secrets.nix)；HM 经 osConfig 取路径
-  identityFile = osConfig.sops.secrets.vcs_ssh_key.path;
+  # 私钥由系统 sops 解密为 ~/.ssh/id_ed25519(见 modules/system/secrets.nix)；HM 经 osConfig 取路径
+  identityFile = osConfig.sops.secrets.ssh_key.path;
 
   # ── 唯一数据源:加 forge 只动 forges.nix ──
   forges = (import ./forges.nix).forges;

@@ -5,6 +5,7 @@
   lib,
   pkgs,
   inputs,
+  osConfig,
   ...
 }:
 
@@ -62,5 +63,11 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
+    # 全局兜底:所有 ssh 连接统一用 id_ed25519 一把身份钥(forge 认证/jj 签名/手动连机同源)
+    # 不再为任何用途单独造钥;known_hosts 钉死见 modules/system/ssh.nix
+    settings."*" = {
+      identityFile = osConfig.sops.secrets.ssh_key.path;
+      identitiesOnly = true;
+    };
   };
 }
