@@ -12,11 +12,13 @@
   stdenv,
   fetchurl,
   autoPatchelfHook,
+  makeWrapper,
+  ripgrep,
 }:
 
 let
   # beta tag 发布流水号,与 @opencode-ai/cli 同步
-  version = "0.0.0-beta-17577";
+  version = "0.0.0-beta-17728";
 
   # npm 平台子包名(fetchurl 直接拉 tarball,绕过 node 生态)
   platformPkg =
@@ -32,10 +34,13 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/${scopeDir}/${baseName}/-/${baseName}-${version}.tgz";
-    hash = "sha256-oHrD4Si+EThjtebvV8x/Q/yoG7J5k9XNzj0KIxOTfMg=";
+    hash = "sha256-N2pS2dNb8OQj2BfKaSvXObgYAk14juOhf4lGAVyTYMc=";
   };
 
-  nativeBuildInputs = [ autoPatchelfHook ];
+  nativeBuildInputs = [
+    autoPatchelfHook
+    makeWrapper
+  ];
   buildInputs = [ stdenv.cc.cc.lib ];
 
   # Bun 编译产物在 ELF 尾部带 embedded trailer,module graph 靠文件内偏移定位;
@@ -48,6 +53,11 @@ stdenv.mkDerivation {
     # tarball 只有 bin/opencode2 单个二进制(bin/ 下其余是 sourcemap,不装)
     # sourceRoot 已是解包后的 package/,直接取 bin/
     install -Dm755 bin/opencode2 $out/bin/opencode2
+    # rg 是功能性依赖(非泛用保险):二进制内嵌 @vscode/ripgrep 引用,
+    # fork/grep 工具按名调 rg;宿主 shell 恰好有 rg 会掩盖此缺口,
+    # 裸环境(容器/沙箱/最小 PATH)即现形 —— 故注入而非依赖环境
+    wrapProgram $out/bin/opencode2 \
+      --prefix PATH : ${lib.makeBinPath [ ripgrep ]}
 
     runHook postInstall
   '';
