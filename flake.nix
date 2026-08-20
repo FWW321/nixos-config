@@ -116,6 +116,19 @@
             (import ./pkgs/default.nix)
             inputs.nixdsh.overlays.default
             inputs.zcode-nix.overlays.default
+            # @open-design/dsh-runtime 打包:src 与 services.open-design 同一
+            # inputs.open-design pin(OD daemon↔runtime 协议代际原子耦合,
+            # 详见 pkgs/open-design-dsh-runtime 头注释)
+            (final: _prev: {
+              open-design-dsh-runtime = final.callPackage ./pkgs/open-design-dsh-runtime {
+                odDshRuntimeSrc = inputs.open-design;
+              };
+              # daemon × better-sqlite3 13 graft(nodejs#63642 崩溃根治,
+              # 取代已废弃的 nodejs 24.18.1 重绑;见包内头注释)
+              open-design-daemon-bsq13 = final.callPackage ./pkgs/open-design-daemon-bsq13 {
+                daemonPkg = inputs.open-design.packages.${final.system}.daemon;
+              };
+            })
           ]; }
 
           # 外部模块

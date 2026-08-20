@@ -15,6 +15,7 @@
     ./settings.nix
     ./search.nix
     ./plugins.nix
+    ./profiles.nix
     ./mcp.nix
   ];
   programs.dsh = {

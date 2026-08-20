@@ -620,11 +620,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1787182951,
-        "narHash": "sha256-iMoisHBf3JduJEe/XA2hV76cGYuTnzpsK9fD+6JmpbA=",
+        "lastModified": 1787253620,
+        "narHash": "sha256-wU9LYPd8UuST5xC6CJpzbItbRKWHWxfJ4upsPIfUg7k=",
         "owner": "FWW321",
         "repo": "nixdsh",
-        "rev": "28aa87553ad558c57c42117de94b367f32e750e6",
+        "rev": "9d98d0c41a9362e9a77ea5d90c298e7fff71c01d",
         "type": "github"
       },
       "original": {
