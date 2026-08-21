@@ -1,5 +1,5 @@
 # filepath: ~/nixos-config/hosts/_template/disko.nix
-# 新主机磁盘模板 —— 向导替换 {{TOKEN}}:
+# 新主机磁盘模板 —— 向导替换占位符(注释中不写字面花括号,避免残留自检误报):
 #   {{SYSTEM_DISK}} 必填;{{HOME_DISK}}/{{DATA_DISK}} 为 null 时落回系统盘子卷
 #   (单盘机与多盘机同一模板;swap 默认按内存大小建议)
 let

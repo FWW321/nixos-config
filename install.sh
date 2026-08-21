@@ -6,6 +6,7 @@
 #   ./install.sh <已有主机名>                # 按既有配置安装/重装
 #   ./install.sh <已有主机名> --host-key <f> # 同机重装,复用旧 host key(secrets 免重加密)
 #   ./install.sh <新主机名>                  # 向导模式:探测硬件→引导填参→生成配置→安装
+#   ./install.sh --selftest                  # CI/本地:夹具走一遍物化+求值,不动盘不交互
 #
 # 主机注册表 = hosts/ 目录(flake.nix 自动发现,_ 前缀除外):
 #   向导建完目录即注册完成,无需改任何 nix 文件
@@ -16,6 +17,49 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 die() { echo "❌ $*" >&2; exit 1; }
+
+# 物化 = 模板 token 替换(向导与 selftest 共用同一真源;改 token 只改这里)
+materialize_host() { # $1=主机名 $2=cpu_profile $3=gpu_import $4=nvidia_open $5=nvidia_pkg
+  #                   $6=system_disk $7=home_disk $8=data_disk $9=swap_gib
+  local h=$1
+  mkdir -p "hosts/$h"
+  cp hosts/_template/{default.nix,disko.nix,redact.sh} "hosts/$h/"
+  if [ "$3" = "./nvidia.nix" ]; then
+    cp hosts/_template/nvidia.nix "hosts/$h/"
+    sed -i "s|{{NVIDIA_OPEN}}|$4|g; s|{{NVIDIA_PACKAGE}}|$5|g" "hosts/$h/nvidia.nix"
+  fi
+  sed -i "s|{{HOSTNAME}}|$h|g; s|{{CPU_PROFILE}}|$2|g; s|{{GPU_IMPORT}}|$3|g" "hosts/$h/default.nix"
+  sed -i "s|{{SYSTEM_DISK}}|$6|g; s|{{HOME_DISK}}|$7|g; s|{{DATA_DISK}}|$8|g; s|{{SWAP_GIB}}|$9|g" \
+    "hosts/$h/disko.nix"
+  # token 残留自检:有漏填立刻指出位置,而不是等到求值失败
+  if grep -rn "{{" "hosts/$h"; then
+    echo "❌ 模板 token 未替换完整(见上方 grep 输出)" >&2
+    return 1
+  fi
+}
+
+# ── --selftest:CI 夹具回归(物化 3 种布局 → 完整求值 → 清理)──
+# 覆盖:单盘+Turing N卡 / 三盘+legacy N卡 / 无独显 AMD;磁盘路径仅存在于
+# 配置文本,求值不触碰设备;夹具用 FWW-Desktop 的脱敏 facter(hardware.facter 必填)
+if [ "${1:-}" = "--selftest" ]; then
+  ST_CLEAN="hosts/st-single-gpu hosts/st-multi-legacy hosts/st-nogpu"
+  # shellcheck disable=SC2064  # ST_CLEAN 是固定字符串,定义时展开正是意图
+  trap "git rm -rfq --ignore-unmatch $ST_CLEAN 2>/dev/null || rm -rf $ST_CLEAN" EXIT
+  materialize_host st-single-gpu  common-cpu-intel ./nvidia.nix    true  latest     /dev/vda null     null     32
+  materialize_host st-multi-legacy common-cpu-intel ./nvidia.nix    false legacy_580 /dev/vda /dev/vdb /dev/vdc 64
+  materialize_host st-nogpu       common-cpu-amd   "# ./nvidia.nix" true latest     /dev/vda null     null     16
+  for h in st-single-gpu st-multi-legacy st-nogpu; do
+    cp hosts/FWW-Desktop/.facter.json "hosts/$h/.facter.json"
+  done
+  git add hosts/st-*
+  for h in st-single-gpu st-multi-legacy st-nogpu; do
+    echo "── selftest: 求值 $h ──"
+    nix build --dry-run ".#nixosConfigurations.$h.config.system.build.toplevel" \
+      || die "selftest: $h 求值失败"
+  done
+  echo "✅ selftest 通过:3 组夹具物化 + 完整求值"
+  exit 0
+fi
 
 # ── 参数 ─────────────────────────────────────────────
 HOSTNAME="" HOST_KEY_FILE=""
@@ -30,6 +74,8 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$HOSTNAME" ] || die "未指定主机名。用法: ./install.sh <主机名> [--host-key <旧key>]"
 [ "$(id -u)" = 0 ] || die "请以 root 运行(安装介质默认 root shell)"
+# 主机名 = 目录名 + flake attr 名,限制字符集(防 sed/attr 两种上下文注入)
+[[ "$HOSTNAME" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]] || die "主机名仅限字母数字与 _-(当前: $HOSTNAME)"
 
 # 引导模式守卫:本仓库引导栈(ESP 分区 + systemd-boot + efi.canTouchEfiVariables,
 # 见 modules/nixos/boot.nix)仅 UEFI 机器可引导;BIOS-only(或 CSM 强制 legacy)机器
@@ -85,9 +131,17 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   fi
 
   # 磁盘清单(人来做"哪块盘扮演什么角色"的意图决策)
-  echo "  检测到以下磁盘:"
-  mapfile -t DISKS < <(lsblk -dnp -o PATH,SIZE,TYPE,MODEL | awk '$3=="disk"')
-  [ "${#DISKS[@]}" -ge 1 ] || die "未检测到磁盘"
+  # 排除带挂载分区的盘:安装介质自身在其中 —— installer 的 nix store 就在
+  # U 盘上,选它等于锯断自己坐的树枝
+  EXCLUDE_DISKS=$(lsblk -nrpo NAME,TYPE,MOUNTPOINTS \
+    | awk '($2=="part" || $2=="disk") && $3!="" {d=$1; sub(/[0-9]+$/,"",d); print d}' | sort -u)
+  mapfile -t DISKS < <(lsblk -dnp -o PATH,SIZE,TYPE,MODEL \
+    | awk -v excl="$EXCLUDE_DISKS" 'BEGIN{n=split(excl,a,"\n"); for(i=1;i<=n;i++) skip[a[i]]=1}
+      $3=="disk" && !($1 in skip)')
+  [ "${#DISKS[@]}" -ge 1 ] || die "未检测到可用磁盘${EXCLUDE_DISKS:+(已排除带挂载分区的: $(echo $EXCLUDE_DISKS))}"
+  if [ -n "$EXCLUDE_DISKS" ]; then
+    echo "  (已排除带挂载分区的盘: $(echo $EXCLUDE_DISKS | tr '\n' ' '))"
+  fi
   for i in "${!DISKS[@]}"; do echo "    [$i] ${DISKS[$i]}"; done
 
   pick_disk() { # $1=用途 $2=是否必填
@@ -103,6 +157,17 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   SYSTEM_DISK=$(pick_disk "系统盘(将被格式化!)" req)
   HOME_DISK=$(pick_disk "home 盘" opt)
   DATA_DISK=$(pick_disk "data 盘" opt)
+  # 角色互斥:同盘双角色 = disko 两条目同设备,第二次 mkfs 抹掉第一次的成果
+  if [ "$HOME_DISK" != null ] || [ "$DATA_DISK" != null ]; then
+    for d in "$HOME_DISK" "$DATA_DISK"; do
+      if [ "$d" != null ] && [ "$d" = "$SYSTEM_DISK" ]; then
+        die "$d 被选了两个角色 —— 多盘请选不同盘;单盘则多余角色直接回车(落回系统盘子卷)"
+      fi
+    done
+    if [ "$HOME_DISK" != null ] && [ "$HOME_DISK" = "$DATA_DISK" ]; then
+      die "home 盘与 data 盘不能是同一块"
+    fi
+  fi
 
   # swap 建议 = 内存大小(休眠需要 ≥ RAM)
   RAM_GIB=$(free -g | awk '/^Mem:/{print $2}')
@@ -129,17 +194,9 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   read -p "  按此布局创建并安装?(y/N) " -n 1 -r; echo
   [[ $REPLY =~ ^[Yy]$ ]] || die "已取消"
 
-  # 物化:模板 → hosts/<name>/
-  mkdir -p "hosts/$HOSTNAME"
-  cp hosts/_template/{default.nix,disko.nix,redact.sh} "hosts/$HOSTNAME/"
-  if [ "$GPU_IMPORT" = "./nvidia.nix" ]; then
-    cp hosts/_template/nvidia.nix "hosts/$HOSTNAME/"
-    sed -i "s|{{NVIDIA_OPEN}}|$NVIDIA_OPEN|g; s|{{NVIDIA_PACKAGE}}|$NVIDIA_PACKAGE|g" "hosts/$HOSTNAME/nvidia.nix"
-  fi
-  sed -i "s|{{HOSTNAME}}|$HOSTNAME|g; s|{{CPU_PROFILE}}|$CPU_PROFILE|g; s|{{GPU_IMPORT}}|$GPU_IMPORT|g" \
-    "hosts/$HOSTNAME/default.nix"
-  sed -i "s|{{SYSTEM_DISK}}|$SYSTEM_DISK|g; s|{{HOME_DISK}}|$HOME_DISK|g; s|{{DATA_DISK}}|$DATA_DISK|g; s|{{SWAP_GIB}}|$SWAP_GIB|g" \
-    "hosts/$HOSTNAME/disko.nix"
+  # 物化:模板 → hosts/<name>/(共用函数,与 selftest 同一真源)
+  materialize_host "$HOSTNAME" "$CPU_PROFILE" "$GPU_IMPORT" "$NVIDIA_OPEN" "$NVIDIA_PACKAGE" \
+    "$SYSTEM_DISK" "$HOME_DISK" "$DATA_DISK" "$SWAP_GIB"
   $GIT add "hosts/$HOSTNAME"
   echo "✅ hosts/$HOSTNAME 已生成并注册(hosts/ 目录即主机列表)"
   echo "   装机后的手动项(显示器/传感器/udev):见 hosts/$HOSTNAME/default.nix 内 TODO"
@@ -155,58 +212,45 @@ read -p "确认已备份数据并继续?(y/N) " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] || die "已取消"
 
-# ── [1/5] 硬件事实:facter 报告 + 脱敏 ─────────────────
+# ── [1/6] 硬件事实:facter 报告 + 脱敏 ─────────────────
 # 任何 flake eval 都依赖 .facter.json,必须最先做
-echo "[1/5] 🔍 生成硬件事实报告(facter)..."
+echo "[1/6] 🔍 生成硬件事实报告(facter)..."
 nix run nixpkgs#nixos-facter -- -o "hosts/$HOSTNAME/.facter.json"
 "hosts/$HOSTNAME/redact.sh"   # 公开仓库:序列号脱敏(幂等)
 $GIT add "hosts/$HOSTNAME/.facter.json"
 
-# ── [2/5] sops host key 契约 ──────────────────────────
-# secrets.yaml 按 host key 的 age 公钥加密;key 不匹配 = 装完无法登录
-# label 从主机名派生(FWW-Desktop → host_fww_desktop);新主机 label 尚未
-# 登记是合法状态,由 [4/5] 生成 key 后写入
-echo "[2/5] 🔑 处理 SSH host key(sops 解密契约)..."
+# ── [2/6] 预检:动盘前完整求值 ─────────────────────────
+# 配置的第一次完整求值发生在这里而非 nixos-install —— 模板参数错/模块
+# 冲突/token 残留在格式化之前拦截(diskoScript 只求值到 disko 层,不够)
+echo "[2/6] 🧪 预检:完整求值目标配置(动盘前最后一道闸)..."
+if ! nix build --dry-run ".#nixosConfigurations.${HOSTNAME}.config.system.build.toplevel"; then
+  die "配置求值失败 —— 磁盘尚未触碰,修好配置重跑即可"
+fi
+
+# ── [3/6] sops host key 契约(全部在动盘之前完成)──────
+# secrets.yaml 按 host key 的 age 公钥加密;key 不匹配 = 装完无法登录。
+# key 生成/label 登记/重加密/解密烟测全部前置:任何 sops 失败都发生在
+# 磁盘被格式化之前(YAML 被 sed 弄坏也在这里当场暴露,而非盘空之后)
+# label 从主机名派生(FWW-Desktop → host_fww_desktop)
+echo "[3/6] 🔑 sops host key 契约..."
 SOPS_ADMIN_LABEL=admin_fww
 SOPS_HOST_LABEL=host_$(echo "$HOSTNAME" | tr '[:upper:]-' '[:lower:]_')
 OLD_AGE_PUB=$(sed -n "s/.*&${SOPS_HOST_LABEL} \(age1[a-z0-9]*\).*/\1/p" .sops.yaml)
-if [ -z "$OLD_AGE_PUB" ]; then
-  echo "     .sops.yaml 中无 ${SOPS_HOST_LABEL}(新主机),key 生成后登记 → [4/5]"
-fi
+TMPKEY=/tmp/install-host-key
 
 if [ -n "$HOST_KEY_FILE" ]; then
-  # 同机重装:复用备份的旧 key
+  # 同机重装:复用备份的旧 key(必须与 .sops.yaml 登记值一致,当场验证)
   [ -f "$HOST_KEY_FILE" ] || die "--host-key 文件不存在: $HOST_KEY_FILE"
   [ -n "$OLD_AGE_PUB" ] || die "该主机 label 未登记过,不存在\"复用旧 key\"场景;去掉 --host-key 走全新安装"
   NEW_AGE_PUB=$(ssh-keygen -y -f "$HOST_KEY_FILE" | nix shell nixpkgs#ssh-to-age -c ssh-to-age)
-else
-  NEW_AGE_PUB=""
-fi
-
-if [ -n "$NEW_AGE_PUB" ] && [ "$NEW_AGE_PUB" = "$OLD_AGE_PUB" ]; then
+  [ "$NEW_AGE_PUB" = "$OLD_AGE_PUB" ] \
+    || die "旧 key 与 .sops.yaml 不匹配(该 key 非本仓库加密目标),请检查后重试"
   echo "     旧 key 与 .sops.yaml 匹配,secrets 无需重加密 ✅"
-elif [ -n "$NEW_AGE_PUB" ]; then
-  die "旧 key 与 .sops.yaml 不匹配(该 key 非本仓库加密目标),请检查后重试"
-fi
-# NEW_AGE_PUB 为空(全新安装)→ 稍后生成新 key 并重加密,见 [4/5]
-
-# ── [3/5] disko:声明式分区/格式化/挂载 ───────────────
-echo "[3/5] 📦 disko 格式化与挂载(flake.lock 内 pin 版本)..."
-nix build ".#nixosConfigurations.${HOSTNAME}.config.system.build.diskoScript" \
-  --out-link /tmp/disko-install
-/tmp/disko-install
-
-# ── [4/5] host key 就位 + (必要时)重加密 secrets ─────
-echo "[4/5] 🔐 host key 就位..."
-KEY=/mnt/etc/ssh/ssh_host_ed25519_key
-mkdir -p /mnt/etc/ssh
-if [ -n "$HOST_KEY_FILE" ]; then
-  install -m 600 "$HOST_KEY_FILE" "$KEY"
-  ssh-keygen -y -f "$KEY" > "${KEY}.pub"
 else
-  # 全新安装(或 label 需重登记):生成新 key;secrets.yaml 重加密给新 key
-  ssh-keygen -t ed25519 -N "" -f "$KEY" -q
-  NEW_AGE_PUB=$(ssh-keygen -y -f "$KEY" | nix shell nixpkgs#ssh-to-age -c ssh-to-age)
+  # 全新安装(或重装换 key):生成新 key → 登记 label → 重加密
+  rm -f "$TMPKEY"   # 部分失败重跑时避免 ssh-keygen 交互式询问覆盖
+  ssh-keygen -t ed25519 -N "" -f "$TMPKEY" -q
+  NEW_AGE_PUB=$(ssh-keygen -y -f "$TMPKEY" | nix shell nixpkgs#ssh-to-age -c ssh-to-age)
   if [ "${SOPS_AGE_KEY_FILE:-}" = "" ] && [ "${SOPS_AGE_KEY:-}" = "" ]; then
     die "全新安装需要 admin age 私钥重加密 secrets:
   1. 备份 U 盘放好 admin 私钥后重跑:
@@ -221,16 +265,47 @@ else
     sed -i "/^keys:/a\\  - \&${SOPS_HOST_LABEL} ${NEW_AGE_PUB}" .sops.yaml
     sed -i "/- \*${SOPS_ADMIN_LABEL}/a\\          - \*${SOPS_HOST_LABEL}" .sops.yaml
   fi
+  # updatekeys 会完整解析 .sops.yaml —— 上方 sed 的任何损坏在此当场失败(仍动盘前)
   nix run nixpkgs#sops -- updatekeys secrets/secrets.yaml -y
   $GIT add .sops.yaml secrets/secrets.yaml
   echo "     secrets.yaml 已重加密(host: ${SOPS_HOST_LABEL})✅(记得 commit)"
 fi
 
-# ── [5/5] 安装系统 + 仓库就位 ─────────────────────────
-echo "[5/5] ⚙️  构建 NixOS(缓存列表与 modules/nixos/nix.nix 保持同步)..."
+# 解密烟测:拿手头的 admin 私钥证明 user_password 路径可解(防 key/路径名漂移;
+# --host-key 路径无 admin 私钥,但上方已证 key 与登记值一致,等价于可解)
+if [ -n "${SOPS_AGE_KEY_FILE:-}${SOPS_AGE_KEY:-}" ]; then
+  nix run nixpkgs#sops -- decrypt --extract '["user_password"]' secrets/secrets.yaml >/dev/null \
+    && echo "     user_password 解密烟测通过 ✅" \
+    || die "user_password 解密失败:检查 secrets.yaml 的路径名与 admin key"
+fi
+
+# ── [4/6] disko:声明式分区/格式化/挂载 ───────────────
+# 到这里为止的一切失败都不留痕迹(除 repo 内新文件);从这里起磁盘被改写
+echo "[4/6] 📦 disko 格式化与挂载(flake.lock 内 pin 版本)..."
+nix build ".#nixosConfigurations.${HOSTNAME}.config.system.build.diskoScript" \
+  --out-link /tmp/disko-install
+/tmp/disko-install
+
+# ── [5/6] host key 就位(此刻 /mnt 才可写)─────────────
+echo "[5/6] 📝 host key 写入目标系统..."
+KEY=/mnt/etc/ssh/ssh_host_ed25519_key
+mkdir -p /mnt/etc/ssh
+if [ -n "$HOST_KEY_FILE" ]; then
+  install -m 600 "$HOST_KEY_FILE" "$KEY"
+else
+  install -m 600 "$TMPKEY" "$KEY"
+fi
+ssh-keygen -y -f "$KEY" > "${KEY}.pub"
+
+# ── [6/6] 安装系统 + 仓库就位 ─────────────────────────
+# 缓存源经 nix eval 取自本机配置(nix.nix 单一真源,消除双份手工同步)
+echo "[6/6] ⚙️  构建 NixOS..."
+SUBSTITUTERS=$(nix eval --raw ".#nixosConfigurations.${HOSTNAME}.config.nix.settings.substituters" \
+  --apply 'builtins.concatStringsSep " "')
+TRUSTED_KEYS=$(nix eval --raw ".#nixosConfigurations.${HOSTNAME}.config.nix.settings.trusted-public-keys" \
+  --apply 'builtins.concatStringsSep " "')
 nixos-install --root /mnt --flake ".#${HOSTNAME}" --no-root-passwd \
-  --option extra-substituters "https://attic.xuyh0120.win/lantian https://niri.cachix.org https://hyprland.cachix.org https://nix-community.cachix.org https://noctalia.cachix.org" \
-  --option extra-trusted-public-keys "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc= niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+  --option substituters "$SUBSTITUTERS" --option trusted-public-keys "$TRUSTED_KEYS"
 
 DEST=/mnt/home/fww/nixos-config
 mkdir -p "$DEST"

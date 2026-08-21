@@ -1,5 +1,5 @@
 # filepath: ~/nixos-config/hosts/_template/default.nix
-# 新主机模板 —— install.sh 向导按探测结果替换 {{TOKEN}} 后物化为 hosts/<name>/
+# 新主机模板 —— install.sh 向导按探测结果替换占位符后物化为 hosts/<name>/
 #
 # 装机后仍需手动补的项(探测不出"意图"的部分,均已留 TODO 锚点):
 #   - 显示器布局/缩放(niri/hyprland outputs)
