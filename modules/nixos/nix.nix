@@ -47,18 +47,28 @@
     # 降低 nix-daemon 优先级，避免影响前台任务
     daemonCPUSchedPolicy = "idle";
     daemonIOSchedClass = "idle";
-
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 14d --max-freed ${toString (100 * 1024 * 1024 * 1024)}";
-    };
   };
 
-  # nh:nixos-rebuild 的现代前端。NH_FLAKE 免每次带路径(nh os switch 直接可用)
-  # 清理仍由上方 nix.gc weekly 管,nh clean 不双开
+  # nh:nixos-rebuild 前端 + 周期清理(与 nix.gc 二选一:nixpkgs 模块对双开
+  # 显式 warning "use one or the other to avoid conflict",两套都删 generations+GC)
+  #
+  # 清理 = root 定时器跑 `nh clean all`,能力为 nix-collect-garbage 超集:
+  #   - generations:--keep 10 计数下限 + --keep-since 14d 时间窗(≈原
+  #     --delete-older-than 14d,额外多滚回深度下限)
+  #   - 扫描面含 uid 1000-1100 用户的 ~/.local/state/nix/profiles(HM generations)
+  #   - gcroots:孤儿/死链删除 + result/direnv root 按 keep-since 老化
+  #     (nix-collect-garbage 永不碰 gcroots;裸 nix build 在 gcroots/auto
+  #     钉住的路径旧配置下永远回收不了,换机前实测已积累 97 个)
+  #   - 收尾 nix store gc --max 100G(≈原 --max-freed)
+  # 注:nh 默认 --keep 1 会把滚回点砍到剩一代,参数必须显式钉;
+  #     --optimise 不加(auto-optimise-store 写时优化已开)
   programs.nh = {
     enable = true;
     flake = "/home/fww/nixos-config";
+    clean = {
+      enable = true;
+      dates = "weekly";
+      extraArgs = "--keep 10 --keep-since 14d --max 100G";
+    };
   };
 }
