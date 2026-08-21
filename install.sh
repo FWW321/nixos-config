@@ -31,6 +31,13 @@ done
 [ -n "$HOSTNAME" ] || die "未指定主机名。用法: ./install.sh <主机名> [--host-key <旧key>]"
 [ "$(id -u)" = 0 ] || die "请以 root 运行(安装介质默认 root shell)"
 
+# 引导模式守卫:本仓库引导栈(ESP 分区 + systemd-boot + efi.canTouchEfiVariables,
+# 见 modules/nixos/boot.nix)仅 UEFI 机器可引导;BIOS-only(或 CSM 强制 legacy)机器
+# 会装完无法开机。检测:UEFI 模式下内核暴露 /sys/firmware/efi
+[ -d /sys/firmware/efi ] || die "当前以 BIOS/Legacy 模式启动 —— 本仓库引导配置只支持 UEFI。
+  若机器实为 UEFI:重启进固件设置,关闭 CSM/Legacy boot 后重试。
+  确需 BIOS 引导:modules/nixos/boot.nix 换 GRUB + 模板 ESP 段去掉 type=EF00 后再来。"
+
 # 安装介质可能没有 git;flake 纯净性要求新文件被 git 跟踪
 GIT="git"
 command -v git >/dev/null 2>&1 || GIT="nix shell nixpkgs#git -c git"
