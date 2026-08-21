@@ -35,8 +35,7 @@
     ./development
     ./docs.nix
   ];
-
-  # 系统工具
+  # 常用工具(nh 由系统级 programs.nh 提供 NH_FLAKE,见 modules/system/nix.nix)
   home.packages =
     with pkgs;
     [
@@ -49,13 +48,12 @@
       hyperfine
       ouch
       wireshark-cli
-      nh
       xwayland-satellite
       # MiniMax Token Plan CLI(终端直接可用;opencode skill 侧见 ai/common/skills.nix)
       mmx-cli
     ];
 
-  programs.bash.enable = true;
+  # bash 配置整体在 ./terminal.nix(enable/aliases/各集成),此处不重复声明
 
   # Koharu 配置已迁 users/fww/ai/koharu.nix(programs.koharu)
 

@@ -86,18 +86,13 @@ in
   # Bat - 更好的 cat
   programs.bat.enable = true;
 
-  # Eza - 现代化 ls（icons/git/表头/目录优先）
-  # icons=always: 已装 JetBrainsMono Nerd Font(stylix),无需 auto 检测
-  # 不用 --time-style=long-iso: HM alias 会给带=的选项加引号,brush 不兼容
+  # Eza - 现代化 ls。此处仅装包:别名全部手动声明(见 shellAliases)。
+  # 模块的 bash 集成注入 ls/ll/la/lla 时与手动组风格分裂(--icons always vs
+  # =always)且 lla 裸 flag 泄漏;brush 不递归展开 alias,集成本就不完整生效
+  # → 单一真源 = 手动别名,集成显式关闭
   programs.eza = {
     enable = true;
-    enableBashIntegration = true;
-    icons = "always";
-    git = true;
-    extraOptions = [
-      "--group-directories-first"
-      "--header"
-    ];
+    enableBashIntegration = false;
   };
 
   # Yazi - 现代文件管理器

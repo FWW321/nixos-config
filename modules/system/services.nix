@@ -1,24 +1,8 @@
 # filepath: ~/nixos-config/modules/system/services.nix
-# 系统服务：SSH、防火墙、存储维护
+# 系统服务:防火墙、存储维护、nix-ld(SSH 见 ssh.nix)
 { pkgs, ... }:
 
 {
-  # OpenSSH 安全配置
-  services.openssh = {
-    enable = true;
-    startWhenNeeded = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      X11Forwarding = false;
-    };
-    hostKeys = [{
-      type = "ed25519";
-      path = "/etc/ssh/ssh_host_ed25519_key";
-    }];
-  };
-
   # 运行非 NixOS 二进制文件（下载的闭源软件、patchelf 过 interpreter 的二进制）
   # 注意：只对 interpreter 设为 nix-ld 的二进制生效；cargo install 的二进制
   # interpreter 是 nix glibc ld（不走 nix-ld），仍需 LD_LIBRARY_PATH（见 development.nix）

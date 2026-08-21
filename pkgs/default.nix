@@ -5,10 +5,8 @@
 # 新增包：在 pkgs/ 下建 <name>/default.nix，然后在此 final 追加一行
 final: _prev: {
   mdbook-svgbob = final.callPackage ./mdbook-svgbob { };
-  mdbook-katex = final.callPackage ./mdbook-katex { };
   opencode2 = final.callPackage ./opencode2 { };
   pdf-inspector = final.callPackage ./pdf-inspector { };
-  # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见 mmx-cli/default.nix 头注释)
   mmx-cli = final.callPackage ./mmx-cli { };
   # koharu 已迁独立仓库 koharu-nix(flake input overlay 提供 pkgs.koharu,
   # 同 nixdsh/zcode-nix;HM 模块见 users/fww/ai/koharu.nix)

@@ -19,11 +19,10 @@
     ./xdg-user-dirs.nix
   ];
 
-  # Wayland 工具包
+  # Wayland 工具包(jq 由 programs.jq.enable 在 terminal.nix 装,不重复)
   home.packages = with pkgs; [
     gpu-screen-recorder
     wl-clipboard
-    jq
   ];
 
   # 如需切换到 KDE Plasma 桌面，在 flake inputs 加入 plasma-manager：

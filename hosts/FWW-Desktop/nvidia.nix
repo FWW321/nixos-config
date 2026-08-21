@@ -37,15 +37,15 @@
   ];
 
   # Wayland 环境变量
+  # 已删 GBM_BACKEND(驱动 560+ GBM loader 自动选 nvidia-drm 后端,单卡无需硬钉,
+  # Hyprland wiki 现行版也已移除)与 WLR_NO_HARDWARE_CURSORS(Hyprland 官方废弃,
+  # niri 非 wlroots 不读)
   environment.sessionVariables = {
     LIBVA_DRIVER_NAME = "nvidia";
-    GBM_BACKEND = "nvidia-drm";
     __GLX_VENDOR_LIBRARY_NAME = "nvidia";
     # VRR/G-Sync 支持
     __GL_GSYNC_ALLOWED = "1";
     __GL_VRR_ALLOWED = "1";
-    # 硬件光标可能在某些配置下有问题
-    WLR_NO_HARDWARE_CURSORS = "1";
     # NVIDIA VA-API 后端
     NVD_BACKEND = "direct";
     # DLSS / NVAPI：Proton 下启用 N 卡专属功能（DLSS 升档、Reflex、帧生成）

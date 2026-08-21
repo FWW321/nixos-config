@@ -61,10 +61,9 @@
     ];
   };
 
-  # 环境变量
+  # 环境变量(EDITOR 由 nixvim defaultEditor 在用户级声明,系统级不重复)
   environment.sessionVariables = {
     NIXOS_OZONE_WL = "1";
-    EDITOR = "nvim";
   };
 
   environment.pathsToLink = [ "/share/applications" "/share/xdg-desktop-portal" ];
