@@ -498,11 +498,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787337557,
-        "narHash": "sha256-3x+MZ4N6/uWu1CVQkoDRZgPRPoak1sk1hHk1I6+vTUw=",
+        "lastModified": 1787345231,
+        "narHash": "sha256-lmVa0zJl735GUkbhrWnFjckQb60jIpavZEx0ME5VRbg=",
         "owner": "FWW321",
         "repo": "koharu-nix",
-        "rev": "4d482e8749cedfc950407a233e570766255926bb",
+        "rev": "2cbdf44e6c78fe125673f530501f6a787bc658d8",
         "type": "github"
       },
       "original": {
@@ -1364,11 +1364,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787183674,
-        "narHash": "sha256-ECVp8CiwguZswvdj/9LNFzQhS8+Qr+u3HUSP8ZtqPXE=",
+        "lastModified": 1787345231,
+        "narHash": "sha256-I6ynJjV2N+pJOje3zmb4raF8BPimkc1e59LLzScgEmg=",
         "owner": "FWW321",
         "repo": "zcode-nix",
-        "rev": "5897e53e8559caa9d0837daef8d58fd426f318cf",
+        "rev": "1699fd386b5aabd78ee36653020fb6433345d9b8",
         "type": "github"
       },
       "original": {

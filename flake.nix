@@ -122,9 +122,8 @@
           { nixpkgs.overlays = [
             inputs.rust-overlay.overlays.default
             (import ./pkgs/default.nix)
+            # dsh:插件系统消费 pkgs.dshPlugins 命名空间,overlay 是承重接口(保留)
             inputs.nixdsh.overlays.default
-            inputs.zcode-nix.overlays.default
-            inputs.koharu-nix.overlays.default
             # @open-design/dsh-runtime 打包:src 与 services.open-design 同一
             # inputs.open-design pin(OD daemon↔runtime 协议代际原子耦合,
             # 详见 pkgs/open-design-dsh-runtime 头注释)
