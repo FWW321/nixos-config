@@ -31,7 +31,7 @@
   # nh clean --keep 5 对齐 = 实际可滚回深度。模板新机 ESP 4G 用默认 20
   boot.loader.systemd-boot.configurationLimit = 5;
 
-  networking.hostName = "FWW-Desktop";
+  # 主机名由 flake.nix 从目录名统一注入,主机目录不设
 
   boot.kernelModules = [
     "i2c-dev"

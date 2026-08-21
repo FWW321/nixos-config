@@ -146,6 +146,10 @@
             # 主机(自治:disko/facter/GPU/nixos-hardware 在 host 内 import)
             ./hosts/${name}
 
+            # 主机名唯一真源 = 目录名(hosts/FWW-Desktop → "FWW-Desktop"),
+            # 主机目录内不再重复设置
+            { networking.hostName = name; }
+
             # 共享系统模块(聚合入口)
             ./modules/nixos
 

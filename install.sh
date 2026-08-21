@@ -18,24 +18,31 @@ cd "$(dirname "$0")"
 
 die() { echo "❌ $*" >&2; exit 1; }
 
-# 物化 = 模板 token 替换(向导与 selftest 共用同一真源;改 token 只改这里)
-materialize_host() { # $1=主机名 $2=cpu_profile $3=gpu_import $4=nvidia_open $5=nvidia_pkg
-  #                   $6=system_disk $7=home_disk $8=data_disk $9=swap_gib
+# 物化 = 复制零 token 模板 + 写 params.nix(向导与 selftest 共用同一真源)。
+# 正确性靠 Nix 类型系统:params 缺字段/错值名 → [2/6] 求值闸门当场报错,
+# 不存在"模板替换漏填"这一类 bug,故无需 token 残留检查
+materialize_host() { # $1=主机名 $2=cpu_profile $3=gpu(nvidia|null) $4=nvidia_open
+  #                   $5=nvidia_pkg $6=system_disk $7=home_disk $8=data_disk $9=swap_gib
   local h=$1
   mkdir -p "hosts/$h"
-  cp hosts/_template/{default.nix,disko.nix,redact.sh} "hosts/$h/"
-  if [ "$3" = "./nvidia.nix" ]; then
-    cp hosts/_template/nvidia.nix "hosts/$h/"
-    sed -i "s|{{NVIDIA_OPEN}}|$4|g; s|{{NVIDIA_PACKAGE}}|$5|g" "hosts/$h/nvidia.nix"
-  fi
-  sed -i "s|{{HOSTNAME}}|$h|g; s|{{CPU_PROFILE}}|$2|g; s|{{GPU_IMPORT}}|$3|g" "hosts/$h/default.nix"
-  sed -i "s|{{SYSTEM_DISK}}|$6|g; s|{{HOME_DISK}}|$7|g; s|{{DATA_DISK}}|$8|g; s|{{SWAP_GIB}}|$9|g" \
-    "hosts/$h/disko.nix"
-  # token 残留自检:有漏填立刻指出位置,而不是等到求值失败
-  if grep -rn "{{" "hosts/$h"; then
-    echo "❌ 模板 token 未替换完整(见上方 grep 输出)" >&2
-    return 1
-  fi
+  cp hosts/_template/{default.nix,disko.nix,nvidia.nix,params.nix,redact.sh} "hosts/$h/"
+  cat >"hosts/$h/params.nix" <<EOF
+# 由 install.sh 向导生成;手动调整后直接 nixos-rebuild 即可
+{
+  cpuProfile = "$2";
+  gpu = ${3};
+  nvidia = {
+    open = ${4};
+    package = ${5};
+  };
+  disks = {
+    system = "${6}";
+    home = ${7};
+    data = ${8};
+  };
+  swapGiB = ${9};
+}
+EOF
 }
 
 # ── --selftest:CI 夹具回归(物化 3 种布局 → 完整求值 → 清理)──
@@ -45,9 +52,9 @@ if [ "${1:-}" = "--selftest" ]; then
   ST_CLEAN="hosts/st-single-gpu hosts/st-multi-legacy hosts/st-nogpu"
   # shellcheck disable=SC2064  # ST_CLEAN 是固定字符串,定义时展开正是意图
   trap "git rm -rfq --ignore-unmatch $ST_CLEAN 2>/dev/null || rm -rf $ST_CLEAN" EXIT
-  materialize_host st-single-gpu  common-cpu-intel ./nvidia.nix    true  latest     /dev/vda null     null     32
-  materialize_host st-multi-legacy common-cpu-intel ./nvidia.nix    false legacy_580 /dev/vda /dev/vdb /dev/vdc 64
-  materialize_host st-nogpu       common-cpu-amd   "# ./nvidia.nix" true latest     /dev/vda null     null     16
+  materialize_host st-single-gpu   common-cpu-intel '"nvidia"' true  '"latest"'     /dev/vda null     null     32
+  materialize_host st-multi-legacy common-cpu-intel '"nvidia"' false '"legacy_580"' /dev/vda /dev/vdb /dev/vdc 64
+  materialize_host st-nogpu        common-cpu-amd   null       true  '"latest"'     /dev/vda null     null     16
   for h in st-single-gpu st-multi-legacy st-nogpu; do
     cp hosts/FWW-Desktop/.facter.json "hosts/$h/.facter.json"
   done
@@ -105,7 +112,7 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   # 只有 nouveau,闭源驱动装完才有)。同时按 PCI device id 判架构:
   #   >= 0x1E00 = Turing+(GSP 存在,open 模块可用);更老 = Maxwell/Pascal/Volta
   #   (open 不兼容,需闭源 + legacy_580 终点分支,nvidia README/support timeframes)
-  GPU_IMPORT="# ./nvidia.nix  # 未检测到 NVIDIA"
+  GPU_KIND=null
   NVIDIA_OPEN=true
   NVIDIA_PACKAGE=latest
   GPU_LIST=""
@@ -123,7 +130,7 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
     fi
   done
   if [ -n "$GPU_LIST" ]; then
-    GPU_IMPORT="./nvidia.nix"
+    GPU_KIND="nvidia"
     echo "  GPU → NVIDIA(${GPU_LIST# })open=$NVIDIA_OPEN package=$NVIDIA_PACKAGE"
     command -v lspci >/dev/null && lspci -nn | grep -i 'vga\|3d' | sed 's/^/    /'
   else
@@ -195,8 +202,12 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   [[ $REPLY =~ ^[Yy]$ ]] || die "已取消"
 
   # 物化:模板 → hosts/<name>/(共用函数,与 selftest 同一真源)
-  materialize_host "$HOSTNAME" "$CPU_PROFILE" "$GPU_IMPORT" "$NVIDIA_OPEN" "$NVIDIA_PACKAGE" \
-    "$SYSTEM_DISK" "$HOME_DISK" "$DATA_DISK" "$SWAP_GIB"
+  # GPU_ARG/NVIDIA_PKG_ARG 是"Nix 字面量"形态:"nvidia" 与 null;
+  # latest 写成 nix 字符串 "latest"(params.nix 中为 attr 名)
+  if [ "$GPU_KIND" = nvidia ]; then GPU_ARG='"nvidia"'; else GPU_ARG=null; fi
+  NVIDIA_PKG_ARG="\"$NVIDIA_PACKAGE\""
+  materialize_host "$HOSTNAME" "$CPU_PROFILE" "$GPU_ARG" "$NVIDIA_OPEN" \
+    "$NVIDIA_PKG_ARG" "$SYSTEM_DISK" "$HOME_DISK" "$DATA_DISK" "$SWAP_GIB"
   $GIT add "hosts/$HOSTNAME"
   echo "✅ hosts/$HOSTNAME 已生成并注册(hosts/ 目录即主机列表)"
   echo "   装机后的手动项(显示器/传感器/udev):见 hosts/$HOSTNAME/default.nix 内 TODO"

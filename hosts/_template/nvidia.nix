@@ -1,11 +1,15 @@
-# filepath: ~/nixos-config/hosts/<host>/nvidia.nix(由 _template 物化,向导按架构填参)
+# filepath: ~/nixos-config/hosts/<host>/nvidia.nix(由 _template 物化)
 #
-# 适用边界(照抄会导致错误安装的场景,均已在向导自动判定,手动复用时注意):
+# 参数(架构判定/分支选择)经 ./params.nix 注入,向导按 PCI device id 自动判定。
+# 适用边界(手动复用 params 时注意):
 #   - open 模块:仅 Turing+(GTX 16xx/RTX 20xx,2018+,依赖 GSP);Maxwell/Pascal/
 #     Volta(GTX 9xx/10xx,TITAN V)必须闭源,且 580 是终点分支(nvidia 官方
 #     support timeframes)→ package 需 legacy_580。Blackwell+ 反向只支持 open。
 #   - 混合显卡笔记本(Intel/AMD 核显 + N 卡):本文件缺 PRIME 段,见下方 TODO
 #   - 单卡桌面 Turing+:本文件即完整配置
+let
+  p = import ./params.nix;
+in
 {
   config,
   pkgs,
@@ -20,11 +24,11 @@
     modesetting.enable = true;
     # 电源管理 - 必须开启以支持休眠/挂起
     powerManagement.enable = true;
-    # 开源内核模块:{{NVIDIA_OPEN}}(Turing+ 为 true;Maxwell/Pascal/Volta 为 false,不兼容)
-    open = {{NVIDIA_OPEN}};
+    # 开源内核模块:params.nvidia.open(Turing+ = true;Maxwell/Pascal/Volta = false,不兼容)
+    open = p.nvidia.open;
     nvidiaSettings = true;
-    # {{NVIDIA_PACKAGE}}:latest(Turing+)| legacy_580(Maxwell/Pascal/Volta 终点分支)
-    package = config.boot.kernelPackages.nvidiaPackages.{{NVIDIA_PACKAGE}};
+    # params.nvidia.package:latest(Turing+)| legacy_580(Maxwell/Pascal/Volta 终点分支)
+    package = config.boot.kernelPackages.nvidiaPackages.${p.nvidia.package};
 
     # TODO 混合显卡笔记本(核显+N卡)解开并填 bus id(`lspci | grep -E 'VGA|3D'` 十六进制转十进制):
     # prime = {
