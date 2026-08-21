@@ -25,5 +25,7 @@ jobs:
       - name: Flake check (all outputs)
         run: nix flake check
 
-      - name: Format check (RFC 166)
-        run: nix fmt -- --fail-on-change
+      - name: Format + lint check (RFC 166 / deadnix / statix)
+        run: |
+          nix fmt
+          git diff --exit-code

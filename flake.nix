@@ -127,6 +127,8 @@
           pkgs = import nixpkgs {
             system = "x86_64-linux";
             overlays = [ self.overlays.default ];
+            # chatgpt(deb 解包)unfree;与 nix.nix 的 nixpkgs.config 同规则
+            config.allowUnfree = true;
           };
         in
         {
