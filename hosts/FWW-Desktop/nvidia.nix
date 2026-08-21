@@ -25,7 +25,12 @@
   hardware.nvidia-container-toolkit.enable = true;
 
   # NVIDIA 早期加载 - 确保在 display manager 前加载驱动
-  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
+  boot.initrd.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_uvm"
+    "nvidia_drm"
+  ];
 
   # NVIDIA DRM 和休眠支持内核参数
   boot.kernelParams = [

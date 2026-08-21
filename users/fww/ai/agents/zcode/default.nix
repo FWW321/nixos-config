@@ -1,10 +1,23 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/zcode/default.nix
 # zcode 适配器:common 中立层 → programs.zcode 选项(纯数据,零机制)
 # 机制见独立仓库 zcode-nix 的 modules/zcode.nix;本文件只做词汇翻译
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../../common { inherit pkgs inputs lib config; };
+  common = import ../../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 
   # common 端点键 → zcode kind(机械映射;教训见模块 providers.<n>.kind 描述:
   # kind:openai 是 Responses API,zhipu coding 端点须走 openai-compatible)
@@ -22,13 +35,16 @@ let
   # 删掉下面的 zhipu 排除条件,custom:zhipu 条目随下次 switch 自动重建
   # schema 后键恒在:models 未声明 = {},apiKey 未声明 = null
   # (旧 `?` 存在性探测会恒真)
-  eligible = lib.filterAttrs
-    (name: p: p.models != { } && p.apiKey.secretFile != null && name != "zhipu")
-    common.providers;
+  eligible = lib.filterAttrs (
+    name: p: p.models != { } && p.apiKey.secretFile != null && name != "zhipu"
+  ) common.providers;
 
-  providers = lib.mapAttrs (name: p:
-    let ep = endpointByProvider.${name} or "anthropic";
-    in {
+  providers = lib.mapAttrs (
+    name: p:
+    let
+      ep = endpointByProvider.${name} or "anthropic";
+    in
+    {
       kind = kindByEndpoint.${ep};
       baseURL = p.endpoints.${ep};
       apiKeyFile = p.apiKey.secretFile;
@@ -36,7 +52,8 @@ let
         context = m.contextWindow;
         output = m.maxOutput;
       }) p.models;
-    }) eligible;
+    }
+  ) eligible;
 
   # skill 依赖包(agent-browser 等)走模块 extraPackages,显式声明
   # (此前是蹭 opencode 的 skillPkgs,隐式依赖)
@@ -44,28 +61,36 @@ let
     lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills)
   );
 
-  selectedSkills = lib.filterAttrs (_: s: (s.defaultEnabled or false) && !(s ? runtime))
-    common.skills;
+  selectedSkills = lib.filterAttrs (
+    _: s: (s.defaultEnabled or false) && !(s ? runtime)
+  ) common.skills;
 
   # common skill 形状 → 模块三态:entryFile 单文件 / source 目录
-  skills = lib.mapAttrs (_: s:
-    if s ? entryFile then "${s.source}/${s.entryFile}" else s.source)
-    selectedSkills;
+  skills = lib.mapAttrs (
+    _: s: if s ? entryFile then "${s.source}/${s.entryFile}" else s.source
+  ) selectedSkills;
 
   # common mcp 形状(local/remote) → 模块业界形状(command/url + file 引用)
-  mcpServers = lib.mapAttrs (_: m:
-    (if m ? local then {
-      inherit (m.local) command;
-      args = m.local.args or [ ];
-      env = lib.mapAttrs (_: v: if v ? secretFile then { file = v.secretFile; } else v)
-        (m.local.env or { });
-    } else {
-      url = m.remote.url;
-      headers = lib.mapAttrs (_: h: {
-        file = h.secretFile;
-        prefix = h.prefix;
-      }) (m.remote.secretHeaders or { });
-    })
+  mcpServers = lib.mapAttrs (
+    _: m:
+    (
+      if m ? local then
+        {
+          inherit (m.local) command;
+          args = m.local.args or [ ];
+          env = lib.mapAttrs (_: v: if v ? secretFile then { file = v.secretFile; } else v) (
+            m.local.env or { }
+          );
+        }
+      else
+        {
+          url = m.remote.url;
+          headers = lib.mapAttrs (_: h: {
+            file = h.secretFile;
+            prefix = h.prefix;
+          }) (m.remote.secretHeaders or { });
+        }
+    )
     // (lib.optionalAttrs (!(m.defaultEnabled or true)) { enabled = false; })
   ) common.mcp;
 in
@@ -86,12 +111,13 @@ in
     agents.vision = {
       inherit (common.subagents.vision) description prompt;
       model =
-        "custom:" + lib.strings.escapeURL "custom:${common.subagents.vision.model.provider}"
+        "custom:"
+        + lib.strings.escapeURL "custom:${common.subagents.vision.model.provider}"
         + ":${common.subagents.vision.model.model}";
       tools = [
-        "Read"  # 读取图像文件
-        "Glob"  # 按名定位文件
-        "Grep"  # 按内容定位文本(图表 CSV 源等)
+        "Read" # 读取图像文件
+        "Glob" # 按名定位文件
+        "Grep" # 按内容定位文本(图表 CSV 源等)
       ];
     };
   };

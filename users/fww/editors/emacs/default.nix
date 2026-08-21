@@ -26,20 +26,20 @@ let
   # Python/C/Rust/Go/Zig/...：Emacs 29+ 内置了对应 -ts-mode（python-ts-mode 等），【只需 grammar】
   # Nix：Emacs 不内置 nix-ts-mode，【grammar 在此 + mode 在下方 extraPackages 的 nix-ts-mode】
   ts-grammars = pkgs.emacs.pkgs.treesit-grammars.with-grammars (p: [
-    p.tree-sitter-nix           # Nix
-    p.tree-sitter-python        # Python
-    p.tree-sitter-rust          # Rust
-    p.tree-sitter-go            # Go
-    p.tree-sitter-c             # C
-    p.tree-sitter-cpp           # C++
-    p.tree-sitter-zig           # Zig
-    p.tree-sitter-toml          # TOML
-    p.tree-sitter-json          # JSON
-    p.tree-sitter-yaml          # YAML
-    p.tree-sitter-markdown      # Markdown
-    p.tree-sitter-typescript    # TypeScript
-    p.tree-sitter-tsx           # TSX
-    p.tree-sitter-javascript    # JavaScript
+    p.tree-sitter-nix # Nix
+    p.tree-sitter-python # Python
+    p.tree-sitter-rust # Rust
+    p.tree-sitter-go # Go
+    p.tree-sitter-c # C
+    p.tree-sitter-cpp # C++
+    p.tree-sitter-zig # Zig
+    p.tree-sitter-toml # TOML
+    p.tree-sitter-json # JSON
+    p.tree-sitter-yaml # YAML
+    p.tree-sitter-markdown # Markdown
+    p.tree-sitter-typescript # TypeScript
+    p.tree-sitter-tsx # TSX
+    p.tree-sitter-javascript # JavaScript
   ]);
 in
 {
@@ -49,28 +49,38 @@ in
     package = pkgs.emacs-pgtk;
 
     # 包由 nix 声明式安装（可复现）；init 里 use-package 的 :ensure 因此可省略
-    extraPackages = epkgs: with epkgs; [
-      # 补全栈（minad 系 + embark 上下文动作）
-      vertico orderless marginalia consult corfu cape
-      embark embark-consult
-      # Git
-      magit
-      # 编辑 / 发现 / undo
-      which-key helpful vundo
-      # 格式化（保存时；外部 formatter 二进制见 home.packages）
-      apheleia
-      # tree-sitter 模式管理（grammar 由 ts-grammars 提供，不靠 treesit-auto 装）
-      treesit-auto
-      nix-ts-mode        # Nix 的 tree-sitter 主模式（Emacs 不内置，单独装；grammar 见 ts-grammars）
-      # AI（LLM 客户端，后端配置见 init-ai.el）
-      gptel
-      # 弹窗 buffer 管理（*Help* / *Messages* / compilation 等一键显隐）
-      popper
-      # 状态栏
-      nerd-icons doom-modeline
-      # 视觉
-      rainbow-delimiters
-    ];
+    extraPackages =
+      epkgs: with epkgs; [
+        # 补全栈（minad 系 + embark 上下文动作）
+        vertico
+        orderless
+        marginalia
+        consult
+        corfu
+        cape
+        embark
+        embark-consult
+        # Git
+        magit
+        # 编辑 / 发现 / undo
+        which-key
+        helpful
+        vundo
+        # 格式化（保存时；外部 formatter 二进制见 home.packages）
+        apheleia
+        # tree-sitter 模式管理（grammar 由 ts-grammars 提供，不靠 treesit-auto 装）
+        treesit-auto
+        nix-ts-mode # Nix 的 tree-sitter 主模式（Emacs 不内置，单独装；grammar 见 ts-grammars）
+        # AI（LLM 客户端，后端配置见 init-ai.el）
+        gptel
+        # 弹窗 buffer 管理（*Help* / *Messages* / compilation 等一键显隐）
+        popper
+        # 状态栏
+        nerd-icons
+        doom-modeline
+        # 视觉
+        rainbow-delimiters
+      ];
   };
 
   # Emacs daemon（systemd user 服务）——emacsclient 连常驻 daemon，秒开、不阻塞终端
@@ -78,31 +88,31 @@ in
   # socketActivation：懒启动，首次 emacsclient 才经 systemd socket 拉起 daemon（省空闲内存）
   services.emacs = {
     enable = true;
-    client.enable = true;            # 生成 emacsclient desktop 项
-    socketActivation.enable = true;  # 懒启动（关掉则登录时 eager 常驻）
+    client.enable = true; # 生成 emacsclient desktop 项
+    socketActivation.enable = true; # 懒启动（关掉则登录时 eager 常驻）
     # 不设 defaultEditor：EDITOR 已在 wrappers/hm.nix 设为 nvim，此处不覆盖
   };
 
   # 语言服务器（LSP server）——独立二进制，放 home.packages 而非 extraPackages；eglot 自动调用
   # 例外：rust-analyzer 由 rust-overlay 工具链提供（见 development.nix home.packages），不在此——nightly 工具链已含 rust-analyzer 扩展
   home.packages = with pkgs; [
-    nil                            # Nix
-    pyright                        # Python（提供 pyright-langserver）
-    gopls                          # Go
-    clang-tools                    # C/C++（提供 clangd）
-    zls                            # Zig
-    taplo                          # TOML
-    marksman                       # Markdown
-    typescript-language-server     # TypeScript / JavaScript
-    vscode-langservers-extracted   # JSON / CSS / HTML
-    yaml-language-server           # YAML
+    nil # Nix
+    pyright # Python（提供 pyright-langserver）
+    gopls # Go
+    clang-tools # C/C++（提供 clangd）
+    zls # Zig
+    taplo # TOML
+    marksman # Markdown
+    typescript-language-server # TypeScript / JavaScript
+    vscode-langservers-extracted # JSON / CSS / HTML
+    yaml-language-server # YAML
     # 格式化器（apheleia 保存时调用；clang-format 来自 clang-tools、taplo 已在上方 LSP 列）
-    nixfmt                         # Nix
-    ruff                           # Python（ruff format）
-    prettier                       # JS / TS / JSON / YAML / Markdown / CSS
+    nixfmt # Nix
+    ruff # Python（ruff format）
+    prettier # JS / TS / JSON / YAML / Markdown / CSS
     # rustfmt 不在此：rust-overlay 工具链（见 development.nix）已提供 rustfmt / cargo-fmt
     # 字体（doom-modeline 图标用）
-    nerd-fonts.symbols-only        # Symbols Nerd Font Mono（图标字形回退字体）
+    nerd-fonts.symbols-only # Symbols Nerd Font Mono（图标字形回退字体）
   ];
 
   # elisp 配置：源引用同目录 .el 文件（改 .el 后 nix switch 生效；elisp 享语法高亮/工具支持）

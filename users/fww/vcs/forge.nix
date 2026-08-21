@@ -17,39 +17,45 @@ let
   # ── 唯一数据源:加 forge 只动 forges.nix ──
   forges = (import ./forges.nix).forges;
 
-  forgeName = f: builtins.head (lib.splitString "." f.host);  # github.com → github
+  forgeName = f: builtins.head (lib.splitString "." f.host); # github.com → github
 in
 {
   # ssh host 块(transport + 认证)→ git/jj 共用 ~/.ssh/config
-  programs.ssh.settings = builtins.listToAttrs (map (f: {
-    name = f.host;
-    value = {
-      hostname = f.host;
-      user = "git";
-      inherit identityFile;
-      identitiesOnly = true;
-    };
-  }) forges);
+  programs.ssh.settings = builtins.listToAttrs (
+    map (f: {
+      name = f.host;
+      value = {
+        hostname = f.host;
+        user = "git";
+        inherit identityFile;
+        identitiesOnly = true;
+      };
+    }) forges
+  );
 
-  programs.git.settings =
-    { # https → ssh 重写:git 直读;jj 经 spawn 的 git 子进程间读
-      url = builtins.listToAttrs (map (f: {
+  programs.git.settings = {
+    # https → ssh 重写:git 直读;jj 经 spawn 的 git 子进程间读
+    url = builtins.listToAttrs (
+      map (f: {
         name = "git@${f.host}:";
         value.insteadOf = "https://${f.host}/";
-      }) forges);
-    }
-    # forge 用户名标记(ghub/magit forge 读此解析身份,git 本身忽略)
-    // builtins.listToAttrs (map (f: {
-      name = forgeName f;          # github / codeberg → git config section
-      value.user = f.username;     # [github] user = ...  (ghub/magit forge 读,git 本身忽略)
-    }) forges);
+      }) forges
+    );
+  }
+  # forge 用户名标记(ghub/magit forge 读此解析身份,git 本身忽略)
+  // builtins.listToAttrs (
+    map (f: {
+      name = forgeName f; # github / codeberg → git config section
+      value.user = f.username; # [github] user = ...  (ghub/magit forge 读,git 本身忽略)
+    }) forges
+  );
 
   # gh CLI:GitHub 官方命令行(与 github MCP server 共用同一 forge 身份)
   # 认证由系统 sops 模板渲染 ~/.config/gh/hosts.yml(见 modules/nixos/secrets.nix),无需 gh auth login
   programs.gh = {
     enable = true;
     settings = {
-      git_protocol = "ssh";  # 与 forge.nix 的 https→ssh 重写一致
+      git_protocol = "ssh"; # 与 forge.nix 的 https→ssh 重写一致
       editor = "nvim";
     };
   };

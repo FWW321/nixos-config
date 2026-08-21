@@ -8,7 +8,11 @@
 # opencode skill (users/fww/ai/skills/pdf-inspector) 经 skills.nix 的 package 字段绑定此包
 #
 # 无 MSRV 约束 (rust_version: null, edition 2021),用 nixpkgs 默认 stable rustPlatform
-{ lib, rustPlatform, fetchCrate }:
+{
+  lib,
+  rustPlatform,
+  fetchCrate,
+}:
 
 rustPlatform.buildRustPackage rec {
   pname = "pdf-inspector";

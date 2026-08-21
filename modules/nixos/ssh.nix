@@ -14,14 +14,18 @@
       KbdInteractiveAuthentication = false;
       X11Forwarding = false;
     };
-    hostKeys = [{
-      type = "ed25519";
-      path = "/etc/ssh/ssh_host_ed25519_key";
-    }];
+    hostKeys = [
+      {
+        type = "ed25519";
+        path = "/etc/ssh/ssh_host_ed25519_key";
+      }
+    ];
   };
 
   programs.ssh.knownHosts = {
-    "github.com".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
-    "codeberg.org".publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIVIC02vnjFyL+I4RHfvIGNtOgJMe769VTF1VR4EB3ZB";
+    "github.com".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+    "codeberg.org".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIVIC02vnjFyL+I4RHfvIGNtOgJMe769VTF1VR4EB3ZB";
   };
 }

@@ -7,7 +7,12 @@
 # PUT/DELETE 运行时注册 API(仅 GET /api/skill 列表 + session 级激活),
 # 故 mcp-hot-sync.nix 式热同步无法复刻;变更生效统一走
 # `opencode2 service restart`(进行中的工具调用会被中断,属预期)。
-{ pkgs, inputs, lib, ... }:
+{
+  pkgs,
+  inputs,
+  lib,
+  ...
+}:
 let
   understandDirs = [
     "understand"

@@ -10,11 +10,11 @@
 {
   programs.dsh.plugins = {
     # ── 交互面(face/registry 全自动)──
-    web-app.enable = true;   # → face "web"(上游 dsh web 原生子命令)
-    headless.enable = true;  # → face "headless"(in-box 表推导)
+    web-app.enable = true; # → face "web"(上游 dsh web 原生子命令)
+    headless.enable = true; # → face "headless"(in-box 表推导)
     dsh-tui = {
-      enable = true;                       # → face "tui"(registry 键名反查 + face= 元数据,零 source)
-      excludedPresets = [ "liangshen" ];   # 物理剥离:不进 farm、播种器无从种出、菜单不可见不可选(user 根旧副本已手动清)
+      enable = true; # → face "tui"(registry 键名反查 + face= 元数据,零 source)
+      excludedPresets = [ "liangshen" ]; # 物理剥离:不进 farm、播种器无从种出、菜单不可见不可选(user 根旧副本已手动清)
       # defaultPreset/permissionMode 不设 → 回落全局(standard / workspace-write,见 search.nix)
     };
   };

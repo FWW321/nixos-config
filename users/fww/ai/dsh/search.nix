@@ -19,7 +19,7 @@
 
     webSearchProviders.zhipu = {
       row = {
-        name = "@fww/dsh-web-search-zhipu";        # 行 id 缺省 = web-search-zhipu
+        name = "@fww/dsh-web-search-zhipu"; # 行 id 缺省 = web-search-zhipu
         secretFile = "/run/secrets/zhipu_api_key"; # 派生 apiKeyEnv=ZHIPU_API_KEY
         # 其余走包默认:mcpURL=web_search_prime / tool / count=5
       };
@@ -28,7 +28,7 @@
     webSearchProviders.exa = {
       row = {
         name = "@tonydua/dsh-web-search-exa";
-        secretFile = "/run/secrets/exa_api_key";   # 派生 apiKeyEnv=EXA_API_KEY
+        secretFile = "/run/secrets/exa_api_key"; # 派生 apiKeyEnv=EXA_API_KEY
       };
     };
 
@@ -37,7 +37,7 @@
 
     webFetchProviders.zhipu = {
       row = {
-        name = "@fww/dsh-web-fetch-zhipu";         # 行 id 缺省 = web-fetch-zhipu
+        name = "@fww/dsh-web-fetch-zhipu"; # 行 id 缺省 = web-fetch-zhipu
         secretFile = "/run/secrets/zhipu_api_key"; # 同 env 同文件,与 search 去重
       };
     };

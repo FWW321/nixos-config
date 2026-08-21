@@ -36,22 +36,20 @@
     ./docs.nix
   ];
   # 常用工具(nh 由系统级 programs.nh 提供 NH_FLAKE,见 modules/nixos/nix.nix)
-  home.packages =
-    with pkgs;
-    [
-      qq
-      fd
-      curl
-      btop
-      ripgrep
-      dust
-      hyperfine
-      ouch
-      wireshark-cli
-      xwayland-satellite
-      # MiniMax Token Plan CLI(终端直接可用;opencode skill 侧见 ai/common/skills.nix)
-      mmx-cli
-    ];
+  home.packages = with pkgs; [
+    qq
+    fd
+    curl
+    btop
+    ripgrep
+    dust
+    hyperfine
+    ouch
+    wireshark-cli
+    xwayland-satellite
+    # MiniMax Token Plan CLI(终端直接可用;opencode skill 侧见 ai/common/skills.nix)
+    mmx-cli
+  ];
 
   # bash 配置整体在 ./terminal.nix(enable/aliases/各集成),此处不重复声明
 

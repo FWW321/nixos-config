@@ -6,6 +6,6 @@
   programs.brave = {
     enable = true;
     commandLineArgs = [ "--restore-last-session" ];
-    extensions = [{ id = "bdiifdefkgmcblbcghdlonllpjhhjgof"; }];
+    extensions = [ { id = "bdiifdefkgmcblbcghdlonllpjhhjgof"; } ];
   };
 }

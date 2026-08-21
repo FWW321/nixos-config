@@ -1,10 +1,23 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/opencode/settings.nix
 # opencode v2 核心配置(programs.opencode)
 # v2 与 v1 同路径读 ~/.config/opencode/,但字段是 v2 原生后不要再喂给 v1
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../../common { inherit pkgs inputs lib config; };
+  common = import ../../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 
   p = common.providers.zhipu;
 
@@ -13,24 +26,27 @@ let
 
   # ── MCP 格式转换：中立 → opencode v2 ──
   # v2:mcp.servers 包一层,enabled 反转为 disabled,timeout 分 catalog/execution
-  toOpenCodeHeader = v:
-    if builtins.isString v then "{file:${v}}"
-    else "${v.prefix}{file:${v.secretFile}}";
+  toOpenCodeHeader =
+    v: if builtins.isString v then "{file:${v}}" else "${v.prefix}{file:${v.secretFile}}";
 
-  toOpenCodeMcp = _: s:
-    if s ? remote then {
-      type = "remote";
-      disabled = !(s.defaultEnabled or false);
-      url = s.remote.url;
-      headers = lib.mapAttrs (_: toOpenCodeHeader) (s.remote.secretHeaders or { });
-    } else {
-      type = "local";
-      disabled = !(s.defaultEnabled or false);
-      command = [ s.local.command ] ++ (s.local.args or [ ]);
-      environment = lib.mapAttrs (_: v:
-        if v ? secretFile then "{file:${v.secretFile}}" else v
-      ) (s.local.env or { });
-    };
+  toOpenCodeMcp =
+    _: s:
+    if s ? remote then
+      {
+        type = "remote";
+        disabled = !(s.defaultEnabled or false);
+        url = s.remote.url;
+        headers = lib.mapAttrs (_: toOpenCodeHeader) (s.remote.secretHeaders or { });
+      }
+    else
+      {
+        type = "local";
+        disabled = !(s.defaultEnabled or false);
+        command = [ s.local.command ] ++ (s.local.args or [ ]);
+        environment = lib.mapAttrs (_: v: if v ? secretFile then "{file:${v.secretFile}}" else v) (
+          s.local.env or { }
+        );
+      };
 in
 {
   # ── opencode 核心(v2 包,nixpkgs 未收录,走 pkgs/opencode2) ──

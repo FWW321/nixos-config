@@ -14,7 +14,10 @@
   context7 = {
     local = {
       command = "npx";
-      args = [ "-y" "@upstash/context7-mcp" ];
+      args = [
+        "-y"
+        "@upstash/context7-mcp"
+      ];
       env.CONTEXT7_API_KEY.secretFile = "/run/secrets/context7_key";
     };
   };
@@ -87,7 +90,11 @@
   github = {
     local = {
       command = "${pkgs.github-mcp-server}/bin/github-mcp-server";
-      args = [ "stdio" "--toolsets" "default,actions,dependabot,notifications" ];
+      args = [
+        "stdio"
+        "--toolsets"
+        "default,actions,dependabot,notifications"
+      ];
       env.GITHUB_PERSONAL_ACCESS_TOKEN.secretFile = "/run/secrets/github_token";
     };
   };

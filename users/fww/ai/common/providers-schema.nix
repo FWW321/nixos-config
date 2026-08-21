@@ -16,7 +16,11 @@ lib: raw:
 let
   inherit (lib) mkOption types;
 
-  endpointNames = [ "anthropic" "openai" "responses" ];
+  endpointNames = [
+    "anthropic"
+    "openai"
+    "responses"
+  ];
 
   # 档位块:levels 键 = 中立档名(开放集);值 = 端点 wire 拼写,
   # null = "不发参数"(glm/M3 的 anthropic off 档即此义)
@@ -48,9 +52,18 @@ let
         default = false;
       };
       thinking = {
-        anthropic = mkOption { type = types.nullOr endpointThinking; default = null; };
-        openai = mkOption { type = types.nullOr endpointThinking; default = null; };
-        responses = mkOption { type = types.nullOr endpointThinking; default = null; };
+        anthropic = mkOption {
+          type = types.nullOr endpointThinking;
+          default = null;
+        };
+        openai = mkOption {
+          type = types.nullOr endpointThinking;
+          default = null;
+        };
+        responses = mkOption {
+          type = types.nullOr endpointThinking;
+          default = null;
+        };
       };
     };
   };
@@ -58,9 +71,18 @@ let
   providerType = types.submodule {
     options = {
       endpoints = {
-        anthropic = mkOption { type = types.nullOr types.str; default = null; };
-        openai = mkOption { type = types.nullOr types.str; default = null; };
-        responses = mkOption { type = types.nullOr types.str; default = null; };
+        anthropic = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+        };
+        openai = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+        };
+        responses = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+        };
       };
       apiKey.secretFile = mkOption {
         type = types.nullOr types.str;
@@ -82,12 +104,14 @@ let
         description = "轻任务档(端无关的通用模式);须为 models 键(一致性检查)";
       };
       embedding = mkOption {
-        type = types.nullOr (types.submodule {
-          options = {
-            model = mkOption { type = types.str; };
-            dim = mkOption { type = types.ints.positive; };
-          };
-        });
+        type = types.nullOr (
+          types.submodule {
+            options = {
+              model = mkOption { type = types.str; };
+              dim = mkOption { type = types.ints.positive; };
+            };
+          }
+        );
         default = null;
       };
     };
@@ -109,30 +133,41 @@ let
     let
       # 自闭包读模型(而非收 m 参数):保证 map/concatMap 喂到 name/p/mid
       # 后没有残余函数参 —— 四参版在 map 下会残留半个 lambda 混进列表
-      perModel = name: p: mid:
-        let m = p.models.${mid}; in
-        lib.concatMap
-          (ep:
-            let t = m.thinking.${ep}; in
-            lib.optionals (t != null) (
-              (lib.optional (p.endpoints.${ep} == null)
-                "${name}.models.${mid}: 声明了 thinking.${ep},但 provider 无 ${ep} 端点")
-              ++ (lib.optional (t.levels == { })
-                "${name}.models.${mid}.thinking.${ep}: levels 为空")
-              ++ (lib.optional (!(builtins.hasAttr t.default t.levels))
-                "${name}.models.${mid}.thinking.${ep}: default \"${t.default}\" 不在 levels(${lib.concatStringsSep "," (builtins.attrNames t.levels)})中")
-            ))
-          endpointNames;
-      perProvider = name: p:
-        let modelIds = builtins.attrNames p.models; in
-        (lib.optional (modelIds != [ ] && lib.all (ep: p.endpoints.${ep} == null) endpointNames)
-          "${name}: 有 models 但三端点全无")
-        ++ (lib.optional (modelIds != [ ] && p.defaultModel == null)
-          "${name}: 有 models 但无 defaultModel")
-        ++ (lib.optional (p.defaultModel != null && !(lib.elem p.defaultModel modelIds))
-          "${name}: defaultModel \"${p.defaultModel}\" 不是 models(${lib.concatStringsSep "," modelIds})的键")
-        ++ (lib.optional (p.smallModel != null && !(lib.elem p.smallModel modelIds))
-          "${name}: smallModel \"${p.smallModel}\" 不是 models 的键")
+      perModel =
+        name: p: mid:
+        let
+          m = p.models.${mid};
+        in
+        lib.concatMap (
+          ep:
+          let
+            t = m.thinking.${ep};
+          in
+          lib.optionals (t != null) (
+            (lib.optional (
+              p.endpoints.${ep} == null
+            ) "${name}.models.${mid}: 声明了 thinking.${ep},但 provider 无 ${ep} 端点")
+            ++ (lib.optional (t.levels == { }) "${name}.models.${mid}.thinking.${ep}: levels 为空")
+            ++ (lib.optional (!(builtins.hasAttr t.default t.levels))
+              "${name}.models.${mid}.thinking.${ep}: default \"${t.default}\" 不在 levels(${lib.concatStringsSep "," (builtins.attrNames t.levels)})中"
+            )
+          )
+        ) endpointNames;
+      perProvider =
+        name: p:
+        let
+          modelIds = builtins.attrNames p.models;
+        in
+        (lib.optional (
+          modelIds != [ ] && lib.all (ep: p.endpoints.${ep} == null) endpointNames
+        ) "${name}: 有 models 但三端点全无")
+        ++ (lib.optional (modelIds != [ ] && p.defaultModel == null) "${name}: 有 models 但无 defaultModel")
+        ++ (lib.optional (
+          p.defaultModel != null && !(lib.elem p.defaultModel modelIds)
+        ) "${name}: defaultModel \"${p.defaultModel}\" 不是 models(${lib.concatStringsSep "," modelIds})的键")
+        ++ (lib.optional (
+          p.smallModel != null && !(lib.elem p.smallModel modelIds)
+        ) "${name}: smallModel \"${p.smallModel}\" 不是 models 的键")
         # concatMap(不是 map):perModel 返回字符串列表,这里必须压平,
         # 否则嵌套空列表让 violations != [] 恒真 → 无差别 throw
         ++ lib.concatMap (perModel name p) modelIds;
@@ -141,6 +176,6 @@ let
 in
 # ── 第三步:deepSeq 全量严格化(module system 惰性,不逼到底,
 # 校验覆盖就取决于消费者碰巧读了哪些字段)+ 违约总报
-lib.throwIf (violations != [ ])
-  ("中立 provider 数据违约(common/providers.nix):\n  " + lib.concatStringsSep "\n  " violations)
-  (builtins.deepSeq shape shape)
+lib.throwIf (violations != [ ]) (
+  "中立 provider 数据违约(common/providers.nix):\n  " + lib.concatStringsSep "\n  " violations
+) (builtins.deepSeq shape shape)

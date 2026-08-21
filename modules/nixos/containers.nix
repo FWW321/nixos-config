@@ -1,6 +1,11 @@
 # filepath: ~/nixos-config/modules/nixos/containers.nix
 # rootless Podman — 无 daemon、systemd 原生、rootless 默认
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   virtualisation.containers.enable = true;
@@ -18,8 +23,18 @@
 
   # rootless 必需：subuid/subgid 映射
   users.users.fww = {
-    subUidRanges = [{ startUid = 100000; count = 65536; }];
-    subGidRanges = [{ startGid = 100000; count = 65536; }];
+    subUidRanges = [
+      {
+        startUid = 100000;
+        count = 65536;
+      }
+    ];
+    subGidRanges = [
+      {
+        startGid = 100000;
+        count = 65536;
+      }
+    ];
   };
 
   environment.systemPackages = with pkgs; [

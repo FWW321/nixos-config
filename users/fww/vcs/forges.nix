@@ -4,7 +4,13 @@
 # 加新 forge = 往列表加一项，消费方自动同源不漂移
 {
   forges = [
-    { host = "github.com"; username = "FWW321"; }
-    { host = "codeberg.org"; username = "FWW"; }
+    {
+      host = "github.com";
+      username = "FWW321";
+    }
+    {
+      host = "codeberg.org";
+      username = "FWW";
+    }
   ];
 }

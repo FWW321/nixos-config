@@ -22,7 +22,12 @@
 #   serde 静默丢弃);openai-compatible 槽位只讲 chat completions。
 #   想走 anthropic 协议需上游 PR:ClaudeConfig 加 Option<Url> + 两处
 #   URL 常量参数化(改动极小)。
-{ inputs, osConfig, lib, ... }:
+{
+  inputs,
+  osConfig,
+  lib,
+  ...
+}:
 
 let
   # N 卡门控:宿主声明了 nvidia 驱动才部署 koharu(ML 推理的 CUDA 路径

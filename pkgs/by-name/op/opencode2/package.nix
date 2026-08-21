@@ -22,8 +22,10 @@ let
 
   # npm 平台子包名(fetchurl 直接拉 tarball,绕过 node 生态)
   platformPkg =
-    if stdenv.hostPlatform.isAarch64 then "@opencode-ai/cli-linux-arm64"
-    else "@opencode-ai/cli-linux-x64";
+    if stdenv.hostPlatform.isAarch64 then
+      "@opencode-ai/cli-linux-arm64"
+    else
+      "@opencode-ai/cli-linux-x64";
   # scope 下的 npm registry 路径
   scopeDir = builtins.head (lib.splitString "/" platformPkg);
   baseName = lib.last (lib.splitString "/" platformPkg);
@@ -68,7 +70,10 @@ stdenv.mkDerivation {
     changelog = "https://github.com/anomalyco/opencode/releases";
     license = lib.licenses.mit;
     mainProgram = "opencode2";
-    platforms = [ "x86_64-linux" "aarch64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
   };
 }

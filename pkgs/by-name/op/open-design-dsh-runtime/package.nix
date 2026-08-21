@@ -37,12 +37,19 @@ let
   # peer 集随上游 manifest 自动同步(手抄 7 个名字会漂)
   peers = builtins.attrNames (manifest.peerDependencies or { });
 
-  npmTarball = { url, integrity }: fetchurl { inherit url; hash = integrity; };
+  npmTarball =
+    { url, integrity }:
+    fetchurl {
+      inherit url;
+      hash = integrity;
+    };
 
   # 依赖版本钉在上游 package.json;hash 钉 npm registry integrity —— 两处
   # 事实源,上游 bump 依赖时这里 fetchurl 报 hash mismatch(fail-loud)
   dshCmdline = npmTarball {
-    url = "https://registry.npmjs.org/@deepseek-ai/dsh-cmdline/-/dsh-cmdline-${manifest.dependencies."@deepseek-ai/dsh-cmdline"}.tgz";
+    url = "https://registry.npmjs.org/@deepseek-ai/dsh-cmdline/-/dsh-cmdline-${
+      manifest.dependencies."@deepseek-ai/dsh-cmdline"
+    }.tgz";
     integrity = "sha512-dqRHF+kIlTBwt+fio/34ttp6B7Lrpm31A+EOoEwBuwaziiHTEAWVl50hS53dPFmPyVBRINavBdx7Fa7UT2/2iw==";
   };
   commander = npmTarball {

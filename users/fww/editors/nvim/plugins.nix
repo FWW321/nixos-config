@@ -27,8 +27,16 @@
         enabled = true;
         trigger_events = {
           # 官方默认 immediate_save 事件（含 QuitPre / VimSuspend）
-          immediate_save = [ "BufLeave" "FocusLost" "QuitPre" "VimSuspend" ];
-          defer_save = [ "InsertLeave" "TextChanged" ];
+          immediate_save = [
+            "BufLeave"
+            "FocusLost"
+            "QuitPre"
+            "VimSuspend"
+          ];
+          defer_save = [
+            "InsertLeave"
+            "TextChanged"
+          ];
           cancel_deferred_save = [ "InsertEnter" ];
         };
         write_all_buffers = false;
@@ -40,37 +48,39 @@
         debug = false;
         # README 推荐的 excluded_filetypes（含 gitcommit，避免误保存提交信息）
         # 多数已是 non-modifiable / special-buffer，这里是 "extra safe"
-        condition = let
-          excluded_filetypes = [
-            "gitcommit"
-            "NvimTree"
-            "Outline"
-            "TelescopePrompt"
-            "alpha"
-            "dashboard"
-            "lazygit"
-            "neo-tree"
-            "oil"
-            "prompt"
-            "toggleterm"
-          ];
-          # 生成 Lua 合法的 table 字面量：{ "gitcommit", "NvimTree", ... }
-          lua_list = "{ " + builtins.concatStringsSep ", " (map (s: ''"${s}"'') excluded_filetypes) + " }";
-        in {
-          __raw = ''
-            function(buf)
-              local excluded_filetypes = ${lua_list}
-              if vim.tbl_contains(excluded_filetypes, vim.fn.getbufvar(buf, "&filetype")) then
-                return false
+        condition =
+          let
+            excluded_filetypes = [
+              "gitcommit"
+              "NvimTree"
+              "Outline"
+              "TelescopePrompt"
+              "alpha"
+              "dashboard"
+              "lazygit"
+              "neo-tree"
+              "oil"
+              "prompt"
+              "toggleterm"
+            ];
+            # 生成 Lua 合法的 table 字面量：{ "gitcommit", "NvimTree", ... }
+            lua_list = "{ " + builtins.concatStringsSep ", " (map (s: ''"${s}"'') excluded_filetypes) + " }";
+          in
+          {
+            __raw = ''
+              function(buf)
+                local excluded_filetypes = ${lua_list}
+                if vim.tbl_contains(excluded_filetypes, vim.fn.getbufvar(buf, "&filetype")) then
+                  return false
+                end
+                -- 排除 special-buffers（README 示例），buftype 为空才保存
+                if vim.fn.getbufvar(buf, "&buftype") ~= "" then
+                  return false
+                end
+                return true
               end
-              -- 排除 special-buffers（README 示例），buftype 为空才保存
-              if vim.fn.getbufvar(buf, "&buftype") ~= "" then
-                return false
-              end
-              return true
-            end
-          '';
-        };
+            '';
+          };
       };
     };
 
@@ -82,7 +92,12 @@
 
     todo-comments = {
       enable = true;
-      lazyLoad.settings.cmd = [ "TodoQuickFix" "TodoLocList" "TodoTrouble" "TodoTelescope" ];
+      lazyLoad.settings.cmd = [
+        "TodoQuickFix"
+        "TodoLocList"
+        "TodoTrouble"
+        "TodoTelescope"
+      ];
     };
 
     mini-bracketed.enable = true;
@@ -113,18 +128,44 @@
         cmdline = {
           view = "cmdline_center";
           format = {
-            cmdline = { pattern = "^:"; icon = ""; lang = "vim"; };
-            search_down = { kind = "search"; pattern = "^/"; icon = " "; lang = "regex"; };
-            search_up = { kind = "search"; pattern = "^%?"; icon = " "; lang = "regex"; };
+            cmdline = {
+              pattern = "^:";
+              icon = "";
+              lang = "vim";
+            };
+            search_down = {
+              kind = "search";
+              pattern = "^/";
+              icon = " ";
+              lang = "regex";
+            };
+            search_up = {
+              kind = "search";
+              pattern = "^%?";
+              icon = " ";
+              lang = "regex";
+            };
           };
         };
         views = {
           cmdline_center = {
             backend = "popup";
             relative = "editor";
-            position = { row = "40%"; col = "50%"; };
-            size = { width = "60%"; height = "auto"; };
-            border = { style = "rounded"; padding = [ 0 1 ]; };
+            position = {
+              row = "40%";
+              col = "50%";
+            };
+            size = {
+              width = "60%";
+              height = "auto";
+            };
+            border = {
+              style = "rounded";
+              padding = [
+                0
+                1
+              ];
+            };
           };
         };
         lsp.override = {

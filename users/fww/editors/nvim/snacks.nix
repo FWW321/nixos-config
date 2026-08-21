@@ -70,8 +70,7 @@ in
               icon = " ";
               key = "c";
               desc = "Config";
-              action =
-                ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})";
+              action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})";
             }
             {
               icon = " ";
@@ -89,7 +88,8 @@ in
         };
         sections = [
           { section = "header"; }
-          { section = "keys";
+          {
+            section = "keys";
             gap = 1;
             padding = 1;
           }
@@ -177,7 +177,9 @@ in
 
       picker = {
         enabled = true;
-        layout = { preset = "telescope"; };
+        layout = {
+          preset = "telescope";
+        };
         matcher = {
           fuzzy = true;
           smartcase = true;

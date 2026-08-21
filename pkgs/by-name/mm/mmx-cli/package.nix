@@ -19,7 +19,13 @@
 #   可读时,自动追加 --api-key(sops 同源 key,key 不落盘;ps 可见命令行属官方
 #   flag 语义,与错误提示推荐路径一致)。显式传 --api-key(含 =)则不注入。
 #   顺带导出 MINIMAX_REGION=cn 默认(此 env 是真被 ze() 读取的,免每调用探测)。
-{ lib, stdenv, fetchurl, nodejs, makeWrapper }:
+{
+  lib,
+  stdenv,
+  fetchurl,
+  nodejs,
+  makeWrapper,
+}:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "mmx-cli";

@@ -224,7 +224,13 @@ in
 
         asm_lsp = {
           enable = true;
-          filetypes = [ "asm" "nasm" "fasm" "s" "S" ];
+          filetypes = [
+            "asm"
+            "nasm"
+            "fasm"
+            "s"
+            "S"
+          ];
         };
 
         # Typst：tinymist 是 typst 官方 LSP（取代已 archived 的 typst-lsp）

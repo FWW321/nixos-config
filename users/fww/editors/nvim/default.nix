@@ -87,8 +87,15 @@
         desc = "Refresh inlay hints when diagnostics arrive (server ready)";
       }
       {
-        event = [ "BufRead" "BufNewFile" ];
-        pattern = [ "*.asm" "*.nasm" "*.fasm" ];
+        event = [
+          "BufRead"
+          "BufNewFile"
+        ];
+        pattern = [
+          "*.asm"
+          "*.nasm"
+          "*.fasm"
+        ];
         callback.__raw = ''
           function()
             vim.bo.filetype = vim.fn.expand("%:e") == "fasm" and "fasm" or "nasm"

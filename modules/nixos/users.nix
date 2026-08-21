@@ -7,7 +7,15 @@
 
   users.users.fww = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" "video" "audio" "input" "shared" "kvm" ];
+    extraGroups = [
+      "wheel"
+      "networkmanager"
+      "video"
+      "audio"
+      "input"
+      "shared"
+      "kvm"
+    ];
     hashedPasswordFile = config.sops.secrets.user_password.path;
     shell = pkgs.brush;
   };
@@ -29,5 +37,8 @@
   security.polkit.enable = true;
 
   # 注册 shell 到 /etc/shells（pkexec 需要）
-  environment.shells = with pkgs; [ brush bash ];
+  environment.shells = with pkgs; [
+    brush
+    bash
+  ];
 }

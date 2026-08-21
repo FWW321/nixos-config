@@ -93,11 +93,18 @@
     # 主锁仍完整钉每个源的 rev;更新 nix flake update sources/<name>
     # (主文件内 mapAttrs 去重被求值器拒绝 —— 只吃字面 attrset,
     # 结构外移是唯一消音路径,2026-08-21 lab 实测)──
-    sources = { url = "path:./sources"; };
+    sources = {
+      url = "path:./sources";
+    };
   };
 
   outputs =
-    { self, nixpkgs, home-manager, ... }@inputs:
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      ...
+    }@inputs:
     let
       # 登记表摊平:sources/flake.nix 里的源码树以原名进入 inputs 命名空间,
       # 消费者零改动(冲突面 = 主输入名,登记表内不与之同名即可)
@@ -110,8 +117,9 @@
       # 本仓 by-name 自建包(组装见 overlays/default.nix)
       overlays.default = import ./overlays { inherit inputs; };
 
-      # RFC 166 官方格式化器(nix fmt;nvim 侧 nixfmt/statix 同源工具链)
-      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+      # RFC 166 官方格式化器(nix fmt;treefmt 封装,nixfmt 1.4 已弃裸调用;
+      # nvim 侧 nixfmt/statix 同源工具链)
+      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
 
       # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
       # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
@@ -119,12 +127,15 @@
       # 中立 provider 层 schema 守护(动机/断言见 providers-schema-check.nix;
       # 与 nixdsh 的 checks 同一验证入口)
       checks.x86_64-linux.providers-schema =
-        import ./users/fww/ai/common/providers-schema-check.nix checkPkgs nixpkgs.lib;
+        import ./users/fww/ai/common/providers-schema-check.nix checkPkgs
+          nixpkgs.lib;
 
       nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
         # system 不显式传:nixpkgs.hostPlatform 由 hosts/FWW-Desktop/hardware.nix 声明
         # (nixpkgs flake 已将 system 参数标为 legacy alias)
-        specialArgs = { inputs = inputs'; };
+        specialArgs = {
+          inputs = inputs';
+        };
         modules = [
           # overlay 注册(唯一出口)
           { nixpkgs.overlays = [ self.overlays.default ]; }
@@ -149,7 +160,9 @@
               useGlobalPkgs = true;
               useUserPackages = true;
               backupFileExtension = "backup";
-              extraSpecialArgs = { inputs = inputs'; };
+              extraSpecialArgs = {
+                inputs = inputs';
+              };
               sharedModules = [
                 inputs.open-design.homeManagerModules.default
                 inputs.nixdsh.homeManagerModules.dsh

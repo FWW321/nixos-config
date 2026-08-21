@@ -4,10 +4,23 @@
 # `agent-default-model` 段(上游无 `models` 命名空间)
 # 凭据:secretFile 声明内桥(nixdsh)—— wrapper 现读 /run/secrets 物化
 # env,CLI/TUI/headless/web 服务统一,无 bash/EnvironmentFile 外部桥
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../common { inherit pkgs inputs lib config; };
+  common = import ../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 
   p = common.providers.zhipu;
   mm = common.providers.minimax;
@@ -27,21 +40,32 @@ let
   #   值 disabled → "low":官方转换表 disabled→low,行为等价(该路径无
   #     type 槽位可发 disabled;仅 glm 触发,MiniMax off 走 null)
   #   值 adaptive → "high":占位 effort(端点忽略)
-  toDshThinking = t:
-    lib.listToAttrs (map
-      (name:
-        let wire = t.levels.${name}; in
+  toDshThinking =
+    t:
+    lib.listToAttrs (
+      map (
+        name:
+        let
+          wire = t.levels.${name};
+        in
         {
           name = if name == "on" then "high" else name;
           value =
-            if wire == "disabled" then "low"
-            else if wire == "adaptive" then "high"
-            else wire;
-        })
-      (builtins.attrNames t.levels));
+            if wire == "disabled" then
+              "low"
+            else if wire == "adaptive" then
+              "high"
+            else
+              wire;
+        }
+      ) (builtins.attrNames t.levels)
+    );
 
-  toDshModel = id: m:
-    { inherit id; }
+  toDshModel =
+    id: m:
+    {
+      inherit id;
+    }
     // lib.optionalAttrs (m ? contextWindow) { inherit (m) contextWindow; }
     // lib.optionalAttrs (m ? maxOutput) { maxTokens = m.maxOutput; }
     // lib.optionalAttrs (m.thinking.anthropic != null) {
@@ -49,7 +73,10 @@ let
       compat.forceAdaptiveThinking = true;
     }
     // lib.optionalAttrs (m.supportsVision or false) {
-      input = [ "text" "image" ];
+      input = [
+        "text"
+        "image"
+      ];
     };
 in
 {
@@ -62,7 +89,7 @@ in
     # zhipu-coding-plan 会残留(yq merge 只覆盖不删),须一次性手清
     providers."zai-ai-cn" = {
       apiKeyEnv = "ZHIPU_API_KEY";
-      secretFile = p.apiKey.secretFile;  # 声明内 env 桥,与消费者同处一行
+      secretFile = p.apiKey.secretFile; # 声明内 env 桥,与消费者同处一行
       api = "anthropic-messages";
       baseURL = p.endpoints.anthropic;
       models = lib.mapAttrsToList toDshModel p.models;
@@ -72,7 +99,7 @@ in
     # adaptive thinking;端点/模型元数据唯一来源 = common/providers.nix)
     providers.minimax = {
       apiKeyEnv = "MINIMAX_API_KEY";
-      secretFile = mm.apiKey.secretFile;  # sops 同源,OD/agent 侧共用
+      secretFile = mm.apiKey.secretFile; # sops 同源,OD/agent 侧共用
       api = "anthropic-messages";
       baseURL = mm.endpoints.anthropic;
       models = lib.mapAttrsToList toDshModel mm.models;

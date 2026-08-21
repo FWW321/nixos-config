@@ -13,10 +13,23 @@
 #   - 本地 stdio MCP secret env → wrapper 脚本 cat secret file 后 exec
 # 注意:桌面端从 compositor 启动时无 shell env,provider key/远程 MCP 仅
 # CLI 可用;桌面端走 ChatGPT 账号登录即可
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../common { inherit pkgs inputs lib config; };
+  common = import ../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 
   # ── codex 可用 provider:声明了 responses 端点的(codex 0.84+ 仅支持 responses)──
   # siliconflow(仅 embedding/openai 端点)被此过滤自动排除
@@ -29,21 +42,23 @@ let
   # ── secret file → 环境变量名(/run/secrets/zhipu_api_key → ZHIPU_API_KEY)──
   # 单一来源:env var 名由 secret 文件名派生(大写+中划线转下划线),
   # config.toml 引用与 bash 导出同源生成,永不漂移
-  secretToEnv = file:
-    lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ]
-      (baseNameOf (toString file)));
+  secretToEnv =
+    file: lib.toUpper (builtins.replaceStrings [ "-" ] [ "_" ] (baseNameOf (toString file)));
 
   # ── 全局 skill:与 opencode 同选择逻辑 ──
   # (曾因 git-workflow 上游无 frontmatter 设排除列表,该 skill 移除后已无排除项)
-  selectedSkills = lib.filterAttrs (_: s: (s.defaultEnabled or false) && !(s ? runtime))
-    common.skills;
+  selectedSkills = lib.filterAttrs (
+    _: s: (s.defaultEnabled or false) && !(s ? runtime)
+  ) common.skills;
 
   # ── Skill:entryFile 单文件(值=path→file,模块生成 <name>/SKILL.md) vs 目录(symlink) ──
-  codexSkills = lib.mapAttrs (_: s:
-    if s ? entryFile then "${s.source}/${s.entryFile}" else s.source
+  codexSkills = lib.mapAttrs (
+    _: s: if s ? entryFile then "${s.source}/${s.entryFile}" else s.source
   ) selectedSkills;
 
-  skillPkgs = lib.catAttrs "package" (lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills));
+  skillPkgs = lib.catAttrs "package" (
+    lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills)
+  );
   skillEnv = lib.foldl' (acc: s: acc // (s.env or { })) { } (lib.attrValues selectedSkills);
 
   # ── MCP 格式转换:中立 → codex config.toml ──
@@ -61,34 +76,50 @@ let
   # 这些工具在 opencode 侧全部正常 → codex 只留原生快 server(github/nixos；
   # minimax MCP 已移除,搜索走 codex 原生 web_search,媒体生成放弃,见 mcp.nix 注释)
   mcpExcluded = [
-    "context7"       # 远程 HTTP,慢启动受害者(同下)
-    "web-reader"     # 智谱端点 npx 桥
+    "context7" # 远程 HTTP,慢启动受害者(同下)
+    "web-reader" # 智谱端点 npx 桥
     "web-search-prime"
     "zread"
   ];
 
-  toCodexLocal = name: m:
+  toCodexLocal =
+    name: m:
     let
       envs = m.local.env or { };
       secrets = lib.filterAttrs (_: v: v ? secretFile) envs;
       plains = lib.filterAttrs (_: v: !(v ? secretFile)) envs;
       needsWrapper = secrets != { };
       wrapper = pkgs.writeShellScript "codex-mcp-${name}" ''
-        ${lib.concatStringsSep "\n" (lib.mapAttrsToList
-          (k: v: ''export ${k}="$(cat ${lib.escapeShellArg v.secretFile} 2>/dev/null || true)"'')
-          secrets)}
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (
+            k: v: ''export ${k}="$(cat ${lib.escapeShellArg v.secretFile} 2>/dev/null || true)"''
+          ) secrets
+        )}
         exec ${lib.escapeShellArg m.local.command} ${lib.escapeShellArgs (m.local.args or [ ])}
       '';
       transport =
-        if needsWrapper then { command = toString wrapper; }
-        else { inherit (m.local) command; args = m.local.args or [ ]; };
+        if needsWrapper then
+          { command = toString wrapper; }
+        else
+          {
+            inherit (m.local) command;
+            args = m.local.args or [ ];
+          };
       # 中立层 autoApproveTools → codex per-tool approval_mode="approve"
       # (无 readOnlyHint 的 MCP 工具默认要审批,exec 非交互下直接 Abort)
-      toolApprovals = lib.listToAttrs (map (t: lib.nameValuePair t {
-        approval_mode = "approve";
-      }) (m.autoApproveTools or [ ]));
+      toolApprovals = lib.listToAttrs (
+        map (
+          t:
+          lib.nameValuePair t {
+            approval_mode = "approve";
+          }
+        ) (m.autoApproveTools or [ ])
+      );
     in
-    { enabled = m.defaultEnabled or false; } // transport
+    {
+      enabled = m.defaultEnabled or false;
+    }
+    // transport
     // lib.optionalAttrs (plains != { }) { env = plains; }
     // lib.optionalAttrs (toolApprovals != { }) { tools = toolApprovals; };
 
@@ -102,7 +133,8 @@ let
   # 官方 TS SDK,容忍此类响应,是 issue 里双重复核的唯一通路)
   # 桥接 wrapper 运行时读 secret 文件,值不进 store;用 nodejs 而非 slim(slim 不带 npx)
   # npx 冷启动 + 远端延迟可能超默认 30s → startup_timeout_sec 放宽(官方超时报错指引的字段)
-  toCodexRemote = name: m:
+  toCodexRemote =
+    name: m:
     let
       headers = m.remote.secretHeaders or { };
       bearer = headers.Authorization or null;
@@ -114,37 +146,48 @@ let
           --header "Authorization: Bearer $(cat ${lib.escapeShellArg bearer.secretFile} 2>/dev/null || true)"
       '';
     in
-    if needsBridge then {
-      enabled = m.defaultEnabled or false;
-      command = toString bridge;
-      startup_timeout_sec = 90;
-    } else
-      { enabled = m.defaultEnabled or false; url = m.remote.url; startup_timeout_sec = 60; }
+    if needsBridge then
+      {
+        enabled = m.defaultEnabled or false;
+        command = toString bridge;
+        startup_timeout_sec = 90;
+      }
+    else
+      {
+        enabled = m.defaultEnabled or false;
+        url = m.remote.url;
+        startup_timeout_sec = 60;
+      }
       // (lib.optionalAttrs isBearer { bearer_token_env_var = secretToEnv bearer.secretFile; })
       // (lib.optionalAttrs (plainHeaders != { }) {
         env_http_headers = lib.mapAttrs (_: secretToEnv) plainHeaders;
       });
 
-  codexMcp = lib.mapAttrs (name: m:
-    if m ? local then toCodexLocal name m else toCodexRemote name m
-  ) (lib.filterAttrs (n: _: !(builtins.elem n mcpExcluded)) common.mcp);
+  codexMcp = lib.mapAttrs (name: m: if m ? local then toCodexLocal name m else toCodexRemote name m) (
+    lib.filterAttrs (n: _: !(builtins.elem n mcpExcluded)) common.mcp
+  );
 
   # ── 需要导出的 secret env:provider key + 远程 MCP 的 secret(lib.unique 去重)──
-  remoteSecretEnvs = lib.concatLists (lib.mapAttrsToList (_: m:
-    lib.optionals (m ? remote) (
-      let
-        headers = m.remote.secretHeaders or { };
-        b = headers.Authorization or null;
-        fromBearer = lib.optional (b ? secretFile) {
-          env = secretToEnv b.secretFile;
-          inherit (b) secretFile;
-        };
-        fromPlain = lib.mapAttrsToList (_: v: { env = secretToEnv v; secretFile = v; })
-          (lib.filterAttrs (_: v: builtins.isString v) headers);
-      in
-      fromBearer ++ fromPlain
-    )
-  ) common.mcp);
+  remoteSecretEnvs = lib.concatLists (
+    lib.mapAttrsToList (
+      _: m:
+      lib.optionals (m ? remote) (
+        let
+          headers = m.remote.secretHeaders or { };
+          b = headers.Authorization or null;
+          fromBearer = lib.optional (b ? secretFile) {
+            env = secretToEnv b.secretFile;
+            inherit (b) secretFile;
+          };
+          fromPlain = lib.mapAttrsToList (_: v: {
+            env = secretToEnv v;
+            secretFile = v;
+          }) (lib.filterAttrs (_: v: builtins.isString v) headers);
+        in
+        fromBearer ++ fromPlain
+      )
+    ) common.mcp
+  );
 
   secretEnvExports = lib.unique (
     # 所有 codex provider 的 key + 远程 MCP 的 secret
@@ -168,16 +211,20 @@ let
     xhigh = "Extra deep reasoning";
     max = "Deep reasoning";
   };
-  catalogEntry = idx: id:
-    let e = p.models.${id}.thinking.responses; in
+  catalogEntry =
+    idx: id:
+    let
+      e = p.models.${id}.thinking.responses;
+    in
     {
       slug = id;
       display_name = id;
       description = "Z.ai coding model";
       default_reasoning_level = e.default;
-      supported_reasoning_levels = map
-        (lvl: { effort = lvl; description = effortDesc.${lvl} or "Reasoning"; })
-        (builtins.attrNames e.levels);
+      supported_reasoning_levels = map (lvl: {
+        effort = lvl;
+        description = effortDesc.${lvl} or "Reasoning";
+      }) (builtins.attrNames e.levels);
       shell_type = "shell_command";
       visibility = "list";
       supported_in_api = true;
@@ -196,10 +243,12 @@ let
       experimental_supported_tools = [ ];
       input_modalities = [ "text" ];
     };
-  modelsJson = pkgs.writeText "codex-models.json" (builtins.toJSON {
-    # 只声明默认模型 glm-5.3(providers.nix 已只留 5.3,5.2 全线退役)
-    models = [ (catalogEntry 0 p.defaultModel) ];
-  });
+  modelsJson = pkgs.writeText "codex-models.json" (
+    builtins.toJSON {
+      # 只声明默认模型 glm-5.3(providers.nix 已只留 5.3,5.2 全线退役)
+      models = [ (catalogEntry 0 p.defaultModel) ];
+    }
+  );
 
   # ── provider → codex model_providers 段(单一来源自动派生)──
   # env_key 从 secret 文件名派生,与 bash 导出同源;wire_api 全 responses
@@ -231,11 +280,14 @@ let
         model_catalog_json = "~/.codex/models.json";
       };
     }
-    // lib.mapAttrs' (n: v: lib.nameValuePair n {
-      model_provider = n;
-      model = v.defaultModel;
-      model_context_window = v.models.${v.defaultModel}.contextWindow;
-    }) (lib.filterAttrs (n: _: n != defaultProvider) codexProviders);
+    // lib.mapAttrs' (
+      n: v:
+      lib.nameValuePair n {
+        model_provider = n;
+        model = v.defaultModel;
+        model_context_window = v.models.${v.defaultModel}.contextWindow;
+      }
+    ) (lib.filterAttrs (n: _: n != defaultProvider) codexProviders);
   # chatgpt 不是生成的 profile —— 它就是全局默认(下方 settings),无需切换入口
 in
 {
@@ -333,8 +385,9 @@ in
   home.packages = [ pkgs.chatgpt ] ++ skillPkgs;
 
   # ── Provider/MCP key 注入进程环境(codex env_key/bearer_token_env_var 读这里)──
-  programs.bash.initExtra = lib.concatStringsSep "\n"
-    (map (s: ''  [ -f ${s.secretFile} ] && export ${s.env}="$(cat ${s.secretFile})"'') secretEnvExports);
+  programs.bash.initExtra = lib.concatStringsSep "\n" (
+    map (s: ''[ -f ${s.secretFile} ] && export ${s.env}="$(cat ${s.secretFile})"'') secretEnvExports
+  );
 
   # ── 项目级渲染器(被 agent sync 调用)──
   # 契约:$1 = manifest 路径, $2 = 项目根

@@ -13,7 +13,9 @@
           trigger.prefetch_on_insert = false;
           menu = {
             draw = {
-              treesitter = { "lsp" = [ "kind" ]; };
+              treesitter = {
+                "lsp" = [ "kind" ];
+              };
             };
           };
         };
@@ -22,7 +24,12 @@
         cmdline.enabled = true;
         fuzzy.implementation = "prefer_rust_with_warning";
         sources = {
-          default = [ "lsp" "path" "buffer" "snippets" ];
+          default = [
+            "lsp"
+            "path"
+            "buffer"
+            "snippets"
+          ];
           per_filetype = { };
         };
       };

@@ -21,11 +21,21 @@ in
     enable = true;
     server.enable = true;
     settings = {
-      main = { term = "foot"; shell = lib.getExe pkgs.brush; pad = "12x12"; };
+      main = {
+        term = "foot";
+        shell = lib.getExe pkgs.brush;
+        pad = "12x12";
+      };
       mouse.hide-when-typing = "yes";
       csd.preferred = "none";
-      url = { launch = "\${BROWSER:-zen-beta} \${url}"; osc8-underline = "url-mode"; };
-      bell = { urgent = "yes"; notify = "yes"; };
+      url = {
+        launch = "\${BROWSER:-zen-beta} \${url}";
+        osc8-underline = "url-mode";
+      };
+      bell = {
+        urgent = "yes";
+        notify = "yes";
+      };
     };
   };
 
@@ -46,8 +56,8 @@ in
       cat = "bat";
       cls = "clear";
       # Emacs（连 daemon，-n 不阻塞终端；见 editors/emacs 的 services.emacs）
-      e = "emacsclient -n -c -a emacs";   # GUI 框、不等待：e . / e file.nix
-      et = "emacsclient -t -a emacs";     # 终端框（阻塞当前终端，作 TUI 用）
+      e = "emacsclient -n -c -a emacs"; # GUI 框、不等待：e . / e file.nix
+      et = "emacsclient -t -a emacs"; # 终端框（阻塞当前终端，作 TUI 用）
     };
   };
 

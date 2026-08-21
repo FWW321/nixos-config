@@ -1,9 +1,22 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/opencode/renderer.nix
 # opencode 项目级渲染器(被 agent sync 调用) + ai/registry.json
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../../common { inherit pkgs inputs lib config; };
+  common = import ../../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 in
 {
   xdg.configFile = {

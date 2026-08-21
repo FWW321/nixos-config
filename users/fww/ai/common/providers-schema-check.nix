@@ -16,7 +16,10 @@ let
   # 测试数据自解释,不从真实数据派生(真实数据变化不该牵动测试)
   thinkingBlock = {
     default = "high";
-    levels = { off = null; high = "adaptive"; };
+    levels = {
+      off = null;
+      high = "adaptive";
+    };
   };
   baseModel = {
     contextWindow = 128000;
@@ -31,7 +34,11 @@ let
       data = {
         p.endpoints.anthropic = "https://e";
         p.apiKey.secretFile = "/run/secrets/x";
-        p.models."m1" = baseModel // { thinking.anthropic = thinkingBlock // { default = "max"; }; };
+        p.models."m1" = baseModel // {
+          thinking.anthropic = thinkingBlock // {
+            default = "max";
+          };
+        };
         p.defaultModel = "m1";
       };
     }
@@ -52,7 +59,9 @@ let
         # 只有 openai 端点,thinking 却声明在 anthropic 上
         p.endpoints.openai = "https://e";
         p.apiKey.secretFile = "/run/secrets/x";
-        p.models."m1" = baseModel // { thinking.anthropic = thinkingBlock; };
+        p.models."m1" = baseModel // {
+          thinking.anthropic = thinkingBlock;
+        };
         p.defaultModel = "m1";
       };
     }
@@ -64,7 +73,9 @@ let
       data = {
         p.endpoints.anthropic = "https://e";
         p.apiKey.secretFile = "/run/secrets/x";
-        p.models."m1" = baseModel // { contextWindow = "128k"; };
+        p.models."m1" = baseModel // {
+          contextWindow = "128k";
+        };
         p.defaultModel = "m1";
       };
     }
@@ -75,19 +86,24 @@ let
       data = {
         p.endpoints.anthropic = "https://e";
         p.apiKey.secretFile = "/run/secrets/x";
-        p.models."m1" = baseModel // { thinking.anthropic = thinkingBlock; };
+        p.models."m1" = baseModel // {
+          thinking.anthropic = thinkingBlock;
+        };
         p.defaultModel = "m1";
       };
     }
   ];
 
-  run = c:
-    let r = builtins.tryEval (schema lib c.data); in
+  run =
+    c:
+    let
+      r = builtins.tryEval (schema lib c.data);
+    in
     lib.optional (r.success != (c.expect == "ok"))
       "「${c.name}」期望${c.expect},实际${if r.success then "通过" else "被拒"}";
 
   failures = lib.concatMap run cases;
 in
-lib.throwIf (failures != [ ])
-  ("providers-schema 守护测试失败:\n  " + lib.concatStringsSep "\n  " failures)
-  (pkgs.runCommand "providers-schema-check" { } "touch $out")
+lib.throwIf (failures != [ ]) (
+  "providers-schema 守护测试失败:\n  " + lib.concatStringsSep "\n  " failures
+) (pkgs.runCommand "providers-schema-check" { } "touch $out")

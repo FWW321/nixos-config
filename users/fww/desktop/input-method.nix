@@ -26,7 +26,7 @@ in
         inputMethod = {
           "Groups/0" = {
             Name = "Default";
-            "Default Layout" = "us";       # 物理键盘布局（QWERTY），非输入法
+            "Default Layout" = "us"; # 物理键盘布局（QWERTY），非输入法
             DefaultIM = "rime";
           };
           # 仅保留 rime：雾凇拼音内置中英双模式，Shift 切换即可，

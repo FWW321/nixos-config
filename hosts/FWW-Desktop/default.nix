@@ -1,6 +1,11 @@
 # FWW-Desktop 主机配置 —— 自治:本机硬件文件 + nixos-hardware 模块在此 import,
 # flake.nix 对本主机只挂 ./hosts/FWW-Desktop 一个入口
-{ pkgs, config, inputs, ... }:
+{
+  pkgs,
+  config,
+  inputs,
+  ...
+}:
 
 {
   imports = [
@@ -16,7 +21,10 @@
 
   networking.hostName = "FWW-Desktop";
 
-  boot.kernelModules = [ "i2c-dev" "nct6775" ];
+  boot.kernelModules = [
+    "i2c-dev"
+    "nct6775"
+  ];
   hardware.i2c.enable = true;
   users.groups.i2c = { };
   users.users.fww.extraGroups = [ "i2c" ];
@@ -30,7 +38,11 @@
 
   home-manager.users.fww = {
     programs.niri.settings.outputs."DP-1" = {
-      mode = { width = 3840; height = 2160; refresh = 160.0; };
+      mode = {
+        width = 3840;
+        height = 2160;
+        refresh = 160.0;
+      };
       scale = 1.5;
     };
     wayland.windowManager.hyprland.settings.monitor = {

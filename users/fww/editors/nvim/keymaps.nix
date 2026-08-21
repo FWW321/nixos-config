@@ -78,8 +78,7 @@
     {
       mode = "n";
       key = "<leader>fc";
-      action.__raw =
-        "function() Snacks.picker.files({ cwd = vim.fn.stdpath('config') }) end";
+      action.__raw = "function() Snacks.picker.files({ cwd = vim.fn.stdpath('config') }) end";
       options.desc = "Find Config File";
     }
     {
@@ -123,8 +122,7 @@
     {
       mode = "n";
       key = "<leader>tT";
-      action.__raw =
-        "function() Snacks.terminal({ cwd = vim.fn.expand('%:p:h') }) end";
+      action.__raw = "function() Snacks.terminal({ cwd = vim.fn.expand('%:p:h') }) end";
       options.desc = "Terminal (cwd)";
     }
 
@@ -260,8 +258,7 @@
     {
       mode = "n";
       key = "<leader>E";
-      action.__raw =
-        "function() Snacks.explorer({ cwd = vim.fn.expand('%:p:h') }) end";
+      action.__raw = "function() Snacks.explorer({ cwd = vim.fn.expand('%:p:h') }) end";
       options.desc = "Explorer (cwd)";
     }
 
@@ -345,13 +342,21 @@
 
     # --- Flash ---
     {
-      mode = [ "n" "x" "o" ];
+      mode = [
+        "n"
+        "x"
+        "o"
+      ];
       key = "s";
       action.__raw = "function() require('flash').jump() end";
       options.desc = "Flash";
     }
     {
-      mode = [ "n" "x" "o" ];
+      mode = [
+        "n"
+        "x"
+        "o"
+      ];
       key = "S";
       action.__raw = "function() require('flash').treesitter() end";
       options.desc = "Flash Treesitter";
@@ -363,7 +368,11 @@
       options.desc = "Flash Remote";
     }
     {
-      mode = [ "n" "x" "o" ];
+      mode = [
+        "n"
+        "x"
+        "o"
+      ];
       key = "R";
       action.__raw = "function() require('flash').treesitter_search() end";
       options.desc = "Treesitter Search";
@@ -409,37 +418,55 @@
 
     # --- Multicursor ---
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>mn";
       action.__raw = "function() require('multicursor-nvim').matchAddCursor(1) end";
       options.desc = "Multi: Match Next";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>mp";
       action.__raw = "function() require('multicursor-nvim').matchAddCursor(-1) end";
       options.desc = "Multi: Match Prev";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>ms";
       action.__raw = "function() require('multicursor-nvim').matchSkipCursor(1) end";
       options.desc = "Multi: Match Skip";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>ma";
       action.__raw = "function() require('multicursor-nvim').matchAllAddCursors() end";
       options.desc = "Multi: Match All";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>m<up>";
       action.__raw = "function() require('multicursor-nvim').lineAddCursor(-1) end";
       options.desc = "Multi: Add Line Above";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>m<down>";
       action.__raw = "function() require('multicursor-nvim').lineAddCursor(1) end";
       options.desc = "Multi: Add Line Below";
@@ -463,7 +490,10 @@
       options.desc = "Multi: Mouse Release";
     }
     {
-      mode = [ "n" "x" ];
+      mode = [
+        "n"
+        "x"
+      ];
       key = "<leader>mt";
       action.__raw = "require('multicursor-nvim').toggleCursor";
       options.desc = "Multi: Toggle Cursor";

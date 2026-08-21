@@ -19,7 +19,7 @@ in
     (import ./git.nix { inherit common; })
     (import ./jj.nix { inherit common; })
     (import ./lazygit.nix { inherit common; })
-    ./forge.nix                       # forge 访问层(数据驱动,不经 common)
+    ./forge.nix # forge 访问层(数据驱动,不经 common)
   ];
 
   # ── 共享包(vcs 域工具集中管理,git.nix/jj.nix 不再各自声明包)──

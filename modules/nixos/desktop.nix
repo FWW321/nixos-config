@@ -66,10 +66,16 @@
     NIXOS_OZONE_WL = "1";
   };
 
-  environment.pathsToLink = [ "/share/applications" "/share/xdg-desktop-portal" ];
+  environment.pathsToLink = [
+    "/share/applications"
+    "/share/xdg-desktop-portal"
+  ];
 
   # 本地化
   time.timeZone = "Asia/Shanghai";
   i18n.defaultLocale = "zh_CN.UTF-8";
-  i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "zh_CN.UTF-8/UTF-8" ];
+  i18n.supportedLocales = [
+    "en_US.UTF-8/UTF-8"
+    "zh_CN.UTF-8/UTF-8"
+  ];
 }

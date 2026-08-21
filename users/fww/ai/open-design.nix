@@ -32,7 +32,14 @@
 #      image-01 仍为当前旗舰无需别名；model 键(单模型钉死)不用，别名更细粒度。
 # 视频：模型目录有 minimax-video-01 但无渲染器（0.19.2 源码确认），
 # 走 mmx-cli skill 的 `mmx video generate`（原 minimax-media MCP 已移除）。
-{ config, osConfig, pkgs, lib, inputs, ... }:
+{
+  config,
+  osConfig,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
   # better-sqlite3 13 graft 包(flake.nix inline overlay 提供;
@@ -57,8 +64,7 @@ in
       # 注意:不能直接用 programs.dsh.dshHome 的值($HOME 字面量)——nixdsh 的
       # $HOME 约定靠 bash wrapper 展开,OD 的 systemd Environment= 不展开,
       # daemon 会把 $HOME 当相对路径。此处求值期替换为绝对路径,同一事实源
-      DSH_HOME = lib.replaceStrings [ "$HOME" ] [ config.home.homeDirectory ]
-        config.programs.dsh.dshHome;
+      DSH_HOME = lib.replaceStrings [ "$HOME" ] [ config.home.homeDirectory ] config.programs.dsh.dshHome;
       OD_MINIMAX_IMAGE_BASE_URL = "https://api.minimaxi.com";
       # TTS 模型升级：daemon 硬编码 speech-02-turbo(2024 代)，经 #1277 别名
       # 机制覆写为 speech-2.8-hd(见文件头注释第 4 点)。JSON 原文进 env，
@@ -69,22 +75,22 @@ in
 
   home.activation.od-media-config =
     lib.hm.dag.entryAnywhere # bash
-    ''
-      # MiniMax TTS 域名修正：media-config.json 是 OD 的可变设置文件（Settings
-      # UI 整表重写），此处仅钉住 baseUrl 这一个键（声明式键声明式赢），
-      # 其余 provider 条目/UI 编辑经 jq 原样保留
-      _odCfg="$HOME/.od/media-config.json"
-      mkdir -p "$HOME/.od"
-      if [ -f "$_odCfg" ]; then
-        _tmp=$(mktemp)
-        if ${lib.getExe pkgs.jq} '.providers.minimax.baseUrl = "https://api.minimaxi.com/v1"' "$_odCfg" > "$_tmp"; then
-          mv "$_tmp" "$_odCfg"
+      ''
+        # MiniMax TTS 域名修正：media-config.json 是 OD 的可变设置文件（Settings
+        # UI 整表重写），此处仅钉住 baseUrl 这一个键（声明式键声明式赢），
+        # 其余 provider 条目/UI 编辑经 jq 原样保留
+        _odCfg="$HOME/.od/media-config.json"
+        mkdir -p "$HOME/.od"
+        if [ -f "$_odCfg" ]; then
+          _tmp=$(mktemp)
+          if ${lib.getExe pkgs.jq} '.providers.minimax.baseUrl = "https://api.minimaxi.com/v1"' "$_odCfg" > "$_tmp"; then
+            mv "$_tmp" "$_odCfg"
+          else
+            rm -f "$_tmp"
+          fi
         else
-          rm -f "$_tmp"
+          printf '%s' '{"providers":{"minimax":{"baseUrl":"https://api.minimaxi.com/v1"}}}' > "$_odCfg"
         fi
-      else
-        printf '%s' '{"providers":{"minimax":{"baseUrl":"https://api.minimaxi.com/v1"}}}' > "$_odCfg"
-      fi
-      unset _odCfg _tmp
-    '';
+        unset _odCfg _tmp
+      '';
 }

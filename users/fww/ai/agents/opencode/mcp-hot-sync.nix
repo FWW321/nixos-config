@@ -5,7 +5,12 @@
 # 不写盘,会话零中断 —— 完整验证记录见 2026-08 会话)。
 # 只热加不热删:runtime API 不区分全局/项目级注册,DELETE 会误伤项目级
 # mcp add 的条目;删除/同名定义变更场景留给 service restart(见 settings.nix 注释)
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   home.activation.syncOpencodeMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

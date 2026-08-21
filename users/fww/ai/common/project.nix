@@ -3,30 +3,37 @@
 #   (1) registry:nix 生成 JSON,供 agent 命令运行时查"名字→资源"(部署到 ~/.config/ai/)
 #   (2) globalAgentsMd:全局 AGENTS.md = 通用规则 + defaultEnabled=true 资源的 guide 聚合
 #   (3) skillRender:通用 skill 渲染脚本(agent sync 调用,symlink 到 .agents/skills/)
-{ pkgs, lib, config, mcp, skills, rules }:
+{
+  pkgs,
+  lib,
+  config,
+  mcp,
+  skills,
+  rules,
+}:
 let
   # defaultEnabled=true 且有 guide 的资源(全局 AGENTS.md 聚合用)
-  enabledGuides = lib.filterAttrs
-    (_: r: (r.defaultEnabled or false) && (r ? guide))
-    (mcp // skills);
+  enabledGuides = lib.filterAttrs (_: r: (r.defaultEnabled or false) && (r ? guide)) (mcp // skills);
 in
 {
   # (1) registry:agent 命令查"名字→资源信息"
   #     不含 secret(只存 source/defaultEnabled/guide/runtime)
-  registry = pkgs.writeText "ai-registry.json" (builtins.toJSON {
-    skills = lib.mapAttrs (_: s: {
-      source = s.source or null;
-      entryFile = s.entryFile or null;
-      defaultEnabled = s.defaultEnabled or false;
-      runtime = s.runtime or null;
-      guide = s.guide or null;
-    }) skills;
-    mcp = lib.mapAttrs (_: m: {
-      defaultEnabled = m.defaultEnabled or false;
-      guide = m.guide or null;
-      # 故意不含 command/env/secret:secret 全局 opencode.json/mcp.json 管,registry 只管元数据
-    }) mcp;
-  });
+  registry = pkgs.writeText "ai-registry.json" (
+    builtins.toJSON {
+      skills = lib.mapAttrs (_: s: {
+        source = s.source or null;
+        entryFile = s.entryFile or null;
+        defaultEnabled = s.defaultEnabled or false;
+        runtime = s.runtime or null;
+        guide = s.guide or null;
+      }) skills;
+      mcp = lib.mapAttrs (_: m: {
+        defaultEnabled = m.defaultEnabled or false;
+        guide = m.guide or null;
+        # 故意不含 command/env/secret:secret 全局 opencode.json/mcp.json 管,registry 只管元数据
+      }) mcp;
+    }
+  );
 
   # (2) 全局 AGENTS.md:通用规则 + 通用的有 guide 资源的指引
   #     opencode 的 AGENTS.md source 共用这个

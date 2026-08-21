@@ -14,9 +14,15 @@
     channel.enable = false;
 
     settings = {
-      experimental-features = [ "nix-command" "flakes" ];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
       auto-optimise-store = true;
-      trusted-users = [ "root" "@wheel" ];
+      trusted-users = [
+        "root"
+        "@wheel"
+      ];
       max-jobs = "auto";
       connect-timeout = 5;
       warn-dirty = false;

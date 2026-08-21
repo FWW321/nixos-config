@@ -3,9 +3,9 @@
   zhipu = {
     # 各 agent 按自己使用的协议取对应 endpoint
     endpoints = {
-      anthropic = "https://open.bigmodel.cn/api/anthropic";        # Claude Code 等
-      openai = "https://open.bigmodel.cn/api/coding/paas/v4";       # opencode 等(chat completions)
-      responses = "https://open.bigmodel.cn/api/v1";                # codex 等(responses API,见 docs.bigmodel.cn/cn/coding-plan/tool/codex)
+      anthropic = "https://open.bigmodel.cn/api/anthropic"; # Claude Code 等
+      openai = "https://open.bigmodel.cn/api/coding/paas/v4"; # opencode 等(chat completions)
+      responses = "https://open.bigmodel.cn/api/v1"; # codex 等(responses API,见 docs.bigmodel.cn/cn/coding-plan/tool/codex)
     };
     apiKey.secretFile = "/run/secrets/zhipu_api_key";
     models = {
@@ -65,9 +65,9 @@
   # 额度:5 小时+周双窗口;maxOutput 128K 出自 models.dev,官方模型表只列 context 1M
   minimax = {
     endpoints = {
-      anthropic = "https://api.minimaxi.com/anthropic";           # Claude Code 等
-      openai = "https://api.minimaxi.com/v1";                      # opencode 等(chat completions)
-      responses = "https://api.minimaxi.com/v1";                   # codex 等(responses API,与 openai 同 base 不同路由,均实测通)
+      anthropic = "https://api.minimaxi.com/anthropic"; # Claude Code 等
+      openai = "https://api.minimaxi.com/v1"; # opencode 等(chat completions)
+      responses = "https://api.minimaxi.com/v1"; # codex 等(responses API,与 openai 同 base 不同路由,均实测通)
     };
     apiKey.secretFile = "/run/secrets/minimax_api_key";
     models = {
@@ -122,7 +122,7 @@
     endpoints.openai = "https://api.siliconflow.cn/v1";
     apiKey.secretFile = "/run/secrets/siliconflow_api_key";
     embedding = {
-      model = "Qwen/Qwen3-Embedding-8B";  # MTEB 榜首;代金券覆盖
+      model = "Qwen/Qwen3-Embedding-8B"; # MTEB 榜首;代金券覆盖
       dim = 4096;
     };
   };

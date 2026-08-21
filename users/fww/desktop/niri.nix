@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   script = pkgs.writeShellScript "niri-set-max-mode" ''
@@ -166,7 +171,9 @@ in
 
         # 录屏:noctalia screen_recorder 插件(gpu-screen-recorder 后端,portal 采集)
         "Mod+F9".action = spawn "noctalia" "msg" "plugin" "noctalia/screen_recorder:service" "all" "toggle";
-        "Mod+F10".action = spawn "noctalia" "msg" "plugin" "noctalia/screen_recorder:service" "all" "replay-toggle";
+        "Mod+F10".action =
+          spawn "noctalia" "msg" "plugin" "noctalia/screen_recorder:service" "all"
+            "replay-toggle";
 
         # 硬件媒体键
         "XF86AudioRaiseVolume".action = spawn "noctalia" "msg" "volume-up";

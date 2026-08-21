@@ -6,7 +6,9 @@
   # 旧 npx registry.tgz+TOKEN 本地 stdio 流程已废弃;Motion+ 端点鉴权实测支持
   # Bearer token(与 OAuth 等价),复用 /run/secrets/motion_plus_token,无需 OAuth 登录
   motion = {
-    remote = { url = "https://mcp.motion.dev"; };
+    remote = {
+      url = "https://mcp.motion.dev";
+    };
   };
   motion-plus = {
     remote = {
@@ -21,14 +23,21 @@
   "mcp-server-tauri" = {
     local = {
       command = "npx";
-      args = [ "-y" "@hypothesi/tauri-mcp-server" ];
+      args = [
+        "-y"
+        "@hypothesi/tauri-mcp-server"
+      ];
     };
   };
 
   shadcn = {
     local = {
       command = "npx";
-      args = [ "-y" "shadcn@latest" "mcp" ];
+      args = [
+        "-y"
+        "shadcn@latest"
+        "mcp"
+      ];
     };
   };
 

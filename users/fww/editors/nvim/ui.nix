@@ -25,7 +25,11 @@
         };
         sections = {
           lualine_a = [ "mode" ];
-          lualine_b = [ "branch" "diff" "diagnostics" ];
+          lualine_b = [
+            "branch"
+            "diff"
+            "diagnostics"
+          ];
           lualine_c = [ "filename" ];
           lualine_x = [
             "filetype"
@@ -67,16 +71,59 @@
         preset = "modern";
         show_help = false;
         spec = [
-          { __unkeyed-1 = "<leader>b"; group = "Buffers"; mode = "n"; }
-          { __unkeyed-1 = "<leader>c"; group = "Code"; mode = "n"; }
-          { __unkeyed-1 = "<leader>f"; group = "Find"; mode = "n"; }
-          { __unkeyed-1 = "<leader>g"; group = "Git"; mode = "n"; }
-          { __unkeyed-1 = "<leader>s"; group = "Search"; mode = "n"; }
-          { __unkeyed-1 = "<leader>t"; group = "Toggle"; mode = "n"; }
-          { __unkeyed-1 = "<leader>u"; group = "UI"; mode = "n"; }
-          { __unkeyed-1 = "<leader>w"; group = "Windows"; mode = "n"; }
-          { __unkeyed-1 = "<leader>x"; group = "Trouble"; mode = "n"; }
-          { __unkeyed-1 = "<leader>m"; group = "Multicursor"; mode = [ "n" "x" ]; }
+          {
+            __unkeyed-1 = "<leader>b";
+            group = "Buffers";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>c";
+            group = "Code";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>f";
+            group = "Find";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>g";
+            group = "Git";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>s";
+            group = "Search";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>t";
+            group = "Toggle";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>u";
+            group = "UI";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>w";
+            group = "Windows";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>x";
+            group = "Trouble";
+            mode = "n";
+          }
+          {
+            __unkeyed-1 = "<leader>m";
+            group = "Multicursor";
+            mode = [
+              "n"
+              "x"
+            ];
+          }
         ];
       };
     };

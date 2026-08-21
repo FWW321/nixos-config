@@ -1,22 +1,44 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/opencode/skills.nix
 # Skills 链接(静态 symlink) + 依赖包 + env + bash 集成
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 let
-  common = import ../../common { inherit pkgs inputs lib config; };
+  common = import ../../common {
+    inherit
+      pkgs
+      inputs
+      lib
+      config
+      ;
+  };
 
   # ── 全局 skill:defaultEnabled = true 的(通用),特殊的走项目级 agent skill add ──
-  selectedSkills = lib.filterAttrs (_: s: (s.defaultEnabled or false) && !(s ? runtime))
-    common.skills;
+  selectedSkills = lib.filterAttrs (
+    _: s: (s.defaultEnabled or false) && !(s ? runtime)
+  ) common.skills;
 
   # ── Skill 链接：entryFile 单文件 vs 目录递归 ──
-  linkSkill = name: s:
+  linkSkill =
+    name: s:
     if s ? entryFile then
       { "opencode/skills/${name}/${s.entryFile}".source = "${s.source}/${s.entryFile}"; }
     else
-      { "opencode/skills/${name}" = { source = s.source; recursive = true; }; };
+      {
+        "opencode/skills/${name}" = {
+          source = s.source;
+          recursive = true;
+        };
+      };
   # ── 从选中的 skill 中提取包和 env ──
-  skillPkgs = lib.catAttrs "package" (lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills));
+  skillPkgs = lib.catAttrs "package" (
+    lib.attrValues (lib.filterAttrs (_: s: s ? package) selectedSkills)
+  );
   skillEnv = lib.foldl' (acc: s: acc // (s.env or { })) { } (lib.attrValues selectedSkills);
 in
 {
