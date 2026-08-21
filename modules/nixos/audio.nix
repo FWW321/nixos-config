@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/audio.nix
+# filepath: ~/nixos-config/modules/nixos/audio.nix
 # PipeWire 音频系统
 { ... }:
 

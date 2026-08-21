@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/theme.nix
+# filepath: ~/nixos-config/modules/nixos/theme.nix
 # Stylix 主题配置：字体、光标、配色
 { pkgs, ... }:
 

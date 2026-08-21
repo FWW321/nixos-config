@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/gaming.nix
+# filepath: ~/nixos-config/modules/nixos/gaming.nix
 # Steam、图形驱动、游戏相关
 { pkgs, ... }:
 

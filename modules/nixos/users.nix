@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/users.nix
+# filepath: ~/nixos-config/modules/nixos/users.nix
 # 用户、组、权限、tmpfiles 规则
 { config, pkgs, ... }:
 

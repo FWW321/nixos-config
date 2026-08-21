@@ -1,7 +1,19 @@
-# FWW-Desktop 主机特定配置
-{ pkgs, config, ... }:
+# FWW-Desktop 主机配置 —— 自治:本机硬件文件 + nixos-hardware 模块在此 import,
+# flake.nix 对本主机只挂 ./hosts/FWW-Desktop 一个入口
+{ pkgs, config, inputs, ... }:
 
 {
+  imports = [
+    ./hardware.nix
+    ./disko.nix
+    ./nvidia.nix
+
+    # 硬件模块(主机相关,随主机走)
+    inputs.nixos-hardware.nixosModules.common-cpu-intel
+    inputs.nixos-hardware.nixosModules.common-pc-ssd
+    inputs.nixos-hardware.nixosModules.common-pc
+  ];
+
   networking.hostName = "FWW-Desktop";
 
   boot.kernelModules = [ "i2c-dev" "nct6775" ];

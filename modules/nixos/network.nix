@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/network.nix
+# filepath: ~/nixos-config/modules/nixos/network.nix
 # 网络配置：NetworkManager、蓝牙、dae 代理
 { config, pkgs, lib, inputs, ... }:
 

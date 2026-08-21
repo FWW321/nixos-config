@@ -1,11 +1,18 @@
-# filepath: ~/nixos-config/modules/system/nix.nix
-# Nix 设置、substituters、垃圾回收
-{ ... }:
+# filepath: ~/nixos-config/modules/nixos/nix.nix
+# Nix 设置、registry、substituters、垃圾回收
+{ inputs, ... }:
 
 {
   nixpkgs.config.allowUnfree = true;
 
   nix = {
+    # nixpkgs registry 钉到本 flake 输入:nix run nixpkgs#foo 与系统同源,
+    # 不再解析到全局 registry 的漂浮 nixpkgs
+    registry.nixpkgs.flake = inputs.nixpkgs;
+
+    # flake 已全权管理来源,channel 命令与状态文件不再需要
+    channel.enable = false;
+
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
@@ -40,5 +47,12 @@
       dates = "weekly";
       options = "--delete-older-than 14d --max-freed ${toString (100 * 1024 * 1024 * 1024)}";
     };
+  };
+
+  # nh:nixos-rebuild 的现代前端。NH_FLAKE 免每次带路径(nh os switch 直接可用)
+  # 清理仍由上方 nix.gc weekly 管,nh clean 不双开
+  programs.nh = {
+    enable = true;
+    flake = "/home/fww/nixos-config";
   };
 }

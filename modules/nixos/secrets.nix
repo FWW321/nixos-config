@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/secrets.nix
+# filepath: ~/nixos-config/modules/nixos/secrets.nix
 # 系统级 sops 单实例：全部 secret 集中在此声明，root 于激活期用 host ssh key 解密到
 # /run/secrets（tmpfs，不落盘）。HM 不再跑独立 sops（无双实例、host key 无需对用户可读）。
 #

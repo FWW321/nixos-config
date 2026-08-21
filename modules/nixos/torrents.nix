@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/torrents.nix
+# filepath: ~/nixos-config/modules/nixos/torrents.nix
 # qBittorrent-nox：headless BT 客户端（WebUI + systemd 常驻）
 # nixpkgs 模块默认 package=qbittorrent-nox，自带全套 systemd 沙箱硬化
 # （ProtectSystem=full / MemoryDenyWriteExecute / SystemCallFilter=@system-service 等）

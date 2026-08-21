@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/containers.nix
+# filepath: ~/nixos-config/modules/nixos/containers.nix
 # rootless Podman — 无 daemon、systemd 原生、rootless 默认
 { config, lib, pkgs, ... }:
 

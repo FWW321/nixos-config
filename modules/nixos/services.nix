@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/services.nix
+# filepath: ~/nixos-config/modules/nixos/services.nix
 # 系统服务:防火墙、存储维护、nix-ld(SSH 见 ssh.nix)
 { pkgs, ... }:
 

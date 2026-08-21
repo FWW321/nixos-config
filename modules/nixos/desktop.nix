@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/desktop.nix
+# filepath: ~/nixos-config/modules/nixos/desktop.nix
 # 桌面环境：Hyprland、Niri、greetd、字体、本地化
 { pkgs, ... }:
 

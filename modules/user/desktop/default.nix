@@ -52,7 +52,7 @@
   };
 
   # nix.conf:声明式主体 + secret 片段 include 分离
-  # access-tokens.conf 由系统 sops 模板渲染(见 modules/system/secrets.nix),token 不经手 shell
+  # access-tokens.conf 由系统 sops 模板渲染(见 modules/nixos/secrets.nix),token 不经手 shell
   xdg.configFile."nix/nix.conf".text = ''
     include ${config.home.homeDirectory}/.config/nix/access-tokens.conf
   '';

@@ -110,6 +110,9 @@
       # 本仓 by-name 自建包(组装见 overlays/default.nix)
       overlays.default = import ./overlays { inherit inputs; };
 
+      # RFC 166 官方格式化器(nix fmt;nvim 侧 nixfmt/statix 同源工具链)
+      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt;
+
       # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
       # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
 
@@ -119,44 +122,25 @@
         import ./users/fww/ai/common/providers-schema-check.nix checkPkgs nixpkgs.lib;
 
       nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+        # system 不显式传:nixpkgs.hostPlatform 由 hosts/FWW-Desktop/hardware.nix 声明
+        # (nixpkgs flake 已将 system 参数标为 legacy alias)
         specialArgs = { inputs = inputs'; };
         modules = [
           # overlay 注册(唯一出口)
           { nixpkgs.overlays = [ self.overlays.default ]; }
 
-          # 外部模块
+          # 跨切外部模块
           inputs.dae.nixosModules.dae
           inputs.disko.nixosModules.disko
           inputs.stylix.nixosModules.stylix
           inputs.sops-nix.nixosModules.sops
           inputs.noctalia-greeter.nixosModules.default
 
-          # 硬件模块
-          inputs.nixos-hardware.nixosModules.common-cpu-intel
-          inputs.nixos-hardware.nixosModules.common-pc-ssd
-          inputs.nixos-hardware.nixosModules.common-pc
-
-          # 主机配置
+          # 主机(自治:硬件文件 + nixos-hardware 在 host 内 import)
           ./hosts/FWW-Desktop
-          ./hosts/FWW-Desktop/hardware.nix
-          ./hosts/FWW-Desktop/disko.nix
-          ./hosts/FWW-Desktop/nvidia.nix
 
-          # 通用系统模块
-          ./modules/system/boot.nix
-          ./modules/system/nix.nix
-          ./modules/system/users.nix
-          ./modules/system/audio.nix
-          ./modules/system/desktop.nix
-          ./modules/system/gaming.nix
-          ./modules/system/services.nix
-          ./modules/system/network.nix
-          ./modules/system/containers.nix
-          ./modules/system/torrents.nix
-          ./modules/system/secrets.nix
-          ./modules/system/theme.nix
-          ./modules/system/ssh.nix
+          # 共享系统模块(聚合入口)
+          ./modules/nixos
 
           # Home Manager
           home-manager.nixosModules.home-manager

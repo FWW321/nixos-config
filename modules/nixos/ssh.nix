@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/ssh.nix
+# filepath: ~/nixos-config/modules/nixos/ssh.nix
 # SSH 全栈:OpenSSH 服务安全基线 + 系统级信任根(host key 钉死)
 # 信任根免首次连接交互(兑现可复现迁移)+ 防中间人:
 # forge 的 publicKey 不可从域名推导,注定独立声明;host key 几年一遇变更时手动更新

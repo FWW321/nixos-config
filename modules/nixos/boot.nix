@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/system/boot.nix
+# filepath: ~/nixos-config/modules/nixos/boot.nix
 # 启动、内核、性能调优
 # (kernel/proton 的 overlay 注册已集中 overlays/default.nix,此处只管 boot.*)
 { pkgs, ... }:

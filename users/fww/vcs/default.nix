@@ -35,7 +35,7 @@ in
   };
 
   # ── SSH 签名/认证公钥(声明式) ──
-  # 私钥:系统 sops 解密为 ~/.ssh/id_ed25519(symlink→/run/secrets,见 modules/system/secrets.nix)
+  # 私钥:系统 sops 解密为 ~/.ssh/id_ed25519(symlink→/run/secrets,见 modules/nixos/secrets.nix)
   # 公钥:非秘密,直接进仓库;换钥时更新 secrets.yaml 与 ./id_ed25519.pub 两处
   home.file.".ssh/id_ed25519.pub".source = ./id_ed25519.pub;
 }
