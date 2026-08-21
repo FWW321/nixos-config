@@ -108,11 +108,67 @@
       ...
     }@inputs:
     let
+      inherit (nixpkgs) lib;
+
       # 登记表摊平:sources/flake.nix 里的源码树以原名进入 inputs 命名空间,
       # 消费者零改动(冲突面 = 主输入名,登记表内不与之同名即可)
       inputs' = inputs // inputs.sources.pins;
+
       # checks 专用轻量 pkgs:不叠 overlay,只需 runCommand
       checkPkgs = import nixpkgs { system = "x86_64-linux"; };
+
+      # ── 主机注册表 = hosts/ 目录本身 ──
+      # 每个子目录一台主机(_ 前缀目录除外,如 _template);新增主机 = 建目录
+      # (install.sh 向导自动完成),本文件零改动 —— "目录即配置"原则
+      hostNames = builtins.attrNames (
+        lib.filterAttrs (n: t: t == "directory" && !lib.hasPrefix "_" n) (builtins.readDir ./hosts)
+      );
+
+      # 统一主机装配:所有主机共享同一模块框架,差异全部在各 host 目录内
+      mkHost =
+        name:
+        nixpkgs.lib.nixosSystem {
+          # system 不显式传:nixpkgs.hostPlatform 由各主机 facter 报告推导
+          specialArgs = {
+            inputs = inputs';
+          };
+          modules = [
+            # overlay 注册(唯一出口)
+            { nixpkgs.overlays = [ self.overlays.default ]; }
+
+            # 跨切外部模块
+            inputs.dae.nixosModules.dae
+            inputs.disko.nixosModules.disko
+            inputs.stylix.nixosModules.stylix
+            inputs.sops-nix.nixosModules.sops
+            inputs.noctalia-greeter.nixosModules.default
+
+            # 主机(自治:disko/facter/GPU/nixos-hardware 在 host 内 import)
+            ./hosts/${name}
+
+            # 共享系统模块(聚合入口)
+            ./modules/nixos
+
+            # Home Manager(当前全部主机共用 fww 用户;多用户机器时在
+            # host 目录内追加 home-manager.users 即可)
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                backupFileExtension = "backup";
+                extraSpecialArgs = {
+                  inputs = inputs';
+                };
+                sharedModules = [
+                  inputs.open-design.homeManagerModules.default
+                  inputs.nixdsh.homeManagerModules.dsh
+                ];
+                users.fww = import ./users/fww/default.nix;
+              };
+            }
+          ];
+        };
     in
     {
       # 全部 overlay 的唯一出口:rust 工具链/cachyos 内核与 Proton/nixdsh/
@@ -182,47 +238,7 @@
         import ./users/fww/ai/common/providers-schema-check.nix checkPkgs
           nixpkgs.lib;
 
-      nixosConfigurations.FWW-Desktop = nixpkgs.lib.nixosSystem {
-        # system 不显式传:nixpkgs.hostPlatform 由 hosts/FWW-Desktop/hardware.nix 声明
-        # (nixpkgs flake 已将 system 参数标为 legacy alias)
-        specialArgs = {
-          inputs = inputs';
-        };
-        modules = [
-          # overlay 注册(唯一出口)
-          { nixpkgs.overlays = [ self.overlays.default ]; }
-
-          # 跨切外部模块
-          inputs.dae.nixosModules.dae
-          inputs.disko.nixosModules.disko
-          inputs.stylix.nixosModules.stylix
-          inputs.sops-nix.nixosModules.sops
-          inputs.noctalia-greeter.nixosModules.default
-
-          # 主机(自治:硬件文件 + nixos-hardware 在 host 内 import)
-          ./hosts/FWW-Desktop
-
-          # 共享系统模块(聚合入口)
-          ./modules/nixos
-
-          # Home Manager
-          home-manager.nixosModules.home-manager
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "backup";
-              extraSpecialArgs = {
-                inputs = inputs';
-              };
-              sharedModules = [
-                inputs.open-design.homeManagerModules.default
-                inputs.nixdsh.homeManagerModules.dsh
-              ];
-              users.fww = import ./users/fww/default.nix;
-            };
-          }
-        ];
-      };
+      # 主机自动发现(hosts/<dir> 即 nixosConfigurations.<dir>,见上方 hostNames)
+      nixosConfigurations = lib.genAttrs hostNames mkHost;
     };
 }

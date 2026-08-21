@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 # filepath: ~/nixos-config/install.sh
-# 一键安装/重装本仓库管理的 NixOS 主机(官方安装介质 root shell 下运行)
+# 一键安装/重装/新机初始化本仓库管理的 NixOS(官方安装介质 root shell 下运行)
 #
 # 用法:
-#   ./install.sh <主机名>                     # 全新安装(生成新 host key,需重加密 secrets)
-#   ./install.sh <主机名> --host-key <file>   # 同机重装(复用旧 ssh_host_ed25519_key,secrets 免重加密)
+#   ./install.sh <已有主机名>                # 按既有配置安装/重装
+#   ./install.sh <已有主机名> --host-key <f> # 同机重装,复用旧 host key(secrets 免重加密)
+#   ./install.sh <新主机名>                  # 向导模式:探测硬件→引导填参→生成配置→安装
+#
+# 主机注册表 = hosts/ 目录(flake.nix 自动发现,_ 前缀除外):
+#   向导建完目录即注册完成,无需改任何 nix 文件
 #
 # 环境要求:官方 NixOS 安装介质(root + nix + 有线网),本仓库已就位
 # (git clone 或 U 盘拷贝;git 若缺失自动经 nix shell 提供)。
-#
-# 与旧版的关键差异(2026-08 重写):
-#   - 硬件事实走 facter(.facter.json + redact),不再生成 hardware.nix(该文件已删)
-#   - disko 用 flake.lock 内 pin 的版本(build diskoScript),不再拉 github:latest
-#   - sops host key 契约显式化:secrets.yaml 加密给 host key 的 age 公钥,
-#     新 key 必须重加密(否则装完无法登录),复用旧 key 则免
-#   - 仓库拷贝含 dotfiles(.git/.sops.yaml/.facter.json 缺一则新机不可用)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -32,12 +29,73 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$HOSTNAME" ] || die "未指定主机名。用法: ./install.sh <主机名> [--host-key <旧key>]"
-[ -d "hosts/$HOSTNAME" ] || die "找不到 hosts/$HOSTNAME 配置目录"
 [ "$(id -u)" = 0 ] || die "请以 root 运行(安装介质默认 root shell)"
 
 # 安装介质可能没有 git;flake 纯净性要求新文件被 git 跟踪
 GIT="git"
 command -v git >/dev/null 2>&1 || GIT="nix shell nixpkgs#git -c git"
+
+# ── 向导模式:hosts/<name> 不存在 = 新主机 ─────────────
+if [ ! -d "hosts/$HOSTNAME" ]; then
+  echo "=========================================================="
+  echo "🧙 hosts/$HOSTNAME 不存在 → 新主机向导"
+  echo "=========================================================="
+  read -p "为新机器创建配置并安装?(y/N) " -n 1 -r; echo
+  [[ $REPLY =~ ^[Yy]$ ]] || die "已取消(要装已有主机,检查主机名拼写)"
+
+  # 探测 CPU(AVX 等差异交给 nixos-hardware/nixpkgs,这里只选厂商 profile)
+  if grep -q AuthenticAMD /proc/cpuinfo; then CPU_PROFILE=common-cpu-amd
+  else CPU_PROFILE=common-cpu-intel; fi
+  echo "  CPU → $CPU_PROFILE"
+
+  # 探测 GPU(NVIDIA 自动挂模块;AMD/Intel 核显免专项模块,留给 TODO)
+  GPU_IMPORT="# ./nvidia.nix  # 未检测到 NVIDIA(AMD/Intel 核显无需专项模块)"
+  for uevent in /sys/class/drm/card*/device/uevent; do
+    if grep -q '^DRIVER=nvidia$' "$uevent" 2>/dev/null; then
+      GPU_IMPORT="./nvidia.nix"; break
+    fi
+  done
+  echo "  GPU → ${GPU_IMPORT%%#*}"
+
+  # 磁盘清单(人来做"哪块盘扮演什么角色"的意图决策)
+  echo "  检测到以下磁盘:"
+  mapfile -t DISKS < <(lsblk -dnp -o PATH,SIZE,TYPE,MODEL | awk '$3=="disk"')
+  [ "${#DISKS[@]}" -ge 1 ] || die "未检测到磁盘"
+  for i in "${!DISKS[@]}"; do echo "    [$i] ${DISKS[$i]}"; done
+
+  pick_disk() { # $1=用途 $2=是否必填
+    local idx
+    while :; do
+      read -p "  $1 用哪块盘?(序号$([ "$2" = req ] && echo '' || echo ',回车=不单独分盘')) " idx
+      [ -z "$idx" ] && [ "$2" != req ] && { echo null; return; }
+      [[ "$idx" =~ ^[0-9]+$ ]] && [ "$idx" -lt "${#DISKS[@]}" ] \
+        && { echo "${DISKS[$idx]%% *}"; return; }
+      echo "    无效序号,重输" >&2
+    done
+  }
+  SYSTEM_DISK=$(pick_disk "系统盘(将被格式化!)" req)
+  HOME_DISK=$(pick_disk "home 盘" opt)
+  DATA_DISK=$(pick_disk "data 盘" opt)
+  echo "  系统盘=$SYSTEM_DISK home=${HOME_DISK:-子卷} data=${DATA_DISK:-子卷}"
+
+  # swap 建议 = 内存大小(休眠需要 ≥ RAM)
+  RAM_GIB=$(free -g | awk '/^Mem:/{print $2}')
+  read -p "  swap 大小(GiB,默认 ${RAM_GIB}G=内存大小,休眠需≥RAM): " SWAP_GIB
+  SWAP_GIB=${SWAP_GIB:-$RAM_GIB}
+  [[ "$SWAP_GIB" =~ ^[0-9]+$ ]] || die "swap 大小无效: $SWAP_GIB"
+
+  # 物化:模板 → hosts/<name>/
+  mkdir -p "hosts/$HOSTNAME"
+  cp hosts/_template/{default.nix,disko.nix,redact.sh} "hosts/$HOSTNAME/"
+  [ "$GPU_IMPORT" = "./nvidia.nix" ] && cp hosts/_template/nvidia.nix "hosts/$HOSTNAME/"
+  sed -i "s|{{HOSTNAME}}|$HOSTNAME|g; s|{{CPU_PROFILE}}|$CPU_PROFILE|g; s|{{GPU_IMPORT}}|$GPU_IMPORT|g" \
+    "hosts/$HOSTNAME/default.nix"
+  sed -i "s|{{SYSTEM_DISK}}|$SYSTEM_DISK|g; s|{{HOME_DISK}}|$HOME_DISK|g; s|{{DATA_DISK}}|$DATA_DISK|g; s|{{SWAP_GIB}}|$SWAP_GIB|g" \
+    "hosts/$HOSTNAME/disko.nix"
+  $GIT add "hosts/$HOSTNAME"
+  echo "✅ hosts/$HOSTNAME 已生成并注册(hosts/ 目录即主机列表)"
+  echo "   装机后的手动项(显示器/传感器/udev):见 hosts/$HOSTNAME/default.nix 内 TODO"
+fi
 
 # ── 确认 destructive 操作 ────────────────────────────
 echo "=========================================================="
@@ -58,14 +116,20 @@ $GIT add "hosts/$HOSTNAME/.facter.json"
 
 # ── [2/5] sops host key 契约 ──────────────────────────
 # secrets.yaml 按 host key 的 age 公钥加密;key 不匹配 = 装完无法登录
+# label 从主机名派生(FWW-Desktop → host_fww_desktop);新主机 label 尚未
+# 登记是合法状态,由 [4/5] 生成 key 后写入
 echo "[2/5] 🔑 处理 SSH host key(sops 解密契约)..."
-SOPS_HOST_LABEL=host_fww_desktop
+SOPS_ADMIN_LABEL=admin_fww
+SOPS_HOST_LABEL=host_$(echo "$HOSTNAME" | tr '[:upper:]-' '[:lower:]_')
 OLD_AGE_PUB=$(sed -n "s/.*&${SOPS_HOST_LABEL} \(age1[a-z0-9]*\).*/\1/p" .sops.yaml)
-[ -n "$OLD_AGE_PUB" ] || die ".sops.yaml 中找不到 &${SOPS_HOST_LABEL}"
+if [ -z "$OLD_AGE_PUB" ]; then
+  echo "     .sops.yaml 中无 ${SOPS_HOST_LABEL}(新主机),key 生成后登记 → [4/5]"
+fi
 
 if [ -n "$HOST_KEY_FILE" ]; then
   # 同机重装:复用备份的旧 key
   [ -f "$HOST_KEY_FILE" ] || die "--host-key 文件不存在: $HOST_KEY_FILE"
+  [ -n "$OLD_AGE_PUB" ] || die "该主机 label 未登记过,不存在\"复用旧 key\"场景;去掉 --host-key 走全新安装"
   NEW_AGE_PUB=$(ssh-keygen -y -f "$HOST_KEY_FILE" | nix shell nixpkgs#ssh-to-age -c ssh-to-age)
 else
   NEW_AGE_PUB=""
@@ -92,7 +156,7 @@ if [ -n "$HOST_KEY_FILE" ]; then
   install -m 600 "$HOST_KEY_FILE" "$KEY"
   ssh-keygen -y -f "$KEY" > "${KEY}.pub"
 else
-  # 全新安装:生成新 key;secrets.yaml 必须重加密给新 key
+  # 全新安装(或 label 需重登记):生成新 key;secrets.yaml 重加密给新 key
   ssh-keygen -t ed25519 -N "" -f "$KEY" -q
   NEW_AGE_PUB=$(ssh-keygen -y -f "$KEY" | nix shell nixpkgs#ssh-to-age -c ssh-to-age)
   if [ "${SOPS_AGE_KEY_FILE:-}" = "" ] && [ "${SOPS_AGE_KEY:-}" = "" ]; then
@@ -101,10 +165,17 @@ else
      SOPS_AGE_KEY_FILE=/path/to/admin.key ./install.sh $HOSTNAME
   2. 或改用同机重装路径(--host-key 复用旧 key)"
   fi
-  sed -i "s|&${SOPS_HOST_LABEL} age1[a-z0-9]*|&${SOPS_HOST_LABEL} ${NEW_AGE_PUB}|" .sops.yaml
+  if [ -n "$OLD_AGE_PUB" ]; then
+    # label 已存在(重装):换公钥值
+    sed -i "s|&${SOPS_HOST_LABEL} age1[a-z0-9]*|\\&${SOPS_HOST_LABEL} ${NEW_AGE_PUB}|" .sops.yaml
+  else
+    # 新主机:登记 label(keys 段 + key_groups 引用;YAML 列表顺序无关)
+    sed -i "/^keys:/a\\  - \&${SOPS_HOST_LABEL} ${NEW_AGE_PUB}" .sops.yaml
+    sed -i "/- \*${SOPS_ADMIN_LABEL}/a\\          - \*${SOPS_HOST_LABEL}" .sops.yaml
+  fi
   nix run nixpkgs#sops -- updatekeys secrets/secrets.yaml -y
   $GIT add .sops.yaml secrets/secrets.yaml
-  echo "     secrets.yaml 已重加密给新 host key ✅(记得 commit)"
+  echo "     secrets.yaml 已重加密(host: ${SOPS_HOST_LABEL})✅(记得 commit)"
 fi
 
 # ── [5/5] 安装系统 + 仓库就位 ─────────────────────────
