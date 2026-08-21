@@ -32,10 +32,12 @@
     kernel.sysfs.kernel.mm.transparent_hugepage.defrag = "defer+madvise";
   };
 
-  # scx 调度器 - 现代 BPF 调度器，提升交互响应
+  # scx 调度器 - sched_ext BPF 调度器,提升交互响应
+  # flash:上游 1.0.15 起官方建议默认(commit c25ecbb,性能反超 bpfland;
+  # bpfland 仍受支持,回切只改此行)
   services.scx = {
     enable = true;
-    scheduler = "scx_bpfland";
+    scheduler = "scx_flash";
   };
 
   # 电源管理
