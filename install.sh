@@ -48,14 +48,34 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   else CPU_PROFILE=common-cpu-intel; fi
   echo "  CPU → $CPU_PROFILE"
 
-  # 探测 GPU(NVIDIA 自动挂模块;AMD/Intel 核显免专项模块,留给 TODO)
-  GPU_IMPORT="# ./nvidia.nix  # 未检测到 NVIDIA(AMD/Intel 核显无需专项模块)"
-  for uevent in /sys/class/drm/card*/device/uevent; do
-    if grep -q '^DRIVER=nvidia$' "$uevent" 2>/dev/null; then
-      GPU_IMPORT="./nvidia.nix"; break
+  # 探测 GPU(PCI vendor 0x10de + class 03xx;不能用 DRIVER=nvidia —— 安装介质
+  # 只有 nouveau,闭源驱动装完才有)。同时按 PCI device id 判架构:
+  #   >= 0x1E00 = Turing+(GSP 存在,open 模块可用);更老 = Maxwell/Pascal/Volta
+  #   (open 不兼容,需闭源 + legacy_580 终点分支,nvidia README/support timeframes)
+  GPU_IMPORT="# ./nvidia.nix  # 未检测到 NVIDIA"
+  NVIDIA_OPEN=true
+  NVIDIA_PACKAGE=latest
+  GPU_LIST=""
+  for d in /sys/bus/pci/devices/*; do
+    if [ "$(cat "$d/vendor" 2>/dev/null)" = "0x10de" ] && [[ "$(cat "$d/class" 2>/dev/null)" == 0x03* ]]; then
+      devid=$(cat "$d/device"); devid=$((devid))
+      GPU_LIST="$GPU_LIST $(basename "$d"):$(cat "$d/device")"
+      if [ "$devid" -lt $((0x1E00)) ]; then
+        NVIDIA_OPEN=false
+        NVIDIA_PACKAGE=legacy_580
+        echo "    $(basename "$d") device $(cat "$d/device") < Turing(Maxwell/Pascal/Volta)→ 闭源模块 + legacy_580"
+      else
+        echo "    $(basename "$d") device $(cat "$d/device") = Turing+ → open 模块 + latest"
+      fi
     fi
   done
-  echo "  GPU → ${GPU_IMPORT%%#*}"
+  if [ -n "$GPU_LIST" ]; then
+    GPU_IMPORT="./nvidia.nix"
+    echo "  GPU → NVIDIA(${GPU_LIST# })open=$NVIDIA_OPEN package=$NVIDIA_PACKAGE"
+    command -v lspci >/dev/null && lspci -nn | grep -i 'vga\|3d' | sed 's/^/    /'
+  else
+    echo "  GPU → 非 NVIDIA(核显/AMD 免专项模块)"
+  fi
 
   # 磁盘清单(人来做"哪块盘扮演什么角色"的意图决策)
   echo "  检测到以下磁盘:"
@@ -87,7 +107,10 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   # 物化:模板 → hosts/<name>/
   mkdir -p "hosts/$HOSTNAME"
   cp hosts/_template/{default.nix,disko.nix,redact.sh} "hosts/$HOSTNAME/"
-  [ "$GPU_IMPORT" = "./nvidia.nix" ] && cp hosts/_template/nvidia.nix "hosts/$HOSTNAME/"
+  if [ "$GPU_IMPORT" = "./nvidia.nix" ]; then
+    cp hosts/_template/nvidia.nix "hosts/$HOSTNAME/"
+    sed -i "s|{{NVIDIA_OPEN}}|$NVIDIA_OPEN|g; s|{{NVIDIA_PACKAGE}}|$NVIDIA_PACKAGE|g" "hosts/$HOSTNAME/nvidia.nix"
+  fi
   sed -i "s|{{HOSTNAME}}|$HOSTNAME|g; s|{{CPU_PROFILE}}|$CPU_PROFILE|g; s|{{GPU_IMPORT}}|$GPU_IMPORT|g" \
     "hosts/$HOSTNAME/default.nix"
   sed -i "s|{{SYSTEM_DISK}}|$SYSTEM_DISK|g; s|{{HOME_DISK}}|$HOME_DISK|g; s|{{DATA_DISK}}|$DATA_DISK|g; s|{{SWAP_GIB}}|$SWAP_GIB|g" \
