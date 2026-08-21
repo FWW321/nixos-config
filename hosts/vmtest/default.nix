@@ -1,12 +1,17 @@
 # filepath: ~/nixos-config/hosts/vmtest/
-# VM 验证夹具主机 —— 运行:
-#   nix build --out-link /tmp/vm .#nixosConfigurations.vmtest.config.system.build.vmWithDisko
-#   /tmp/vm/bin/disko-vm   # headless(-nographic),Ctrl-C/timeout 退出
+# VM 验证夹具主机 —— 运行(建议经 herdr pane,非交互产物走 xchg):
+#   NIX_EFI_VARS=/tmp/vars.fd TMPDIR=/tmp/vmx /tmp/vm/bin/disko-vm
+#   产物落 $TMPDIR/nix-vm.*/xchg/{hm.log,facter.json,failed.txt,state.txt,DONE}
+#   (NIX_EFI_VARS 独立文件避免多实例锁竞争;vmtest-export 服务自动导出)
 # 已验证(2026-08):disko 布局(diskoImages)在构建沙箱 QEMU 实际分区/格式化;
-# VM 以镜像为根文件系统启动,systemd 激活至 greetd,无 panic/emergency。
-# 已知未决:VM 内 home-manager-fww 单元失败(查因需交互式登录 VM:root 无密码
-# 未开 + journalctl;真机无此问题,FWW-Desktop 每天正常激活 HM);smartd /
-# nvidia-CDI 失败为 VM 无真实硬件的预期行为。
+# VM 以镜像为根启动,systemd 激活至 multi-user,home-manager-fww 成功;
+# 仅剩 smartd / nvidia-CDI 失败 = VM 无真实硬件的预期。
+# 本夹具曾挖出三只真虫(均已修入生产模块):
+#   1. fww 家目录无人创建(activation 早于 /home 挂载,目录建在 @root 被遮蔽)
+#      → modules/nixos/users.nix tmpfiles
+#   2. sops 家目录符号链接同竞态全丢(ssh_key/gh-hosts/access-tokens)
+#      → modules/nixos/secrets.nix tmpfiles
+#   3. tmpfiles 补父目录默认 root 属主,HM 无法写入 → 显式 d 规则修正
 # ⚠️ 绝不可用于真机:disko 指向 /dev/vda(QEMU 专用),内核为标准内核(绕 vmTools
 # 与 cachyos 内核/TCG 的兼容性),dae 禁用(VM 无代理网络)。
 #
@@ -29,20 +34,74 @@ let
 in
 {
   # ── VM 验证裁剪 ──────────────────────────────────────
-  # 内核换标准:①构建沙箱 QEMU(TCG)上 cachyos x86-64-v3 指令集有风险;
-  # ②vmTools 桥接见下。被验证对象是分区/挂载/激活链,与内核发行版无关
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
-  # 桥接上游真空期:disko(2026-06 pin)给 vmTools 传 aggregateModules 模块树
-  # (无 target attr),新 nixpkgs vmTools 直接 throw(disko master 未修)。
-  # vmTools.override 链式累积,x86 Linux 内核镜像恒 bzImage → 显式钉住。
-  # 夹具局部 overlay,生产主机不触及(diskoImages 无人构建)
+  # dae:VM 无代理网络,且 dummy URL 会使其 crashloop(引导不受影响,但吵)
+  services.dae.enable = lib.mkForce false;
+  # root 串口登录备用(日常验证走下方 export 服务,无需登录)。
+  # 注意必须用 password 而非 initialPassword:后者只在用户首次创建时生效,
+  # root 在激活早期即存在 → initialPassword 永远不生效(实测登录错误)
+  users.users.root.password = lib.mkForce "vmtest";
+  # guest 内跑 nixos-facter,产物经 qemu-vm 内建 /tmp/xchg 双向共享导出
+  environment.systemPackages = [ pkgs.nixos-facter ];
+  # ── 启动可见性(诊断卡死用;mkForce 压过共享 boot.nix 的 0)──
+  # quiet/loglevel=0/show_status=false 全关,串口全程叙述;systemd 单元
+  # 卡在哪一步,pane 上一目了然
+  boot.consoleLogLevel = lib.mkForce 7;
+  boot.kernelParams = [
+    "systemd.show_status=always"
+    "systemd.log_target=console"
+    "systemd.journald.forward_to_console=1"
+  ];
+  # 里程碑标记:走到哪一步就写一行到串口 + xchg(卡死时最后一条即卡点)
+  systemd.services.vmtest-progress = {
+    description = "vmtest: boot progress markers";
+    wantedBy = [ "sysinit.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      mark() { echo "PROGRESS: $1" > /dev/console; echo "$1" >> /tmp/xchg/boot-progress.log 2>/dev/null || true; }
+      mark sysinit
+    '';
+  };
+  systemd.services.vmtest-progress-basic = {
+    description = "vmtest: basic.target marker";
+    wantedBy = [ "basic.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''echo "PROGRESS: basic.target" > /dev/console; echo basic >> /tmp/xchg/boot-progress.log 2>/dev/null || true'';
+  };
+  systemd.services.vmtest-progress-multi = {
+    description = "vmtest: multi-user.target marker";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''echo "PROGRESS: multi-user.target" > /dev/console; echo multi >> /tmp/xchg/boot-progress.log 2>/dev/null || true'';
+  };
+
+  # ── 非交互导出:验证产物自动落 xchg(host: $TMPDIR/nix-vm.*/xchg)──
+  # 比串口交互登录可靠(agetty 时序/回显/locale 三重坑),CI 可无人值守跑
+  systemd.services.vmtest-export = {
+    description = "vmtest: HM journal + facter 导出到 /tmp/xchg";
+    wantedBy = [ "multi-user.target" ];
+    # after 该单元本身 = 同步等 HM 尝试完(无论成败)再导出,journal 完整
+    after = [
+      "home-manager-fww.service"
+      "multi-user.target"
+    ];
+    serviceConfig.Type = "oneshot";
+    unitConfig.ConditionPathIsDirectory = "/tmp/xchg";
+    script = ''
+      journalctl -u home-manager-fww.service --no-pager -n 300 > /tmp/xchg/hm.log || true
+      systemctl --no-pager --failed > /tmp/xchg/failed.txt || true
+      systemctl is-system-running > /tmp/xchg/state.txt || true
+      ${pkgs.nixos-facter}/bin/nixos-facter -o /tmp/xchg/facter.json 2> /tmp/xchg/facter.err || true
+      touch /tmp/xchg/DONE
+    '';
+  };
+  # 桥接上游未知不兼容:disko make-disk-image 给 vmTools 传 aggregateModules
+  # 模块树(无 target attr),新 nixpkgs vmTools 直接 throw(与内核选择无关)。
+  # x86 内核镜像恒 bzImage → 显式钉住;已上报上游,修复后删此 overlay
   nixpkgs.overlays = [
     (_final: prev: {
       vmTools = prev.vmTools.override { kernelImage = "bzImage"; };
     })
   ];
-  # dae:VM 无代理网络,且 dummy URL 会使其 crashloop(引导不受影响,但吵)
-  services.dae.enable = lib.mkForce false;
   # 镜像模式:imageSize 缺省 2G 装不下 ESP 4G + swap + root
   disko.devices.disk.system.imageSize = "10G";
   disko.memSize = 4096;

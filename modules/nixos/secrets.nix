@@ -72,4 +72,20 @@ in
       };
     };
   };
+
+  # 落在 fww 家目录的 sops 产物,必须在 /home 挂载后物化 —— sops 自身的
+  # activation 渲染跑在 stage-2(早于 systemd 挂载 /home),符号链接会建在
+  # @root 子卷上、随后被 @home 子卷/独立盘挂载遮蔽:全新机器首装 ssh_key/
+  # gh-hosts/access-tokens 三链全丢(VM 装机验证实测;真机此前靠旧世代残留
+  # 链接掩盖)。tmpfiles-setup 时序天然正确(After=local-fs、Before=sysinit),
+  # 每次开机幂等重建;路径自引用上方 sops 声明,单一真源
+  systemd.tmpfiles.rules = [
+    "d /home/fww/.config 0755 fww users - -"
+    "d /home/fww/.ssh 0700 fww users - -"
+    "d /home/fww/.config/gh 0755 fww users - -"
+    "d /home/fww/.config/nix 0755 fww users - -"
+    "L+ ${config.sops.secrets.ssh_key.path} - - - - /run/secrets/ssh_key"
+    "L+ ${config.sops.templates.gh-hosts.path} - - - - /run/secrets/rendered/gh-hosts"
+    "L+ ${config.sops.templates.nix-access-tokens.path} - - - - /run/secrets/rendered/nix-access-tokens"
+  ];
 }
