@@ -5,7 +5,7 @@
 #   `dsh <face>`(web 走上游原生子命令)。
 # 功能插件:enable 即装,profiles 缺省分发到所有交互面。
 # (status-rotator 的 typed 短路径选项 programs.dsh.status-rotator 也在此层)
-{ ... }:
+_:
 
 {
   programs.dsh.plugins = {

@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/users/fww/editors/nvim/ui.nix
 # 状态栏、标签栏、图标、which-key、颜色渲染
-{ ... }:
+_:
 
 {
   programs.nixvim.plugins = {

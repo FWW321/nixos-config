@@ -31,7 +31,7 @@ let
     else
       {
         "opencode/skills/${name}" = {
-          source = s.source;
+          inherit (s) source;
           recursive = true;
         };
       };

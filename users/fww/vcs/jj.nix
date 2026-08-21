@@ -5,18 +5,17 @@
 # delta:复用 git 侧 delta(delta 启动时读 git config [delta] 段渲染,样式自动一致)
 # 补全:brush 兼容 bash-completion,nixpkgs 工具自带补全,装上即自动有 jj 补全
 { common }:
-{ ... }:
-{
+_: {
   programs.jujutsu = {
     enable = true; # jujutsu 包由此 module 自动装(watchman/delta 由 default.nix 统一装)
     settings = {
       user = {
-        name = common.name;
-        email = common.email;
+        inherit (common) name;
+        inherit (common) email;
       };
       ui = {
         default-command = "log"; # 裸 `jj` 显示 log(默认是 help)
-        editor = common.editor; # jj 不读 git core.editor,独立设
+        inherit (common) editor; # jj 不读 git core.editor,独立设
         pager = "delta"; # 复用 git 侧 delta(读 ~/.gitconfig [delta] 段渲染)
       };
       git = {

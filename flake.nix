@@ -119,9 +119,57 @@
       # 本仓 by-name 自建包(组装见 overlays/default.nix)
       overlays.default = import ./overlays { inherit inputs; };
 
-      # RFC 166 官方格式化器(nix fmt;treefmt 封装,nixfmt 1.4 已弃裸调用;
-      # nvim 侧 nixfmt/statix 同源工具链)
-      formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixfmt-tree;
+      # 自建包同时以 packages 暴露(nix build .#opencode2 / nix run 直取),
+      # 与 overlay 双出口 —— nixpkgs flake 自身同款做法。
+      # pkgs 叠全部 overlay(lazy,未引用的 kernel/rust 面不求值)
+      packages.x86_64-linux =
+        let
+          pkgs = import nixpkgs {
+            system = "x86_64-linux";
+            overlays = [ self.overlays.default ];
+          };
+        in
+        {
+          inherit (pkgs)
+            chatgpt
+            mdbook-svgbob
+            mmx-cli
+            opencode2
+            open-design-daemon-bsq13
+            open-design-dsh-runtime
+            pdf-inspector
+            ;
+        };
+
+      # 格式化三件套:nixfmt(RFC 166)+ deadnix(死代码)+ statix(惯用法)。
+      # nixfmt-tree 的 treefmt 封装做整树 nixfmt;deadnix/statix 在其前跑 --edit/fix
+      # (--no-lambda-pattern-names:模块函数参数是给消费方的接口,勿被"未使用"误删)
+      formatter.x86_64-linux =
+        let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        in
+        pkgs.writeShellApplication {
+          name = "nix-config-fmt";
+          runtimeInputs = with pkgs; [
+            deadnix
+            nixfmt
+            statix
+          ];
+          text = ''
+            if [ "$#" -eq 0 ]; then
+              deadnix --no-lambda-pattern-names --edit .
+              statix fix .
+              # treefmt 会遍历整树跑 nixfmt;此处 nixfmt 直接对全树亦可
+              find . -name '*.nix' -not -path './.git/*' -print0 | xargs -0 nixfmt
+              exit 0
+            fi
+            deadnix --no-lambda-pattern-names --edit "$@"
+            for target in "$@"; do
+              statix fix "$target"
+            done
+            exec nixfmt "$@"
+          '';
+        };
 
       # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
       # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)

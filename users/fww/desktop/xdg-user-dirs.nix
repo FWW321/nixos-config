@@ -8,9 +8,7 @@
 #
 # 名字全部显式钉英文:留默认时 xdg-user-dirs-update 按 locale 生成
 # (zh_CN 会造 文档/下载/桌面 并列于既有英文目录),不做这种惊喜
-{
-  ...
-}:
+_:
 
 {
   xdg.userDirs = {

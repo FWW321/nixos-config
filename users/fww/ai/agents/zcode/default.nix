@@ -87,7 +87,7 @@ let
           url = m.remote.url;
           headers = lib.mapAttrs (_: h: {
             file = h.secretFile;
-            prefix = h.prefix;
+            inherit (h) prefix;
           }) (m.remote.secretHeaders or { });
         }
     )

@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/users/fww/ai/dsh/settings.nix
 # dsh settings.yaml 声明(freeform;启动时 yq merge,声明键覆盖、本地键保留)
-{ ... }:
+_:
 
 {
   programs.dsh = {

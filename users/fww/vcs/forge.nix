@@ -15,7 +15,7 @@ let
   identityFile = osConfig.sops.secrets.ssh_key.path;
 
   # ── 唯一数据源:加 forge 只动 forges.nix ──
-  forges = (import ./forges.nix).forges;
+  inherit ((import ./forges.nix)) forges;
 
   forgeName = f: builtins.head (lib.splitString "." f.host); # github.com → github
 in

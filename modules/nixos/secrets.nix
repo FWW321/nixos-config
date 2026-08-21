@@ -10,7 +10,7 @@
 
 let
   # gh hosts.yml 模板需要 GitHub 用户名，与 forge.nix 同源（forges.nix 是唯一数据源）
-  forges = (import ../../users/fww/vcs/forges.nix).forges;
+  inherit ((import ../../users/fww/vcs/forges.nix)) forges;
   ghUser = (lib.findFirst (f: f.host == "github.com") { } forges).username or "";
 in
 {

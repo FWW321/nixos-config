@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/users/fww/editors/nvim/completion.nix
 # 补全引擎（blink-cmp）
-{ ... }:
+_:
 
 {
   programs.nixvim.plugins = {

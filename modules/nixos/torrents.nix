@@ -2,7 +2,7 @@
 # qBittorrent-nox：headless BT 客户端（WebUI + systemd 常驻）
 # nixpkgs 模块默认 package=qbittorrent-nox，自带全套 systemd 沙箱硬化
 # （ProtectSystem=full / MemoryDenyWriteExecute / SystemCallFilter=@system-service 等）
-{ ... }:
+_:
 
 let
   btPort = 51413; # BT 监听端口（默认 Port=-1 随机，需固定才能开防火墙）

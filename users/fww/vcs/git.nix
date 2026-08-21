@@ -2,19 +2,18 @@
 # Git 配置(从 users/fww/default.nix 迁出)
 # common(name/email/editor)由 ./default.nix 注入,避免硬编码重复
 { common }:
-{ ... }:
-{
+_: {
   programs.git = {
     enable = true;
     settings = {
       user = {
-        name = common.name;
-        email = common.email;
+        inherit (common) name;
+        inherit (common) email;
         signingkey = common.signingKey; # SSH 签名 key(复用 ssh key)
       };
       init.defaultBranch = "main";
       core = {
-        editor = common.editor;
+        inherit (common) editor;
         ignorecase = false;
         fsmonitor = true; # Git 2.37+ 原生 fsmonitor(比 watchman 轻,jj 单独用 watchman)
       };

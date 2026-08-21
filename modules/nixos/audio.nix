@@ -1,6 +1,6 @@
 # filepath: ~/nixos-config/modules/nixos/audio.nix
 # PipeWire 音频系统
-{ ... }:
+_:
 
 {
   security.rtkit.enable = true;
