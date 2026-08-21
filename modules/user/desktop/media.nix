@@ -1,11 +1,16 @@
 # filepath: ~/nixos-config/modules/user/desktop/media.nix
-# 媒体查看器：图片 / 视频播放
+# 媒体:GUI 查看器(swayimg/mpv)+ 终端图形工具(chafa/timg)
 { pkgs, ... }:
 
 {
   home.packages = with pkgs; [
     swayimg
     mpv
+    # 终端媒体:chafa/timg 经 foot 的 sixel 全像素渲染,
+    # ffmpeg 解锁 yazi 内置视频抽帧预览(video.lua 依赖 ffmpeg+ffprobe)
+    chafa
+    timg
+    ffmpeg
   ];
 
   xdg.mimeApps = {

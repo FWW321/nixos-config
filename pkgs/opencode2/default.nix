@@ -18,7 +18,7 @@
 
 let
   # beta tag 发布流水号,与 @opencode-ai/cli 同步
-  version = "0.0.0-beta-17728";
+  version = "0.0.0-beta-17793";
 
   # npm 平台子包名(fetchurl 直接拉 tarball,绕过 node 生态)
   platformPkg =
@@ -34,7 +34,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/${scopeDir}/${baseName}/-/${baseName}-${version}.tgz";
-    hash = "sha256-N2pS2dNb8OQj2BfKaSvXObgYAk14juOhf4lGAVyTYMc=";
+    hash = "sha256-Wyd7kvFnO0lkiSsGijQtCHbT5p3+jFhyaQz6phcrAKc=";
   };
 
   nativeBuildInputs = [

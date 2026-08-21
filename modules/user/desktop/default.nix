@@ -16,6 +16,7 @@
     ./hyprland.nix
     ./media.nix
     ./input-method.nix
+    ./xdg-user-dirs.nix
   ];
 
   # Wayland 工具包

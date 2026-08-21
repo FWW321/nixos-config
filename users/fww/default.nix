@@ -57,6 +57,8 @@
 
   programs.bash.enable = true;
 
+  # Koharu 配置已迁 users/fww/ai/koharu.nix(programs.koharu)
+
   # Git/Jujutsu 配置迁至 ./vcs/(见上方 imports)
 
   # SSH 配置(forge host 块迁至 ./vcs/forge.nix,数据驱动与 insteadOf/username 同源)

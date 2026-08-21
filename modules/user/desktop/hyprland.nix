@@ -145,6 +145,10 @@ in
 
       hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprland-set-max-mode"))
 
+      # 录屏:noctalia screen_recorder 插件(gpu-screen-recorder 后端,portal 采集)
+      hl.bind(mainMod .. " + F9", hl.dsp.exec_cmd("${noctalia} msg plugin noctalia/screen_recorder:service all toggle"))
+      hl.bind(mainMod .. " + F10", hl.dsp.exec_cmd("${noctalia} msg plugin noctalia/screen_recorder:service all replay-toggle"))
+
       hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("${noctalia} msg volume-up"))
       hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("${noctalia} msg volume-down"))
       hl.bind("XF86AudioMute", hl.dsp.exec_cmd("${noctalia} msg volume-mute"))

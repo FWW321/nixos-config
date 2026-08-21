@@ -10,6 +10,8 @@ final: _prev: {
   pdf-inspector = final.callPackage ./pdf-inspector { };
   # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见 mmx-cli/default.nix 头注释)
   mmx-cli = final.callPackage ./mmx-cli { };
+  # koharu 已迁独立仓库 koharu-nix(flake input overlay 提供 pkgs.koharu,
+  # 同 nixdsh/zcode-nix;HM 模块见 users/fww/ai/koharu.nix)
   # dsh/dshPlugins 已迁独立仓库 nixdsh(flake input overlay 提供 pkgs.dsh)
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见 pkgs/chatgpt/package.nix 头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制

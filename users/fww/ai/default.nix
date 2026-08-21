@@ -10,5 +10,6 @@
     ./open-design.nix
     ./dsh
     ./cli.nix
+    ./koharu.nix
   ];
 }

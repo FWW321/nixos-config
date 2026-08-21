@@ -75,6 +75,11 @@
       url = "github:FWW321/zcode-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Koharu(ML 漫画翻译)打包 + programs.koharu HM 模块(独立仓库)
+    koharu-nix = {
+      url = "github:FWW321/koharu-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     open-design = {
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -119,6 +124,7 @@
             (import ./pkgs/default.nix)
             inputs.nixdsh.overlays.default
             inputs.zcode-nix.overlays.default
+            inputs.koharu-nix.overlays.default
             # @open-design/dsh-runtime 打包:src 与 services.open-design 同一
             # inputs.open-design pin(OD daemon↔runtime 协议代际原子耦合,
             # 详见 pkgs/open-design-dsh-runtime 头注释)

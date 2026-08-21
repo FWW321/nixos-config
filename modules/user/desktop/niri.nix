@@ -164,6 +164,10 @@ in
         "Mod+Print".action = spawn "niri" "msg" "action" "screenshot-window";
         "Mod+Shift+M".action = spawn "niri-set-max-mode";
 
+        # 录屏:noctalia screen_recorder 插件(gpu-screen-recorder 后端,portal 采集)
+        "Mod+F9".action = spawn "noctalia" "msg" "plugin" "noctalia/screen_recorder:service" "all" "toggle";
+        "Mod+F10".action = spawn "noctalia" "msg" "plugin" "noctalia/screen_recorder:service" "all" "replay-toggle";
+
         # 硬件媒体键
         "XF86AudioRaiseVolume".action = spawn "noctalia" "msg" "volume-up";
         "XF86AudioLowerVolume".action = spawn "noctalia" "msg" "volume-down";
