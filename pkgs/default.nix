@@ -11,28 +11,28 @@
 final: _prev: {
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见包内头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
-  chatgpt = final.callPackage ./by-name/ch/chatgpt { codexPackage = final.codex; };
+  chatgpt = final.callPackage ./by-name/ch/chatgpt/package.nix { codexPackage = final.codex; };
 
-  mdbook-svgbob = final.callPackage ./by-name/md/mdbook-svgbob { };
+  mdbook-svgbob = final.callPackage ./by-name/md/mdbook-svgbob/package.nix { };
 
   # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见包内头注释)
-  mmx-cli = final.callPackage ./by-name/mm/mmx-cli { };
+  mmx-cli = final.callPackage ./by-name/mm/mmx-cli/package.nix { };
 
   # @open-design/dsh-runtime:src 与 services.open-design 同一 inputs.open-design pin
   # (OD daemon↔runtime 协议代际原子耦合,详见包内头注释)
-  open-design-dsh-runtime = final.callPackage ./by-name/op/open-design-dsh-runtime {
+  open-design-dsh-runtime = final.callPackage ./by-name/op/open-design-dsh-runtime/package.nix {
     odDshRuntimeSrc = inputs.open-design;
   };
 
   # daemon × better-sqlite3 13 graft(nodejs#63642 崩溃根治,取代已废弃的
   # nodejs 24.18.1 重绑;见包内头注释)
-  open-design-daemon-bsq13 = final.callPackage ./by-name/op/open-design-daemon-bsq13 {
+  open-design-daemon-bsq13 = final.callPackage ./by-name/op/open-design-daemon-bsq13/package.nix {
     daemonPkg = inputs.open-design.packages.${final.system}.daemon;
   };
 
-  opencode2 = final.callPackage ./by-name/op/opencode2 { };
+  opencode2 = final.callPackage ./by-name/op/opencode2/package.nix { };
 
-  pdf-inspector = final.callPackage ./by-name/pd/pdf-inspector { };
+  pdf-inspector = final.callPackage ./by-name/pd/pdf-inspector/package.nix { };
 
   # 已迁独立仓库:dsh/dshPlugins → nixdsh(overlay 见 overlays/default.nix);
   # koharu → koharu-nix、zcode → zcode-nix(包经各自 HM 模块自带)
