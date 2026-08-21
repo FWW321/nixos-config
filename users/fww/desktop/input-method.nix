@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/desktop/input-method.nix
+# filepath: ~/nixos-config/users/fww/desktop/input-method.nix
 # Fcitx5 + Rime（雾凇拼音）：声明式输入法配置
 { pkgs, lib, ... }:
 

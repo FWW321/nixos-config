@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/terminal.nix
+# filepath: ~/nixos-config/users/fww/terminal.nix
 # 终端环境：Foot、Brush、Herdr、现代化 CLI 工具
 {
   lib,

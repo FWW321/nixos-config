@@ -27,8 +27,8 @@
     ./browsers
     ./vcs
     ./editors
-    ../../modules/user/desktop
-    ../../modules/user/terminal.nix
+    ./desktop
+    ./terminal.nix
     # programs.zcode 通用模块已迁独立仓库 zcode-nix;数据适配器在 ./ai/agents/zcode/
     inputs.zcode-nix.homeManagerModules.zcode
     # dsh 模块经 flake.nix sharedModules 挂载(inputs.nixdsh.homeManagerModules.dsh)

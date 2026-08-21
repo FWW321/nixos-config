@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/desktop/noctalia.nix
+# filepath: ~/nixos-config/users/fww/desktop/noctalia.nix
 # Noctalia Shell v5 配置：基于 C++/OpenGL ES 的轻量 Wayland 桌面 shell
 # 配色方案、主题模式、字体、壁纸由 Stylix 统一管理(stylix.targets.noctalia)
 { config, pkgs, ... }:

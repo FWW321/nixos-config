@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/desktop/media.nix
+# filepath: ~/nixos-config/users/fww/desktop/media.nix
 # 媒体:GUI 查看器(swayimg/mpv)+ 终端图形工具(chafa/timg)
 { pkgs, ... }:
 

@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/desktop/xdg-user-dirs.nix
+# filepath: ~/nixos-config/users/fww/desktop/xdg-user-dirs.nix
 # XDG 用户目录:声明式生成 ~/.config/user-dirs.dirs + 建目录
 #
 # 动机:NixOS 不像 Ubuntu 默认跑 xdg-user-dirs-update,缺这个文件时

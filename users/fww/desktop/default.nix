@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/modules/user/desktop/default.nix
+# filepath: ~/nixos-config/users/fww/desktop/default.nix
 # 桌面环境用户配置：Wayland 合成器、输入法、截图工具
 {
   config,
