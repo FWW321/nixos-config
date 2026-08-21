@@ -26,6 +26,11 @@
 
   hardware.facter.reportPath = ./.facter.json;
 
+  # 本机 ESP 1G(装机时既成事实,disko 改不了已装系统):单代实测 168M
+  # (cachyos LTO + NVIDIA initrd 154M)→ 上限 ~5 代;与 nix.nix 的
+  # nh clean --keep 5 对齐 = 实际可滚回深度。模板新机 ESP 4G 用默认 20
+  boot.loader.systemd-boot.configurationLimit = 5;
+
   networking.hostName = "FWW-Desktop";
 
   boot.kernelModules = [

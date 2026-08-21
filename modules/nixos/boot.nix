@@ -1,7 +1,7 @@
 # filepath: ~/nixos-config/modules/nixos/boot.nix
 # 启动、内核、性能调优
 # (kernel/proton 的 overlay 注册已集中 overlays/default.nix,此处只管 boot.*)
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   boot = {
@@ -13,7 +13,10 @@
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 20;
+        # mkDefault 20:配套模板 ESP 4G(单代实测 168M:cachyos LTO bzImage
+        # ~14M + NVIDIA initrd 154M → 20 代 3.4G + fwupd capsule 余量)。
+        # ESP 更小的主机在自己目录覆盖(见 FWW-Desktop:1G → 5)
+        configurationLimit = lib.mkDefault 20;
       };
       efi.canTouchEfiVariables = true;
       timeout = 1;

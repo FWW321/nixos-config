@@ -25,7 +25,10 @@ in
           type = "gpt";
           partitions = {
             ESP = {
-              size = "1G";
+              # 4G 依据:本仓库内核链单代体积实测 ≈168M(cachyos LTO bzImage
+              # ~14M + NVIDIA initrd 154M),configurationLimit=20 → 3.4G;
+              # 另需容纳 fwupd 固件 capsule(部分主板 1-2G)。1G 会撑爆
+              size = "4G";
               type = "EF00";
               content = {
                 type = "filesystem";

@@ -103,13 +103,31 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
   SYSTEM_DISK=$(pick_disk "系统盘(将被格式化!)" req)
   HOME_DISK=$(pick_disk "home 盘" opt)
   DATA_DISK=$(pick_disk "data 盘" opt)
-  echo "  系统盘=$SYSTEM_DISK home=${HOME_DISK:-子卷} data=${DATA_DISK:-子卷}"
 
   # swap 建议 = 内存大小(休眠需要 ≥ RAM)
   RAM_GIB=$(free -g | awk '/^Mem:/{print $2}')
   read -p "  swap 大小(GiB,默认 ${RAM_GIB}G=内存大小,休眠需≥RAM): " SWAP_GIB
   SWAP_GIB=${SWAP_GIB:-$RAM_GIB}
   [[ "$SWAP_GIB" =~ ^[0-9]+$ ]] || die "swap 大小无效: $SWAP_GIB"
+
+  # 布局总览:物化前最后一眼(结构是仓库约定:btrfs+zstd、@root/@nix 子卷、
+  # ESP 4G;可变参数全部来自上方选择)
+  echo "  ─────────────────────────────────────"
+  echo "  最终磁盘布局(仓库约定结构):"
+  echo "    $SYSTEM_DISK → ESP 4G(/boot) + swap ${SWAP_GIB}G + btrfs(@root / @nix"
+  if [ "$HOME_DISK" = null ]; then
+    echo "                + @home 子卷)"
+  else
+    echo "    $HOME_DISK → btrfs @home(/home)"
+  fi
+  if [ "$DATA_DISK" = null ]; then
+    [ "$HOME_DISK" != null ] && echo "                + @data 子卷)"
+  else
+    echo "    $DATA_DISK → btrfs @data(/data)"
+  fi
+  echo "  ─────────────────────────────────────"
+  read -p "  按此布局创建并安装?(y/N) " -n 1 -r; echo
+  [[ $REPLY =~ ^[Yy]$ ]] || die "已取消"
 
   # 物化:模板 → hosts/<name>/
   mkdir -p "hosts/$HOSTNAME"
