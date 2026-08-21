@@ -84,8 +84,10 @@
       url = "github:nexu-io/open-design";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # 终端复用器/agent 运行时(2026-08 上游迁官方 org herdrdev,旧 ogulcancelik/
+    # 仅为重定向;crates.io 仍指旧名,以 GitHub 为准)
     herdr = {
-      url = "github:ogulcancelik/herdr";
+      url = "github:herdrdev/herdr";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

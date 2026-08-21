@@ -1,0 +1,29 @@
+# 每次 push/PR:nix-installer 装最新 Nix → flake check(全 outputs 求值,含
+# nixosConfigurations 与 providers-schema checks)→ 格式检查(未格式化即红)。
+# 本地 --no-build 查不了的 build 型漂移,这里会现形;完整系统构建不在 CI 范围
+# (cachyos 内核闭包大,推 cache 另议)。
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@v16
+
+      # 公开仓库免费;加速 inputs/checks 拉取
+      - uses: DeterminateSystems/magic-nix-cache-action@v9
+
+      - name: Flake check (all outputs)
+        run: nix flake check
+
+      - name: Format check (RFC 166)
+        run: nix fmt -- --fail-on-change
