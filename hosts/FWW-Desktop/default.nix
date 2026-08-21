@@ -25,11 +25,6 @@
 
   hardware.facter.reportPath = ./.facter.json;
 
-  # facter 按探测时在场硬件推导 initrd 模块;usb_storage 不在其中
-  # (生成报告时未插 USB 设备)。initrd 救援场景(USB 启动盘/外置根分区)
-  # 的生命线,显式补回
-  boot.initrd.availableKernelModules = [ "usb_storage" ];
-
   networking.hostName = "FWW-Desktop";
 
   boot.kernelModules = [
