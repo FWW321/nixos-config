@@ -29,3 +29,7 @@ jobs:
         run: |
           nix fmt
           git diff --exit-code
+
+      # facter.json 序列号脱敏校验(公开仓库;脚本见 hosts/FWW-Desktop/redact.sh)
+      - name: Facter privacy check
+        run: hosts/FWW-Desktop/redact.sh --check

@@ -11,9 +11,10 @@
   imports = [
     # 硬件事实:nixpkgs 原生 hardware.facter(nixos-facter 报告驱动 initrd
     # 模块/微码/hostPlatform 等推导),取代 nixos-generate-config 手维护
-    # hardware.nix。重生成(换硬件时,需 root 读 SMBIOS;仓库公开,序列号
-    # 字段已 redact,重生成后需再次 redact——见文件头):
-    #   sudo nix run github:numtide/nixos-facter -- -o ./facter.json
+    # hardware.nix。
+    # 重生成(换硬件/固件升级时,需 root 读 SMBIOS):
+    #   sudo nix run nixpkgs#nixos-facter -- -o ./.facter.json
+    #   ./redact.sh   ← 必跑!公开仓库序列号脱敏(幂等;CI 会校验)
     ./disko.nix
     ./nvidia.nix
 
