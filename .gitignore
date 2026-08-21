@@ -7,3 +7,4 @@
 # Result symlinks
 result
 result-*
+vmtest-efi-vars.fd  # vmWithDisko 运行时 QEMU EFI 变量(CWD 生成)
