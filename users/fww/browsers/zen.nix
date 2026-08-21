@@ -2,6 +2,35 @@
 # Zen Browser 配置 + 搜索引擎别名
 { config, pkgs, inputs, ... }:
 
+let
+  # 陪读蛙(Read Frog):上游 firefox-addons 未收录,按 rycee 同款结构从 AMO 自打包
+  # (addonId passthru + xpi 落位 share/mozilla/extensions/<FF ext GUID>/,新版 HM 无 buildFirefoxXpiAddon)
+  # 更新:查 https://addons.mozilla.org/api/v5/addons/addon/read-frog-open-ai-translator
+  # 换 current_version 的 version / file.url / file.hash 三处
+  read-frog-addonId = "{bd311a81-4530-4fcc-9178-74006155461b}";
+  read-frog = pkgs.stdenv.mkDerivation {
+    pname = "read-frog";
+    version = "1.46.4";
+    src = pkgs.fetchurl {
+      url = "https://addons.mozilla.org/firefox/downloads/file/4971952/read_frog_open_ai_translator-1.46.4.xpi";
+      sha256 = "01vaq4l147594zmcc9jrnwm8kj54pafd5y8hh1bgvrjxl69gj0vr";
+    };
+    dontUnpack = true;
+    installPhase = ''
+      runHook preInstall
+      dst="$out/share/mozilla/extensions/{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+      mkdir -p "$dst"
+      cp "$src" "$dst/${read-frog-addonId}.xpi"
+      runHook postInstall
+    '';
+    passthru.addonId = read-frog-addonId;
+    meta = {
+      description = "陪读蛙 - 翻译与学习 (Read Frog)";
+      homepage = "https://github.com/mengxi-ream/read-frog";
+      mozPermissions = [ ];
+    };
+  };
+in
 {
   imports = [ inputs.zen-browser.homeModules.default ];
 
@@ -44,7 +73,7 @@
         with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system};
         [
           ublock-origin
-          kiss-translator
+          read-frog
         ];
     };
   };
