@@ -1,18 +1,39 @@
 # filepath: ~/nixos-config/pkgs/default.nix
-# 自定义打包 overlay 聚合：每个子目录是一个 pkgs.xxx 包
-# 通过 flake.nix 的 nixpkgs.overlays 挂载，使用方直接 pkgs.<name> 引用
+# 自建包 overlay。目录 = nixpkgs pkgs/by-name 同构(<2字母分片>/<包名>/package.nix),
+# 将来上游化 PR 几乎零改动;包目录内允许附带辅助文件(launcher.nix/source.json/update.sh)。
+# 挂载:overlays/default.nix 组装 → flake.nix nixpkgs.overlays = [ self.overlays.default ]。
 #
-# 新增包：在 pkgs/ 下建 <name>/default.nix，然后在此 final 追加一行
+# 函数签名即依赖声明(nixpkgs by-name 约定):需要特殊参数的包(open-design 两个、
+# chatgpt)在下方 callPackage 显式传,其余自动注入。
+#
+# 新增包:建 by-name/<sh>/<name>/package.nix + 下方一行 callPackage。
+{ inputs }:
 final: _prev: {
-  mdbook-svgbob = final.callPackage ./mdbook-svgbob { };
-  opencode2 = final.callPackage ./opencode2 { };
-  pdf-inspector = final.callPackage ./pdf-inspector { };
-  mmx-cli = final.callPackage ./mmx-cli { };
-  # koharu 已迁独立仓库 koharu-nix(flake input overlay 提供 pkgs.koharu,
-  # 同 nixdsh/zcode-nix;HM 模块见 users/fww/ai/koharu.nix)
-  # dsh/dshPlugins 已迁独立仓库 nixdsh(flake input overlay 提供 pkgs.dsh)
-  # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见 pkgs/chatgpt/package.nix 头注释
+  # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见包内头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
-  chatgpt = final.callPackage ./chatgpt { codexPackage = final.codex; };
-  # zcode 已迁独立仓库 zcode-nix(flake input overlay 提供 pkgs.zcode,同 nixdsh)
+  chatgpt = final.callPackage ./by-name/ch/chatgpt { codexPackage = final.codex; };
+
+  mdbook-svgbob = final.callPackage ./by-name/md/mdbook-svgbob { };
+
+  # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见包内头注释)
+  mmx-cli = final.callPackage ./by-name/mm/mmx-cli { };
+
+  # @open-design/dsh-runtime:src 与 services.open-design 同一 inputs.open-design pin
+  # (OD daemon↔runtime 协议代际原子耦合,详见包内头注释)
+  open-design-dsh-runtime = final.callPackage ./by-name/op/open-design-dsh-runtime {
+    odDshRuntimeSrc = inputs.open-design;
+  };
+
+  # daemon × better-sqlite3 13 graft(nodejs#63642 崩溃根治,取代已废弃的
+  # nodejs 24.18.1 重绑;见包内头注释)
+  open-design-daemon-bsq13 = final.callPackage ./by-name/op/open-design-daemon-bsq13 {
+    daemonPkg = inputs.open-design.packages.${final.system}.daemon;
+  };
+
+  opencode2 = final.callPackage ./by-name/op/opencode2 { };
+
+  pdf-inspector = final.callPackage ./by-name/pd/pdf-inspector { };
+
+  # 已迁独立仓库:dsh/dshPlugins → nixdsh(overlay 见 overlays/default.nix);
+  # koharu → koharu-nix、zcode → zcode-nix(包经各自 HM 模块自带)
 }

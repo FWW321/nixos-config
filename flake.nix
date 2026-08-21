@@ -97,7 +97,7 @@
   };
 
   outputs =
-    { nixpkgs, home-manager, ... }@inputs:
+    { self, nixpkgs, home-manager, ... }@inputs:
     let
       # 登记表摊平:sources/flake.nix 里的源码树以原名进入 inputs 命名空间,
       # 消费者零改动(冲突面 = 主输入名,登记表内不与之同名即可)
@@ -106,6 +106,10 @@
       checkPkgs = import nixpkgs { system = "x86_64-linux"; };
     in
     {
+      # 全部 overlay 的唯一出口:rust 工具链/cachyos 内核与 Proton/nixdsh/
+      # 本仓 by-name 自建包(组装见 overlays/default.nix)
+      overlays.default = import ./overlays { inherit inputs; };
+
       # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
       # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
 
@@ -118,26 +122,8 @@
         system = "x86_64-linux";
         specialArgs = { inputs = inputs'; };
         modules = [
-          # Rust 工具链 overlay（rust-bin → pkgs.rust-bin）+ 自定义打包 overlay（pkgs/mdbook-svgbob 等）
-          { nixpkgs.overlays = [
-            inputs.rust-overlay.overlays.default
-            (import ./pkgs/default.nix)
-            # dsh:插件系统消费 pkgs.dshPlugins 命名空间,overlay 是承重接口(保留)
-            inputs.nixdsh.overlays.default
-            # @open-design/dsh-runtime 打包:src 与 services.open-design 同一
-            # inputs.open-design pin(OD daemon↔runtime 协议代际原子耦合,
-            # 详见 pkgs/open-design-dsh-runtime 头注释)
-            (final: _prev: {
-              open-design-dsh-runtime = final.callPackage ./pkgs/open-design-dsh-runtime {
-                odDshRuntimeSrc = inputs.open-design;
-              };
-              # daemon × better-sqlite3 13 graft(nodejs#63642 崩溃根治,
-              # 取代已废弃的 nodejs 24.18.1 重绑;见包内头注释)
-              open-design-daemon-bsq13 = final.callPackage ./pkgs/open-design-daemon-bsq13 {
-                daemonPkg = inputs.open-design.packages.${final.system}.daemon;
-              };
-            })
-          ]; }
+          # overlay 注册(唯一出口)
+          { nixpkgs.overlays = [ self.overlays.default ]; }
 
           # 外部模块
           inputs.dae.nixosModules.dae

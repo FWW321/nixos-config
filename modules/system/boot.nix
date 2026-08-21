@@ -1,14 +1,9 @@
 # filepath: ~/nixos-config/modules/system/boot.nix
 # 启动、内核、性能调优
-{ pkgs, inputs, ... }:
+# (kernel/proton 的 overlay 注册已集中 overlays/default.nix,此处只管 boot.*)
+{ pkgs, ... }:
 
 {
-  # 使用 pinned overlay：锁定 nixpkgs 版本与二进制缓存一致，避免每次本地编译内核
-  nixpkgs.overlays = [
-    inputs.nix-cachyos-kernel.overlays.pinned
-    inputs.proton-cachyos-nix.overlays.default
-  ];
-
   boot = {
     initrd = {
       systemd.enable = true;
