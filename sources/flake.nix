@@ -44,10 +44,12 @@
       url = "github:ZhangHanDong/makepad-skills";
       flake = false;
     }; # makepad-* (14)
-    # motion-ai-kit 走 ssh:motiondivision org 禁止 >366 天寿命的 fine-grained PAT
-    # 访问其 REST API(github: URL 依赖 api.github.com → 403),SSH 协议不受限
+    # motion-ai-kit 协议选型:三通道各自被墙 —— ①github: 走 api.github.com,
+    # 本机 nix.conf access-tokens 附带长寿命 fine-grained PAT 被 motiondivision
+    # org 策略 403;②git+ssh 需钥匙,CI runner 上无凭据必炸;③codeload
+    # tarball 纯 HTTPS 无鉴权(仓库 public),本机与 CI 双通
     motion-ai-kit = {
-      url = "git+ssh://git@github.com/motiondivision/ai-kit";
+      url = "tarball+https://github.com/motiondivision/ai-kit/archive/refs/heads/main.tar.gz";
       flake = false;
     }; # motion skill (→ skills-project.nix)
     # 工具/编辑器
