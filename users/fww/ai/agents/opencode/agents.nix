@@ -29,10 +29,13 @@ let
     minimax = "minimax-cn-coding-plan";
   };
 
-  # YAML 标量:字符串一律双引号(color 的 # 前缀、描述里的冒号都安全)
+  # YAML 标量:字符串一律双引号(color 的 # 前缀、描述里的冒号都安全);
+  # bool 显式 true/false —— Nix 的 toString false=""(shell 语义),
+  # 直排会把 false 渲染成 YAML null = 配置静默蒸发(zcode 端同款 bug 实证)
   yamlScalar =
     v:
-    if lib.isInt v || lib.isBool v then
+    if lib.isBool v then (if v then "true" else "false")
+    else if lib.isInt v then
       toString v
     else
       "\"" + lib.strings.escape [ "\"" "\\" ] (toString v) + "\"";

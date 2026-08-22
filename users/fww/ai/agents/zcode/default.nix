@@ -108,12 +108,16 @@ in
     # tools 硬白名单是 zcode 端能力(自定义 tools 连 MCP/技能工具一并禁),
     # 对齐"只读分析者"职责:prompt 约束只是软边界,截图可能携带注入,
     # 不给 Bash/Edit/Write 等可写工具
+    # injectAgentsMd=false:AGENTS.md 全是写行为纪律(Read 前置/Edit 增量/
+    # devenv/测试指南),对零写工具的只读转述者 0% 适用 —— 注入只剩
+    # token 成本与注意力噪声(zcode v3.7.1 起默认注入,显式关)
     agents.vision = {
       inherit (common.subagents.vision) description prompt;
       model =
         "custom:"
         + lib.strings.escapeURL "custom:${common.subagents.vision.model.provider}"
         + ":${common.subagents.vision.model.model}";
+      injectAgentsMd = false;
       tools = [
         "Read" # 读取图像文件
         "Glob" # 按名定位文件
