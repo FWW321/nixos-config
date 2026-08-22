@@ -97,8 +97,8 @@ in
   # 桥接上游未知不兼容:disko make-disk-image 给 vmTools 传 aggregateModules
   # 模块树(无 target attr),新 nixpkgs vmTools 直接 throw(与内核选择无关)。
   # x86 内核镜像恒 bzImage → 显式钉住;上游 master 未修(2026-08 检索无既有
-  # issue),上游修复或换 nixpkgs pin 后删此 overlay。issue 草稿在
-  # /tmp/opencode/disko-issue.md(是否提交由仓库主人决定,未经许可不代发)
+  # issue),上游修复或换 nixpkgs pin 后删此 overlay。报告与否由仓库主人定夺,
+  # 复现要点:diskoImages 构建 + 新 nixpkgs vmTools 的 kernel/kernelModules 参数
   nixpkgs.overlays = [
     (_final: prev: {
       vmTools = prev.vmTools.override { kernelImage = "bzImage"; };
