@@ -34,7 +34,8 @@ let
   # 直排会把 false 渲染成 YAML null = 配置静默蒸发(zcode 端同款 bug 实证)
   yamlScalar =
     v:
-    if lib.isBool v then (if v then "true" else "false")
+    if lib.isBool v then
+      (if v then "true" else "false")
     else if lib.isInt v then
       toString v
     else
