@@ -32,6 +32,9 @@ in
   services.smartd.enable = lib.mkForce false; # virtio 盘无 SMART
   # -nographic 串口全链路可观测(内核日志 + 登录提示符都在 ttyS0)
   boot.kernelParams = lib.mkAfter [ "console=ttyS0,115200n8" ];
+  # root 串口登录(vmtest 同款先例;必须用 password 而非 initialPassword ——
+  # root 在激活早期即存在,initialPassword 只在用户首次创建时生效)
+  users.users.root.password = lib.mkForce "vmtest";
 
   # sops 夹具:与 vmtest 共用同一对 fixture 文件(维护契约见 vmtest 头注)
   sops = {
