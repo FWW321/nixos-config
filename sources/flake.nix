@@ -44,12 +44,12 @@
       url = "github:ZhangHanDong/makepad-skills";
       flake = false;
     }; # makepad-* (14)
-    # motion-ai-kit 协议选型:三通道各自被墙 —— ①github: 走 api.github.com,
-    # 本机 nix.conf access-tokens 附带长寿命 fine-grained PAT 被 motiondivision
-    # org 策略 403;②git+ssh 需钥匙,CI runner 上无凭据必炸;③codeload
-    # tarball 纯 HTTPS 无鉴权(仓库 public),本机与 CI 双通
+    # motion-ai-kit 协议选型:github: 走 api.github.com,本机 nix.conf
+    # access-tokens 的长寿命 fine-grained PAT 被 motiondivision org 策略 403;
+    # git+ssh 需钥匙,CI runner 无凭据。git+https 双通且不碰 API——公开仓库
+    # 匿名 clone,git fetcher 进锁带 rev(登记表契约:锁完整钉 rev)
     motion-ai-kit = {
-      url = "tarball+https://github.com/motiondivision/ai-kit/archive/refs/heads/main.tar.gz";
+      url = "git+https://github.com/motiondivision/ai-kit.git";
       flake = false;
     }; # motion skill (→ skills-project.nix)
     # 工具/编辑器

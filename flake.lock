@@ -548,12 +548,15 @@
       "locked": {
         "lastModified": 1785229044,
         "narHash": "sha256-/cyIcAeNubIZMm7L2hDTXfBHUGvpsnX2Fdh2vWIBljA=",
-        "type": "tarball",
-        "url": "https://github.com/motiondivision/ai-kit/archive/refs/heads/main.tar.gz"
+        "ref": "refs/heads/main",
+        "rev": "1140efe9ad5e03c689ea6bb19d9d3850a4dae5f7",
+        "revCount": 6,
+        "type": "git",
+        "url": "https://github.com/motiondivision/ai-kit.git"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://github.com/motiondivision/ai-kit/archive/refs/heads/main.tar.gz"
+        "type": "git",
+        "url": "https://github.com/motiondivision/ai-kit.git"
       }
     },
     "multicursor-nvim": {
