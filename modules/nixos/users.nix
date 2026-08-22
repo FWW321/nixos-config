@@ -7,9 +7,9 @@
 
   users.users.fww = {
     isNormalUser = true;
-    # 首启即建家目录:真机上它此前由 install.sh 拷仓库那步顺手创建(潜伏依赖),
-    # VM 装机验证暴露 —— 若跳过拷贝,全新机器 HM 首启会 cd /home/fww 失败
-    createHome = true;
+    # 注意:家目录不在此建 —— createHome 的 perl make_path 跑在 stage-2,早于
+    # /home 挂载,目录落在 @root 上被子卷/独立盘挂载遮蔽(VM 装机验证实测);
+    # 真正生效的是下方 tmpfiles 规则,见其注释
     extraGroups = [
       "wheel"
       "networkmanager"
