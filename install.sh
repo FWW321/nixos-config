@@ -330,12 +330,16 @@ if [ -n "${SOPS_AGE_KEY_FILE:-}${SOPS_AGE_KEY:-}" ]; then
 fi
 }
 
-NA_EXTRA=()
+# facter 由 nixos-anywhere 现场采集(kexec 后、构建前)写回本仓 —— 即便是
+# 夹具主机也如此:硬件事实必须与目标真实硬件自洽(彩排机=QEMU 设备集,
+# gpu=null;若沿用真机 facter 则 initrd 模块表要求 nvidia 而无驱动包,
+# modules-shrunk 当场 FATAL —— 动盘前闸门的正确拦截)
+NA_EXTRA=(--generate-hardware-config nixos-facter "hosts/$HOSTNAME/.facter.json")
 if [ "${FIXTURE:-}" = y ]; then
-  echo "     夹具主机:secrets 自含(主机内 sops fixture 覆盖)—— 跳过契约与 facter 重采集"
+  echo "     夹具主机:secrets 自含(主机内 sops fixture 覆盖)—— 仅跳过 sops 契约"
 else
   sops_ceremony
-  NA_EXTRA=(--extra-files "$STAGE" --generate-hardware-config nixos-facter "hosts/$HOSTNAME/.facter.json")
+  NA_EXTRA+=(--extra-files "$STAGE")
 fi
 
 # ── [4/4] nixos-anywhere 推送安装 ─────────────────────
@@ -352,10 +356,8 @@ nix run nixpkgs#nixos-anywhere -- \
   ${NA_EXTRA[@]+"${NA_EXTRA[@]}"} \
   "$TARGET"
 
-if [ "${FIXTURE:-}" != y ]; then
-  # nixos-anywhere 对 facter 只做 intent-to-add,正式入暂存区
-  git add "hosts/$HOSTNAME/.facter.json"
-fi
+# nixos-anywhere 对 facter 只做 intent-to-add,正式入暂存区
+git add "hosts/$HOSTNAME/.facter.json"
 echo "=========================================================="
 echo "✅ 安装完成!(主机: $HOSTNAME)"
 echo "收尾清单:"
