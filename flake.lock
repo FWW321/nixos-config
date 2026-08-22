@@ -662,11 +662,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1787260449,
-        "narHash": "sha256-iyvHzS/HlF50hYBjbww07rgPjuMUfiTh3fLvnnUzs7U=",
+        "lastModified": 1787374325,
+        "narHash": "sha256-iR5QKyEzmTSrrOGkIASgl4O1qwjH97EPccmn82VueNQ=",
         "owner": "FWW321",
         "repo": "nixdsh",
-        "rev": "946347e11eb80bc4a7fed15d72ad6cc1c8b11caa",
+        "rev": "10a3d80ee9353506b738c8d1edda7b080e696c42",
         "type": "github"
       },
       "original": {
