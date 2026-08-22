@@ -16,6 +16,8 @@
 #                                          #  自含(vmtest 同款),跳过 sops 契约
 #                                          #  与 facter 重采集 —— NA 装机彩排
 #   ./install.sh --selftest               # CI 回归:物化+求值,不触任何机器
+# 可选:-i <私钥>(认证身份,转发给探测 ssh 与 nixos-anywhere);目标支持
+#   host:port 端口语法(转发 -p/--ssh-port)
 #
 # 目标机准备(全新机):minimal ISO 控制台 → sudo passwd root
 #   (sshd 默认已启用;ISO 自带 git,git clone 本仓库后即可本地运行本脚本)
@@ -82,7 +84,7 @@ if [ "${1:-}" = "--selftest" ]; then
 fi
 
 # ── 参数 ─────────────────────────────────────────────
-HOSTNAME="" HOST_KEY_FILE="" TARGET="" FIXTURE=""
+HOSTNAME="" HOST_KEY_FILE="" TARGET="" FIXTURE="" SSH_IDENTITY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --host-key)
@@ -90,6 +92,9 @@ while [ $# -gt 0 ]; do
       HOST_KEY_FILE=$2; shift 2 ;;
     --fixture)
       FIXTURE=y; shift ;;
+    -i | --identity)
+      [ $# -ge 2 ] || die "-i 需要私钥路径参数"
+      SSH_IDENTITY=$2; shift 2 ;;
     -*) die "未知参数: $1" ;;
     *)
       if [ -z "$HOSTNAME" ]; then HOSTNAME=$1
@@ -101,8 +106,11 @@ done
 [ -n "$HOSTNAME" ] || die "未指定主机名。用法: ./install.sh <主机名> [root@目标] [--host-key <旧key>]"
 # 主机名 = 目录名 + flake attr 名,限制字符集(防 sed/attr 两种上下文注入)
 [[ "$HOSTNAME" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]] || die "主机名仅限字母数字与 _-(当前: $HOSTNAME)"
-while [ -z "$TARGET" ]; do read -p "目标机 (root@ip / root@localhost): " TARGET; done
+while [ -z "$TARGET" ]; do read -p "目标机 (root@ip[:端口] / root@localhost): " TARGET; done
 [[ "$TARGET" = *@* ]] || TARGET="root@$TARGET"   # ssh 裸地址默认用本机用户名,装机必须 root
+# host:port 语法(如 root@10.0.0.5:2222)→ 探测 ssh 与 nixos-anywhere 统一带 -p
+SSH_PORT=""
+if [[ "$TARGET" =~ :([0-9]+)$ ]]; then TARGET="${TARGET%:*}"; SSH_PORT="${BASH_REMATCH[1]}"; fi
 
 # ── [1/4] 目标探测:单次 ssh 拿全部事实(只交互一次密码)──
 # 引导模式守卫也在目标侧:本仓库引导栈(ESP + systemd-boot,见
@@ -125,6 +133,7 @@ grep MemTotal /proc/meminfo | sed "s/^/mem /"'
 echo "[1/4] 🔎 探测目标机 $TARGET..."
 # shellcheck disable=SC2029  # 探测脚本有意在目标侧展开
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 \
+  ${SSH_IDENTITY:+-i "$SSH_IDENTITY"} ${SSH_PORT:+-p "$SSH_PORT"} \
   "$TARGET" "$probe_script" >"$PROBE" \
   || die "无法连接 $TARGET。全新机:ISO 控制台先 sudo passwd root(sshd 默认已启用)"
 
@@ -338,6 +347,8 @@ fi
 echo "[4/4] 🚀 nixos-anywhere 推送安装..."
 nix run nixpkgs#nixos-anywhere -- \
   --flake ".#$HOSTNAME" \
+  ${SSH_IDENTITY:+-i "$SSH_IDENTITY"} \
+  ${SSH_PORT:+--ssh-port "$SSH_PORT"} \
   ${NA_EXTRA[@]+"${NA_EXTRA[@]}"} \
   "$TARGET"
 
