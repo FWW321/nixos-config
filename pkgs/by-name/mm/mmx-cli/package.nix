@@ -1,5 +1,5 @@
 # mmx-cli: MiniMax Token Plan 官方 CLI(text/image/video/speech/music 全模态)
-# 源码: https://github.com/MiniMax-AI/cli  npm: mmx-cli@1.0.19 (tag v1.0.19, 2026-08-01)
+# 源码: https://github.com/MiniMax-AI/cli  npm: mmx-cli@1.0.22 (tag v1.0.22)
 #
 # 打包策略:直接消费 npm registry 成品 tarball(思路同 pkgs/pdf-inspector 的 fetchCrate)
 #   dist/mmx.mjs 为 bun 预构建 bundle,依赖均已内联,唯一外部静态 import 是 undici
@@ -29,12 +29,12 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "mmx-cli";
-  version = "1.0.19";
+  version = "1.0.22";
 
   # npm registry 成品(与 npm install -g mmx-cli 同源同物)
   src = fetchurl {
     url = "https://registry.npmjs.org/mmx-cli/-/mmx-cli-${finalAttrs.version}.tgz";
-    hash = "sha256-OYESnGzoReby1flbIi/uN7x7kvZin218FX16SW+cwEY=";
+    hash = "sha256-I3dwo0Xp0J5XvvUUAtMPRU8iD0epEMkGMMJ7YzrJv2Y=";
   };
 
   # 唯一运行时依赖(上游约束 ^6.21.1,取 6.x 最新)
