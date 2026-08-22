@@ -12,6 +12,10 @@ final: _prev: {
   # CUDA Blender + blender-mcp 组装件(门控部署见 users/fww/desktop/blender.nix)
   blender-cuda = final.callPackage ./by-name/bl/blender-cuda/package.nix { };
 
+  # Blender Lab 官方 MCP server + addon 半边(blender-cuda 组装件收录 addon,
+  # server 入口按名进 MCP 条目;Gitea Cloudflare 绕行等见包内注释)
+  blender-lab-mcp = final.callPackage ./by-name/bl/blender-lab-mcp/package.nix { };
+
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见包内头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
   chatgpt = final.callPackage ./by-name/ch/chatgpt/package.nix { codexPackage = final.codex; };

@@ -44,15 +44,16 @@
   #   };
   # };
 
-  "web-search-prime" = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/web_search_prime/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # 2026-08 暂停启用:与内置 websearch/webfetch 能力重叠,减少常驻连接
+  # "web-search-prime" = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/web_search_prime/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
   "web-reader" = {
     remote = {
@@ -64,15 +65,17 @@
     };
   };
 
-  zread = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/zread/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # 2026-08 暂停启用:zread 上游快照滞后(曾给过 ahujasid 1.5.5 旧版),
+  # GitHub 理解改用 context7 + 内置 webfetch;恢复时连 codex.nix 一起解注
+  # zread = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/zread/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
   nixos = {
     local = {

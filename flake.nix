@@ -194,6 +194,7 @@
         {
           inherit (pkgs)
             blender-cuda
+            blender-lab-mcp
             chatgpt
             mdbook-svgbob
             mmx-cli

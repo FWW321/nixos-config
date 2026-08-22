@@ -66,4 +66,15 @@
       command = "blender-mcp";
     };
   };
+
+  # Blender Lab 官方 MCP:文档检索与场景分析(捆绑 bpy API/手册 rst,主打
+  # "写代码前现查权威文档")。与上面 ahujasid 套件互补而非替代:建模/资产走
+  # blender-mcp,查 API/分析场景走这套。server 认 BLENDER_MCP_PORT 连 addon
+  # (端口由 blender-cuda 的 SYSTEM_SCRIPTS 启动脚本钉 9877,避开 9876)
+  "blender-lab" = {
+    local = {
+      command = "blender-lab-mcp";
+      env.BLENDER_MCP_PORT = "9877";
+    };
+  };
 }

@@ -24,7 +24,13 @@ in
 
   # ── 共享包(vcs 域工具集中管理,git.nix/jj.nix 不再各自声明包)──
   # watchman: jj core.fsmonitor 依赖(git 用原生 fsmonitor 不需要,但集中管理避免散落)
-  home.packages = [ pkgs.watchman ];
+  # git-lfs: 大文件旁路存储(blend/贴图二进制 → 指针+指纹去重),programs.git
+  # 不自带;track 规则由 3d-init 按项目预写(.gitattributes),全局钩子
+  # git lfs install 亦由 3d-init 幂等执行
+  home.packages = [
+    pkgs.watchman
+    pkgs.git-lfs
+  ];
 
   # ── delta:Git + jj 共享的 diff 渲染器(HM 26.05+ 独立模块)──
   # enableGitIntegration 自动注入 git [interactive].diffFilter + [pager](blame/diff/log/show)

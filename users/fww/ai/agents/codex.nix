@@ -7,12 +7,17 @@
 # pkgs.codex 二进制 → CLI/桌面单一版本来源
 #
 # secret 全走进程环境变量(codex 原生设计,值不落 nix store):
-#   - provider env_key → ZHIPU_API_KEY / MINIMAX_API_KEY(从 secret 文件名派生)
-#   - 远程 MCP Authorization Bearer → bearer_token_env_var(同一 ZHIPU_API_KEY)
+#   - 远程 MCP Authorization Bearer → bearer_token_env_var(同一 secret 文件派生 env 名)
 #   - 远程 MCP 普通命名 header(context7) → env_http_headers(header 名即 env 名)
 #   - 本地 stdio MCP secret env → wrapper 脚本 cat secret file 后 exec
-# 注意:桌面端从 compositor 启动时无 shell env,provider key/远程 MCP 仅
-# CLI 可用;桌面端走 ChatGPT 账号登录即可
+# 注意:桌面端从 compositor 启动时无 shell env,远程 MCP 仅 CLI 可用;
+# 桌面端走 ChatGPT 账号登录即可
+#
+# 2026-08 决策:codex 只走 ChatGPT 订阅 OAuth(gpt 系),不再配置第三方
+# provider —— glm/minimax 由 opencode 承接:智谱系 MCP 桥接有 0.147
+# prewarm 双 spawn 工具丢失 bug(见 mcpExcluded 注释),第三方模型在
+# codex 只剩裸模型,且 ChatGPT 登录态会向所有 provider 会话叠加
+# OpenAI 官方指令。model_providers/profiles/models.json 全部移除
 {
   config,
   pkgs,
@@ -30,14 +35,6 @@ let
       config
       ;
   };
-
-  # ── codex 可用 provider:声明了 responses 端点的(codex 0.84+ 仅支持 responses)──
-  # siliconflow(仅 embedding/openai 端点)被此过滤自动排除
-  # schema 后端点键恒在(未声明 = null),旧 `?` 存在性探测会恒真
-  codexProviders = lib.filterAttrs (_: v: v.endpoints.responses != null) common.providers;
-  # 默认 provider 与默认模型(zhipu coding plan)
-  defaultProvider = "zhipu";
-  p = codexProviders.${defaultProvider};
 
   # ── secret file → 环境变量名(/run/secrets/zhipu_api_key → ZHIPU_API_KEY)──
   # 单一来源:env var 名由 secret 文件名派生(大写+中划线转下划线),
@@ -78,8 +75,8 @@ let
   mcpExcluded = [
     "context7" # 远程 HTTP,慢启动受害者(同下)
     "web-reader" # 智谱端点 npx 桥
-    "web-search-prime"
-    "zread"
+    # "web-search-prime" # 已在 mcp.nix 注释停用(2026-08)
+    # "zread" # 同上
   ];
 
   toCodexLocal =
@@ -167,7 +164,7 @@ let
     lib.filterAttrs (n: _: !(builtins.elem n mcpExcluded)) common.mcp
   );
 
-  # ── 需要导出的 secret env:provider key + 远程 MCP 的 secret(lib.unique 去重)──
+  # ── 远程 MCP 的 secret env(所有远程 server 的 bearer/命名 header,lib.unique 去重)──
   remoteSecretEnvs = lib.concatLists (
     lib.mapAttrsToList (
       _: m:
@@ -189,128 +186,44 @@ let
     ) common.mcp
   );
 
-  secretEnvExports = lib.unique (
-    # 所有 codex provider 的 key + 远程 MCP 的 secret
-    (lib.mapAttrsToList (_: v: {
-      env = secretToEnv v.apiKey.secretFile;
-      inherit (v.apiKey) secretFile;
-    }) codexProviders)
-    ++ remoteSecretEnvs
-  );
-  # ── codex 模型目录(models.json):官方要求声明 GLM 模型元数据 ──
-  # codex 内置目录无 GLM,无声明则模型选择器不显示/参数错误
-  # context_window 从 providers.nix 单一来源派生;字段照抄官方文档模板
-  # (priority/experimental_supported_tools 等都是必填,缺一个 codex 直接报解析错误)
-  # 推理档亦从 thinking.responses 派生(此前硬编码 low/high/max,与中立层
-  # 同值 —— 纯迁移无行为变化)
-  effortDesc = {
-    minimal = "Minimal reasoning";
-    low = "Light reasoning";
-    medium = "Balanced reasoning";
-    high = "Enhanced reasoning";
-    xhigh = "Extra deep reasoning";
-    max = "Deep reasoning";
-  };
-  catalogEntry =
-    idx: id:
-    let
-      e = p.models.${id}.thinking.responses;
-    in
-    {
-      slug = id;
-      display_name = id;
-      description = "Z.ai coding model";
-      default_reasoning_level = e.default;
-      supported_reasoning_levels = map (lvl: {
-        effort = lvl;
-        description = effortDesc.${lvl} or "Reasoning";
-      }) (builtins.attrNames e.levels);
-      shell_type = "shell_command";
-      visibility = "list";
-      supported_in_api = true;
-      priority = idx; # 模型选择器排序
-      base_instructions = "";
-      supports_reasoning_summaries = true;
-      default_reasoning_summary = "none";
-      support_verbosity = false;
-      apply_patch_tool_type = "freeform";
-      truncation_policy.mode = "bytes";
-      truncation_policy.limit = 10000;
-      context_window = p.models.${id}.contextWindow;
-      max_context_window = p.models.${id}.contextWindow;
-      effective_context_window_percent = 95;
-      supports_parallel_tool_calls = true;
-      experimental_supported_tools = [ ];
-      input_modalities = [ "text" ];
-    };
-  modelsJson = pkgs.writeText "codex-models.json" (
-    builtins.toJSON {
-      # 只声明默认模型 glm-5.3(providers.nix 已只留 5.3,5.2 全线退役)
-      models = [ (catalogEntry 0 p.defaultModel) ];
-    }
-  );
-
-  # ── provider → codex model_providers 段(单一来源自动派生)──
-  # env_key 从 secret 文件名派生,与 bash 导出同源;wire_api 全 responses
-  toCodexProvider = n: v: {
-    name = (lib.toUpper (lib.substring 0 1 n)) + lib.substring 1 (-1) n;
-    base_url = v.endpoints.responses;
-    env_key = secretToEnv v.apiKey.secretFile;
-    wire_api = "responses";
-  };
-
-  # ── 切换 profile:codex --profile chatgpt(默认) / zhipu / minimax ──
-  # codex 无"模型→provider"映射,picker 选了别的 provider 的模型会打到错误端点 →
-  # 非 openai provider 不进默认 picker,只走 profile(同时钉住 provider+model)
-  #
-  # 2026-08 决策:codex 默认 = ChatGPT 订阅(gpt 系)。glm 全家迁移到 opencode 侧:
-  # codex 的智谱系 MCP(桥接)存在 0.147 prewarm 双 spawn 工具丢失 bug(见 mcpExcluded
-  # 注释),glm 在 codex 侧只剩裸模型;且 ChatGPT 登录态会向所有 provider 会话叠加
-  # OpenAI 官方指令。codex 专职 gpt + 快 server,glm/minimax 场景用 opencode
-  providerProfiles =
-    # zhipu profile:GLM 完整体(钉 provider+model + 静态目录,供偶尔回切)
-    # model_catalog_json 不能放全局 —— 它是硬替换(StaticModelsManager,
-    # model-provider/src/provider.rs),屏蔽 ChatGPT 登录态的后端动态目录,
-    # 导致 login 后 picker 仍只有 glm、desktop 模型面板空白(2026-08 实测)
-    {
-      ${defaultProvider} = {
-        model = p.defaultModel;
-        model_context_window = p.models.${p.defaultModel}.contextWindow;
-        model_reasoning_effort = "max";
-        model_catalog_json = "~/.codex/models.json";
-      };
-    }
-    // lib.mapAttrs' (
-      n: v:
-      lib.nameValuePair n {
-        model_provider = n;
-        model = v.defaultModel;
-        model_context_window = v.models.${v.defaultModel}.contextWindow;
-      }
-    ) (lib.filterAttrs (n: _: n != defaultProvider) codexProviders);
-  # chatgpt 不是生成的 profile —— 它就是全局默认(下方 settings),无需切换入口
+  # 需要导出的 secret env:仅远程 MCP 的 secret(provider 已移除,codex 只走 OAuth)
+  secretEnvExports = lib.unique remoteSecretEnvs;
 in
 {
   # ── codex 核心:CLI(pkgs.codex,模块默认)+ config.toml 声明式 ──
   programs.codex = {
     enable = true;
     settings = {
-      # 默认 = ChatGPT 订阅(内置 openai provider + codex login 登录态,Plus 订阅):
+      # ChatGPT 订阅 OAuth(内置 openai provider + codex login 登录态,Plus 订阅):
       # 模型目录从 ChatGPT 后端动态拉取(后端序列:gpt-5.6-sol/terra/luna/5.5/...),
-      # 无 env_key 依赖;glm/minimax 走 profile 切换(见 providerProfiles 注释)
+      # 无 env_key 依赖;不设 model_catalog_json(硬替换会屏蔽后端动态目录,
+      # picker 只剩静态模型、desktop 模型面板空白,2026-08 实测)
       model = "gpt-5.6-sol";
       model_provider = "openai";
-      # gpt 系 reasoning 最高 xhigh(max 是 GLM 专属档)
+      # gpt 系 reasoning 最高档是 xhigh
       model_reasoning_effort = "xhigh";
-      # 模型目录不设(全局硬替换会屏蔽 ChatGPT 动态目录,见 providerProfiles 注释)
+
+      # ── 上下文机制(2026-08 调研结论;全部不设,吃目录默认)──
+      # 三层数字的关系(codex-rs with_config_overrides + models_cache.json):
+      #   raw 窗     目录 context_window,默认会话预算 272000(sol/terra/luna/5.5 同值)
+      #   max 窗     目录 max_context_window = 872000 —— config 的 model_context_window
+      #              会被 min(设值, max窗) 钳制;设 1M 也静默回落 872K,故别设超
+      #   effective  raw × 95%(目录 effective_context_window_percent),/status 显示
+      #              的"可用窗口" = 272000×0.95 = 258400,这是硬限
+      # 压缩(compaction):active tokens 触到 model_auto_compact_token_limit 即把
+      # 历史摘要重写。不设时取目录默认 = raw×0.9 = 244800(基于 raw 非 effective,
+      # 实为可用窗的 94.7%,已知口径问题 openai/codex#40095);触发即整段重写,
+      # 大会话有状态丢失成本,宁早勿晚
+      # 若要开长上下文(git 历史考古/整库阅读等一次性大装载场景):
+      #   model_context_window = 872000;
+      #   model_auto_compact_token_limit = 784800; # 须 < effective 828400 给压缩留余量
+      # 代价:>272K input 的请求整单 2x 计费,订阅额度消耗显著变快 —— 日常不开,
+      # 用到时按需临时加 -c 覆盖: codex -c model_context_window=872000
+
       # 版本由 nix 管理,关启动更新检查(与 opencode autoupdate=false 同理)
       check_for_update_on_startup = false;
       # 注:codex_apps(connectors)依赖 ChatGPT 登录态(~/.codex/auth.json,codex login 产生),
       # 已登录,保持默认开启;其工具列表从 chatgpt.com 后端拉取,冷启动较慢属正常
-
-      # 全部 codex 可用 provider(含 zhipu/minimax)自动派生:
-      # 0.84+ 移除 chat wire_api,各 responses 端点见 common/providers.nix
-      model_providers = lib.mapAttrs toCodexProvider codexProviders;
 
       mcp_servers = codexMcp;
 
@@ -323,14 +236,8 @@ in
     # context 只收 lines/path 字面量,derivation 会被误判为 text → readFile 内联
     context = builtins.readFile common.project.globalAgentsMd;
 
-    # provider 切换 profile:codex --profile minimax(见上 providerProfiles 注释)
-    profiles = providerProfiles;
-
     skills = codexSkills;
   };
-
-  # ── 模型目录:~/.codex/models.json(config.toml 的 model_catalog_json 指向它)──
-  home.file.".codex/models.json".source = modelsJson;
 
   # ── config.toml 物化为可写文件:修信任屏 batchWrite 失败 ──
   # codex 运行时会写 config.toml(信任屏 [projects]/TUI 主题/hook 开关等,
@@ -384,7 +291,7 @@ in
   # resources/codex symlink 到 pkgs.codex,与上面 CLI 同一二进制
   home.packages = [ pkgs.chatgpt ] ++ skillPkgs;
 
-  # ── Provider/MCP key 注入进程环境(codex env_key/bearer_token_env_var 读这里)──
+  # ── 远程 MCP secret 注入进程环境(codex bearer_token_env_var/env_http_headers 读这里)──
   programs.bash.initExtra = lib.concatStringsSep "\n" (
     map (s: ''[ -f ${s.secretFile} ] && export ${s.env}="$(cat ${s.secretFile})"'') secretEnvExports
   );
