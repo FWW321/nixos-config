@@ -347,13 +347,20 @@ fi
 # hardware-config,自动 git add)→ 本地构建(配置错在此失败,盘未动)→
 # disko → extra-files(host key 落 /mnt/etc/ssh,先于 nixos-install;chroot
 # 激活时 sops 经它自解密,user_password 首启生效)→ nixos-install → 重启。
-# 中断恢复:直接重跑本脚本(全程幂等:key 登记自动走换钥分支,disko 从头来)
+# 中断恢复:直接重跑本脚本(全程幂等:key 登记自动走换钥分支,disko 从头来;
+# nix copy 已传 path 跳过)
+# NA_OPTS:向 nixos-anywhere 透传额外参数(空格分隔)—— 缓存源故障自救,如
+#   NA_OPTS="--no-use-machine-substituters" ./install.sh ...
+# (机器 substituters 由 flake 的 nix.settings 自动注入安装器;源不可达时
+#  每个 miss path 耗尽重试,装机卡死,彩排实测)
 echo "[4/4] 🚀 nixos-anywhere 推送安装..."
+# shellcheck disable=SC2086  # NA_OPTS 有意按空白分词透传
 nix run nixpkgs#nixos-anywhere -- \
   --flake ".#$HOSTNAME" \
   ${SSH_IDENTITY:+-i "$SSH_IDENTITY"} \
   ${SSH_PORT:+--ssh-port "$SSH_PORT"} \
   ${NA_EXTRA[@]+"${NA_EXTRA[@]}"} \
+  ${NA_OPTS:-} \
   "$TARGET"
 
 # nixos-anywhere 对 facter 只做 intent-to-add,正式入暂存区
