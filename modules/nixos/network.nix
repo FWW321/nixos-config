@@ -55,6 +55,26 @@
 
   # DNS 解析 (dae 会接管 DNS 路由)
   services.resolved.enable = true;
+  # resolved 上游:显式公网 v4,不依赖 RA/DHCP 下发的网关地址。实证
+  # (2026-08-22):dae unstable-2026-07-31 对 v6 link-local(fe80::1)的 53
+  # 查询只劫持不回包(resolved 22:50 起 UDP 超时降级 TCP;dae 停机后
+  # fe80::1 立即恢复作答,路由器无辜),重启 dae 不恢复;v4 公网地址则
+  # 劫持+作答正常。发往公网 v4:53 的查询本就被 dae 接管 → 这里写
+  # 223.5.5.5 实际由 dae 路由应答(geosite:cn → alidns,其余 fallback
+  # googledns 走代理),网关 DNS 从此不构成单点
+  networking.nameservers = [
+    "223.5.5.5"
+    "119.29.29.29"
+  ];
+
+  # 压掉 NM 把 RA/DHCP 的 DNS 写进 per-link(否则 resolved 仍会尝试
+  # fe80::1):conf.d 的 [connection] 段是所有连接的默认值,运行时生成的
+  # 有线连接同样生效;只忽略 DNS 下发,地址获取不受影响
+  environment.etc."NetworkManager/conf.d/50-ignore-auto-dns.conf".text = ''
+    [connection]
+    ipv4.ignore-auto-dns=1
+    ipv6.ignore-auto-dns=1
+  '';
 
   # 蓝牙
   hardware.bluetooth = {
