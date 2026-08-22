@@ -55,13 +55,34 @@
 
   # DNS 解析 (dae 会接管 DNS 路由)
   services.resolved.enable = true;
-  # resolved 上游:显式公网 v4,不依赖 RA/DHCP 下发的网关地址。实证
-  # (2026-08-22):dae unstable-2026-07-31 对 v6 link-local(fe80::1)的 53
-  # 查询只劫持不回包(resolved 22:50 起 UDP 超时降级 TCP;dae 停机后
-  # fe80::1 立即恢复作答,路由器无辜),重启 dae 不恢复;v4 公网地址则
-  # 劫持+作答正常。发往公网 v4:53 的查询本就被 dae 接管 → 这里写
-  # 223.5.5.5 实际由 dae 路由应答(geosite:cn → alidns,其余 fallback
-  # googledns 走代理),网关 DNS 从此不构成单点
+  # ── dae 上游 bug 旁路(勿删,见文末"dae link-local DNS bug"档案)──
+  #
+  # 故障:dae(unstable-2026-07-31.caa6f5e)劫持发往 v6 link-local 网关
+  # (fe80::1)的 53 查询后不产生应答 → 依赖它的客户端全部超时。
+  #
+  # 证据链(2026-08-22/23 实测,同机同时刻控制变量):
+  #   1. n=5 定量:dae 运行中 fe80::1 0/5 全灭;223.5.5.5 与 192.168.5.1
+  #      均 5/5 正常(劫持+作答正常)——唯一变量是目的地址 v6 link-local
+  #   2. A/B 基线:dae 停机后 fe80::1 立即 5/5 恢复作答 → 路由器无辜,
+  #      是 dae 的劫持路径吞包;dae restart 不恢复,非瞬态
+  #   3. 源码(control/kern/tproxy.c L1448):劫持判定只看 dport==53,
+  #      对目的地址零豁免,link-local 查询同样被送进 dae netns(dae0/
+  #      dae0peer 架构),v6 link-local 回程在该 netns 内无法回到本机
+  #   4. 时间线:resolved 日志 15:18 起 fe80::1 间歇降级(NM 同时下发
+  #      192.168.5.1 可切换,故白天未察觉);某时刻 resolved 当前服务器
+  #      漂移到 fe80::1 单点后总爆发 → 与 dae 二进制/本仓改动无关
+  #      (当时任何改动均未上机,八代系统同 dae 版本)
+  #
+  # 旁路(两层,都是正解而非掩盖):
+  #   resolved 上游显式公网 v4 —— dae 本就劫持一切出站 53 并按 dns.routing
+  #     应答(实测写 223.5.5.5 答的是 alidns),系统解析器指向网关
+  #     link-local 本身就是反模式(单点+踩此 bug);
+  #   NM ignore-auto-dns —— 压掉 RA/DHCP 把 fe80::1 写进 per-link,
+  #     否则 resolved 仍会选中它。
+  #
+  # ⚠ 残余风险:直查 fe80::1 的客户端(不经系统解析器)仍会挂。上游修复
+  # 或换版本后可移除 ignore-auto-dns 层(恢复 RA DNS),但 nameservers
+  # 显式化建议保留(消除网关 DNS 单点)。上游 issue 暂缓提交。
   networking.nameservers = [
     "223.5.5.5"
     "119.29.29.29"
