@@ -115,7 +115,11 @@
             # MiniMax 国内域名未被 geosite:cn 收录,曾 fallback googledns(走 Linode
             # 出口)拿到面向海外的 CDN 边缘(filecdn.minimax.chat → 128.1.157.x);
             # 指到 alidns 才能解析到国内节点(123.6.x/180.130.x),配合下方直连规则
-            qname(suffix: minimax.chat, minimaxi.chat, minimaxi.com, minimax.com) -> alidns
+            # 语法陷阱:key 前缀只作用于紧跟的一个值 —— suffix: a, b, c 里 b/c 是
+            # 裸参数。主路由 domain() 裸参数有 AliasOptimizer 兜底改写 suffix,
+            # DNS 段 qname() 优化链没有 → 裸参数直达 addQName 即 FATAL(dae
+            # validate 只解析语法查不出,run 才炸)。每值显式写 key
+            qname(suffix: minimax.chat, suffix: minimaxi.chat, suffix: minimaxi.com, suffix: minimax.com) -> alidns
             qname(geosite:cn) -> alidns
             fallback: googledns
           }
@@ -177,7 +181,9 @@
         # MiniMax 国内站(minimax.chat/minimaxi.com)未被 geosite:cn 收录,
         # filecdn.minimax.chat 曾 fallback:proxy 绕 Linode 访问国内 CDN;
         # minimax.com 非 MiniMax 官方域名(解析到 AWS 邮件中继,443 无站),一并直连
-        domain(suffix: minimax.chat, minimaxi.chat, minimaxi.com, minimax.com) -> direct
+        # key 每值显式:domain() 裸参数虽有 alias 兜底(功能上不出错),但与
+        # DNS 段 qname 统一写法,免再踩同坑
+        domain(suffix: minimax.chat, suffix: minimaxi.chat, suffix: minimaxi.com, suffix: minimax.com) -> direct
         domain(geosite:category-bank-cn, geosite:category-finance) -> direct
 
         # linux.do 需在 geosite:cn 直连规则之前，避免被收录后命中直连

@@ -55,4 +55,15 @@
       env.OD_DATA_DIR = toString config.services.open-design.dataDir;
     };
   };
+
+  # Blender MCP:AI 建模(opencode ↔ blender-mcp server ↔ Blender 内 addon,TCP 9876)
+  # server 出自 blender-cuda 组装件(与 addon 同 derivation,版本构造性一致)。
+  # 按名引用(同上 npx 条目先例,PATH 解析):bin/blender-mcp 只随 desktop/
+  # blender.nix 的 N 卡门控部署,这里不插值 store path——非 N 卡主机的 HM 闭包
+  # 不会被牵进 CUDA 构建。前置:Blender 已启动且 N 面板 Start MCP Server
+  "blender-mcp" = {
+    local = {
+      command = "blender-mcp";
+    };
+  };
 }

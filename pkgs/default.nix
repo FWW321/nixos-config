@@ -9,6 +9,9 @@
 # 新增包:建 by-name/<sh>/<name>/package.nix + 下方一行 callPackage。
 { inputs }:
 final: _prev: {
+  # CUDA Blender + blender-mcp 组装件(门控部署见 users/fww/desktop/blender.nix)
+  blender-cuda = final.callPackage ./by-name/bl/blender-cuda/package.nix { };
+
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见包内头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
   chatgpt = final.callPackage ./by-name/ch/chatgpt/package.nix { codexPackage = final.codex; };

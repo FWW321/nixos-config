@@ -193,6 +193,7 @@
         in
         {
           inherit (pkgs)
+            blender-cuda
             chatgpt
             mdbook-svgbob
             mmx-cli
