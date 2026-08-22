@@ -68,13 +68,13 @@
   ];
 
   # 压掉 NM 把 RA/DHCP 的 DNS 写进 per-link(否则 resolved 仍会尝试
-  # fe80::1):conf.d 的 [connection] 段是所有连接的默认值,运行时生成的
-  # 有线连接同样生效;只忽略 DNS 下发,地址获取不受影响
-  environment.etc."NetworkManager/conf.d/50-ignore-auto-dns.conf".text = ''
-    [connection]
-    ipv4.ignore-auto-dns=1
-    ipv6.ignore-auto-dns=1
-  '';
+  # fe80::1):[connection] 段是所有连接的默认值,运行时生成的有线连接
+  # 同样生效;只忽略 DNS 下发,地址获取不受影响(类型化选项,勿手写
+  # conf.d 旁路文件)
+  networking.networkmanager.connectionConfig = {
+    "ipv4.ignore-auto-dns" = true;
+    "ipv6.ignore-auto-dns" = true;
+  };
 
   # 蓝牙
   hardware.bluetooth = {
