@@ -112,6 +112,10 @@
             # AI 域名拒 AAAA：dae 对 tcp4/tcp6 分栈选节点，双栈会话 = 同时两个
             # 出口 IP，触发 OpenAI/Anthropic 风控掐长连接。只留 A → 单栈单出口
             qtype(28) && qname(geosite:openai, geosite:anthropic, suffix: claude.ai) -> reject
+            # MiniMax 国内域名未被 geosite:cn 收录,曾 fallback googledns(走 Linode
+            # 出口)拿到面向海外的 CDN 边缘(filecdn.minimax.chat → 128.1.157.x);
+            # 指到 alidns 才能解析到国内节点(123.6.x/180.130.x),配合下方直连规则
+            qname(suffix: minimax.chat, minimaxi.chat, minimaxi.com, minimax.com) -> alidns
             qname(geosite:cn) -> alidns
             fallback: googledns
           }
@@ -170,6 +174,10 @@
         domain(geosite:apple@cn) -> direct
         domain(geosite:tencent) -> direct
         domain(geosite:category-ai-cn) -> direct
+        # MiniMax 国内站(minimax.chat/minimaxi.com)未被 geosite:cn 收录,
+        # filecdn.minimax.chat 曾 fallback:proxy 绕 Linode 访问国内 CDN;
+        # minimax.com 非 MiniMax 官方域名(解析到 AWS 邮件中继,443 无站),一并直连
+        domain(suffix: minimax.chat, minimaxi.chat, minimaxi.com, minimax.com) -> direct
         domain(geosite:category-bank-cn, geosite:category-finance) -> direct
 
         # linux.do 需在 geosite:cn 直连规则之前，避免被收录后命中直连
