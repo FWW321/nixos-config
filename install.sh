@@ -12,6 +12,9 @@
 # 用法:
 #   ./install.sh <主机名> [root@目标]     # 新主机走向导;已有主机直接装
 #   ./install.sh <主机名> --host-key <f>  # 同机重装:复用旧 host key(免 updatekeys)
+#   ./install.sh <主机名> <目标> --fixture # 夹具主机(如 na-rehearsal):secrets
+#                                          #  自含(vmtest 同款),跳过 sops 契约
+#                                          #  与 facter 重采集 —— NA 装机彩排
 #   ./install.sh --selftest               # CI 回归:物化+求值,不触任何机器
 #
 # 目标机准备(全新机):minimal ISO 控制台 → sudo passwd root
@@ -79,12 +82,14 @@ if [ "${1:-}" = "--selftest" ]; then
 fi
 
 # ── 参数 ─────────────────────────────────────────────
-HOSTNAME="" HOST_KEY_FILE="" TARGET=""
+HOSTNAME="" HOST_KEY_FILE="" TARGET="" FIXTURE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --host-key)
       [ $# -ge 2 ] || die "--host-key 需要路径参数"
       HOST_KEY_FILE=$2; shift 2 ;;
+    --fixture)
+      FIXTURE=y; shift ;;
     -*) die "未知参数: $1" ;;
     *)
       if [ -z "$HOSTNAME" ]; then HOSTNAME=$1
@@ -131,6 +136,7 @@ RAM_KIB=$(awk '/^mem /{print $3}' "$PROBE")
 
 # ── 向导:hosts/<name> 不存在 = 新主机(事实已探测,决策就地做)──
 if [ ! -d "hosts/$HOSTNAME" ]; then
+  [ "${FIXTURE:-}" = y ] && die "--fixture 需已存在的夹具主机(参考 hosts/na-rehearsal),不走向导"
   echo "=========================================================="
   echo "🧙 hosts/$HOSTNAME 不存在 → 新主机向导"
   echo "=========================================================="
@@ -174,7 +180,7 @@ if [ ! -d "hosts/$HOSTNAME" ]; then
     | awk '($2=="part" || $2=="disk") && $3!="" {d=$1; sub(/[0-9]+$/,"",d); print d}' | sort -u)
   mapfile -t DISKS < <(awk '/^disk /{sub(/^disk /,""); print}' "$PROBE" \
     | awk -v excl="$EXCLUDE_DISKS" 'BEGIN{n=split(excl,a,"\n"); for(i=1;i<=n;i++) skip[a[i]]=1}
-        $3=="disk" && !($1 in skip)')
+        $3=="disk" && !($1 in skip) && $1 !~ /^\/dev\/zram/')   # zram 非物理盘,误选=mkfs 内存盘
   [ "${#DISKS[@]}" -ge 1 ] || die "未检测到可用磁盘${EXCLUDE_DISKS:+(已排除带挂载分区的: $(echo $EXCLUDE_DISKS))}"
   if [ -n "$EXCLUDE_DISKS" ]; then
     echo "  (已排除带挂载分区的盘: $(echo "$EXCLUDE_DISKS" | tr '\n' ' '))"
@@ -261,6 +267,8 @@ echo
 # 磁盘被格式化之前(YAML 被 sed 弄坏也在这里当场暴露,而非盘空之后)
 # label 从主机名派生(FWW-Desktop → host_fww_desktop)
 echo "[3/4] 🔑 sops host key 契约..."
+# 契约正文:全新安装(生成→登记→updatekeys)/同机重装(--host-key 复用)两分支
+sops_ceremony() {
 SOPS_ADMIN_LABEL=admin_fww
 SOPS_HOST_LABEL=host_$(echo "$HOSTNAME" | tr '[:upper:]-' '[:lower:]_')
 OLD_AGE_PUB=$(sed -n "s/.*&${SOPS_HOST_LABEL} \(age1[a-z0-9]*\).*/\1/p" .sops.yaml)
@@ -311,6 +319,15 @@ if [ -n "${SOPS_AGE_KEY_FILE:-}${SOPS_AGE_KEY:-}" ]; then
     && echo "     user_password 解密烟测通过 ✅" \
     || die "user_password 解密失败:检查 secrets.yaml 的路径名与 admin key"
 fi
+}
+
+NA_EXTRA=()
+if [ "${FIXTURE:-}" = y ]; then
+  echo "     夹具主机:secrets 自含(主机内 sops fixture 覆盖)—— 跳过契约与 facter 重采集"
+else
+  sops_ceremony
+  NA_EXTRA=(--extra-files "$STAGE" --generate-hardware-config nixos-facter "hosts/$HOSTNAME/.facter.json")
+fi
 
 # ── [4/4] nixos-anywhere 推送安装 ─────────────────────
 # 顺序契约(1.13 源码):kexec/安装器接管 → facter 采集写回本仓(--generate-
@@ -321,12 +338,13 @@ fi
 echo "[4/4] 🚀 nixos-anywhere 推送安装..."
 nix run nixpkgs#nixos-anywhere -- \
   --flake ".#$HOSTNAME" \
-  --extra-files "$STAGE" \
-  --generate-hardware-config nixos-facter "hosts/$HOSTNAME/.facter.json" \
+  ${NA_EXTRA[@]+"${NA_EXTRA[@]}"} \
   "$TARGET"
 
-# nixos-anywhere 对 facter 只做 intent-to-add,正式入暂存区
-git add "hosts/$HOSTNAME/.facter.json"
+if [ "${FIXTURE:-}" != y ]; then
+  # nixos-anywhere 对 facter 只做 intent-to-add,正式入暂存区
+  git add "hosts/$HOSTNAME/.facter.json"
+fi
 echo "=========================================================="
 echo "✅ 安装完成!(主机: $HOSTNAME)"
 echo "收尾清单:"

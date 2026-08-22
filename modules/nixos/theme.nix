@@ -6,7 +6,7 @@
   stylix = {
     enable = true;
     polarity = "dark";
-    image = ../../wallpapers/wallhaven-pkw6y3.jpg;
+    image = ../../assets/wallpapers/wallhaven-pkw6y3.jpg;
 
     fonts = {
       monospace = {

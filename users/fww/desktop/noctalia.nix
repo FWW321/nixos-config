@@ -5,9 +5,9 @@
 
 let
   wallpaperDir = "${config.home.homeDirectory}/Pictures/Wallpapers";
-  wallpaperSrc = ../../../wallpapers;
+  wallpaperSrc = ../../../assets/wallpapers;
   avatarDir = "${config.home.homeDirectory}/Pictures/Avatars";
-  avatarSrc = ../../../Avatars;
+  avatarSrc = ../../../assets/avatars;
 in
 {
   programs.noctalia = {

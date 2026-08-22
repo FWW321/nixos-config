@@ -14,6 +14,7 @@
     ./noctalia.nix
     ./niri.nix
     ./hyprland.nix
+    ./drawy.nix
     ./media.nix
     ./input-method.nix
     ./xdg-user-dirs.nix
