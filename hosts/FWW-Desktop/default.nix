@@ -14,7 +14,6 @@
     # hardware.nix。
     # 重生成(换硬件/固件升级时,需 root 读 SMBIOS):
     #   sudo nix run nixpkgs#nixos-facter -- -o ./.facter.json
-    #   ./redact.sh   ← 必跑!公开仓库序列号脱敏(幂等;CI 会校验)
     ./disko.nix
     ./nvidia.nix
 

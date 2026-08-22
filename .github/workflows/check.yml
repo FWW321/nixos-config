@@ -30,10 +30,6 @@ jobs:
           nix fmt
           git diff --exit-code
 
-      # facter.json 序列号脱敏校验(公开仓库;脚本见 hosts/FWW-Desktop/redact.sh)
-      - name: Facter privacy check
-        run: hosts/FWW-Desktop/redact.sh --check
-
       # install.sh 向导物化回归:3 组夹具(单盘Turing/三盘legacy/无独显AMD)
       # 走同一 materialize_host 真源 → 完整求值。模板 token 或 sed 改动
       # 破坏物化,在这里红;不用装机介质也能持续验证向导输出正确性

@@ -19,7 +19,7 @@ in
 {
   imports = [
     # 硬件事实:nixpkgs 原生 hardware.facter(initrd 模块/微码/hostPlatform 推导)
-    # 重生成(换硬件/固件升级):sudo nix run nixpkgs#nixos-facter -- -o ./.facter.json && ./redact.sh
+    # 重生成(换硬件/固件升级):sudo nix run nixpkgs#nixos-facter -- -o ./.facter.json
     ./disko.nix
 
     # N 卡专项模块按 params 条件挂载(gpu = "nvidia" 时)

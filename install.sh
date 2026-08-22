@@ -25,7 +25,7 @@ materialize_host() { # $1=主机名 $2=cpu_profile $3=gpu(nvidia|null) $4=nvidia
   #                   $5=nvidia_pkg $6=system_disk $7=home_disk $8=data_disk $9=swap_gib
   local h=$1
   mkdir -p "hosts/$h"
-  cp hosts/_template/{default.nix,disko.nix,nvidia.nix,params.nix,redact.sh} "hosts/$h/"
+  cp hosts/_template/{default.nix,disko.nix,nvidia.nix,params.nix} "hosts/$h/"
   cat >"hosts/$h/params.nix" <<EOF
 # 由 install.sh 向导生成;手动调整后直接 nixos-rebuild 即可
 {
@@ -223,11 +223,10 @@ read -p "确认已备份数据并继续?(y/N) " -n 1 -r
 echo
 [[ $REPLY =~ ^[Yy]$ ]] || die "已取消"
 
-# ── [1/6] 硬件事实:facter 报告 + 脱敏 ─────────────────
+# ── [1/6] 硬件事实:facter 报告 ────────────────────────
 # 任何 flake eval 都依赖 .facter.json,必须最先做
 echo "[1/6] 🔍 生成硬件事实报告(facter)..."
 nix run nixpkgs#nixos-facter -- -o "hosts/$HOSTNAME/.facter.json"
-"hosts/$HOSTNAME/redact.sh"   # 公开仓库:序列号脱敏(幂等)
 $GIT add "hosts/$HOSTNAME/.facter.json"
 
 # ── [2/6] 预检:动盘前完整求值 ─────────────────────────
