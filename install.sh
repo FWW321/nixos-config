@@ -14,8 +14,8 @@
 #   ./install.sh <主机名> --host-key <f>  # 同机重装:复用旧 host key(免 updatekeys)
 #   ./install.sh --selftest               # CI 回归:物化+求值,不触任何机器
 #
-# 目标机准备(全新机):minimal ISO 控制台 →
-#   sudo systemctl start sshd && sudo passwd root
+# 目标机准备(全新机):minimal ISO 控制台 → sudo passwd root
+#   (sshd 默认已启用;ISO 自带 git,git clone 本仓库后即可本地运行本脚本)
 # 已有 Linux:无需介质,kexec 自动接管(仅要求 root 可 ssh)。
 # 单机自装:ISO 上起 sshd 后目标填 root@localhost(在目标自身运行系统中
 # 对本机推送不可行 —— kexec 会掀翻运行中的脚本)。
@@ -121,7 +121,7 @@ echo "[1/4] 🔎 探测目标机 $TARGET..."
 # shellcheck disable=SC2029  # 探测脚本有意在目标侧展开
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 \
   "$TARGET" "$probe_script" >"$PROBE" \
-  || die "无法连接 $TARGET。全新机:ISO 控制台先 sudo systemctl start sshd && sudo passwd root"
+  || die "无法连接 $TARGET。全新机:ISO 控制台先 sudo passwd root(sshd 默认已启用)"
 
 RAM_KIB=$(awk '/^mem /{print $3}' "$PROBE")
 [ "$(awk '/^uefi /{print $2}' "$PROBE")" = yes ] \
