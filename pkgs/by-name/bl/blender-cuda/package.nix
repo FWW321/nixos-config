@@ -221,18 +221,87 @@ let
     # userpref"——写盘只由 default_set 触发。argv .blend 加载发生在
     # --python 之后(实测 0.9s),persistent=False 的 addon 在双击文件打开
     # 时全灭。故一律 persistent=True:会话级、活过任何文件加载、不落盘
+    # ── MCP 日志落盘 ──────────────────────────────────────────────
+    # 动机(2026-08 实战):桌面启动的 Blender stdout/stderr 全进 /dev/null,
+    # addon 两次无声死掉(端口消失/半死不应答)后零线索,排查全靠进程考古。
+    # 方案:本模块提供 append 型文件 logger,对两个 addon 各挂一个钩子——
+    # 不改上游文件(升级免疫),monkey-patch 只包公开入口。日志归 XDG state
+    import os
+    import sys
+    import time
+    import traceback
+
+    _LOG = os.path.join(
+        os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")),
+        "blender", "mcp.log",
+    )
+
+    def _mcp_log(tag, msg):
+        try:
+            os.makedirs(os.path.dirname(_LOG), exist_ok=True)
+            with open(_LOG, "a") as f:
+                f.write("{:s} [{:s}] {:s}\n".format(
+                    time.strftime("%H:%M:%S"), tag, msg))
+        except Exception:
+            pass
+
+    _mcp_log("boot", "bootstrap logging armed → " + _LOG)
+
     bpy.context.preferences.system.use_online_access = True
 
     try:
         addon_utils.enable("blender_mcp", default_set=False, persistent=True)
+        # ahujasid 命令分发唯一入口(单文件 addon,类 BlenderMCPServer):
+        # 包装记耗时/非成功响应/异常——死亡时刻与死因本体
+        try:
+            from blender_mcp import BlenderMCPServer as _BMS
+            _orig_exec = _BMS.execute_command
+
+            def _logged_exec(self, command):
+                t0 = time.monotonic()
+                cmd = command.get("type", "?") if isinstance(command, dict) else "?"
+                try:
+                    r = _orig_exec(self, command)
+                    ms = int((time.monotonic() - t0) * 1000)
+                    st = r.get("status", "?") if isinstance(r, dict) else "?"
+                    if st != "success":
+                        _mcp_log("ahujasid", "{:s} → {:s} ({}ms) {!s:.160}".format(
+                            cmd, st, ms, r))
+                    return r
+                except Exception as ex:
+                    _mcp_log("ahujasid", "EXC {:s}: {!s}\n{:s}".format(
+                        cmd, ex, traceback.format_exc()))
+                    raise
+
+            _BMS.execute_command = _logged_exec
+            _mcp_log("ahujasid", "execute_command hook installed")
+        except Exception as ex:
+            _mcp_log("ahujasid", "hook failed: {!s}".format(ex))
     except Exception as e:
         print("blender-mcp autostart failed:", e)
+        _mcp_log("ahujasid", "enable failed: {!s}".format(e))
 
     try:
         addon_utils.enable("blender_lab_mcp", default_set=True, persistent=True)
-        bpy.context.preferences.addons["blender_lab_mcp"].preferences.port = 9877
+        _lab_prefs = bpy.context.preferences.addons["blender_lab_mcp"].preferences
+        _lab_prefs.port = 9877
+        # lab 自带 use_log(逐请求打印),但打 stderr——桌面启动即黑洞。
+        # 开关打开 + 把模块级 print 函数替换为落盘版(签名兼容 file= kwarg)
+        try:
+            import blender_lab_mcp.mcp_to_blender_server as _lab_srv
+            _lab_prefs.use_log = True
+
+            def _lab_print(*args, file=None, **kw):
+                _mcp_log("lab", " ".join(str(a) for a in args)[:2000])
+
+            _lab_srv.print = _lab_print
+            _lab_srv.use_log = True
+            _mcp_log("lab", "use_log → file redirect installed")
+        except Exception as ex:
+            _mcp_log("lab", "log redirect failed: {!s}".format(ex))
     except Exception as e:
         print("blender-lab-mcp autostart failed:", e)
+        _mcp_log("lab", "enable failed: {!s}".format(e))
 
     try:
         # 纯 GPU(OptiX)渲染默认 addon。钉住要覆盖两个时序:

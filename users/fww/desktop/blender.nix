@@ -47,7 +47,37 @@ let
     cat > "$PROJ/AGENTS.md" <<'EOF'
     # 建模项目约定
 
-    - 渲染输出一律 `//renders/`(相对 blend 文件;渲染设置里确认输出路径)
+    - 渲染输出统一放项目根 renders/。脚手架 .blend 在 scenes/,故写
+      scene.render.filepath = '//../renders/hero_v1.png'(// 展开为 .blend
+      所在目录,//../ 即项目根)。禁止 //renders/(= scenes/renders/)、
+      绝对路径、裸文件名;不确定时先读 scene.render.filepath 确认再渲。
+      出图后核对文件落在项目根 renders/ 才算完成
+    - 渲染时长分两路:预计 <10s 的预览可同步 bpy.ops.render.render();
+      更长的必须后台渲,且 Popen 只能经 execute_blender_code 在 Blender
+      进程内发起(实测:Blender 内 Popen+start_new_session=True 的子进程
+      连 Blender 退出都不死;而在 agent 的 shell 里 Popen 会被命令环境
+      在命令结束时回收——ChatGPT app 里实测起即被杀,渲染 0 字节)。
+      写法:bpy.ops.wm.save_mainfile() 后 subprocess.Popen(
+      [bpy.app.binary_path,'--python-use-system-env','-b',
+      bpy.data.filepath,'-f','1'],start_new_session=True)
+      不等待,轮询输出文件出现再继续。binary_path 直起=绕过包装器,
+      子进程不跑 bootstrap 不抢 MCP 端口;--python-use-system-env 必带,
+      无它嵌入式 Python 无视 PYTHONPATH,import numpy 等第三方库当场炸
+      (实测扩展管理器报缺 cattrs 即此因)。同步渲染会冻结 Blender
+      主线程(GUI/MCP 全堵),且 OptiX 满载会挤垮桌面合成器导致 app 崩溃
+    - 渲染进行中不要向 Blender 发其他 MCP 命令(主线程忙,只会排队超时);
+      后台渲模式下可正常发
+    - 后台渲染(blender -b)读的是 .blend 文件里存的渲染设置。GPU 钉住
+      需两个不同字段,缺一必回退 CPU(实测 2240% CPU 打满整机):
+        scene.cycles.device = 'GPU'        # 场景级,决定性,存于 .blend
+        prefs.compute_device_type = 'OPTIX' # 全局后端,另设
+        prefs.get_devices() 后 device.use = (d.type=='OPTIX')
+      三步全做 → bpy.ops.wm.save_mainfile() 存进文件 → 再 Blender 内
+      Popen。只钉 compute_device_type 不设 scene 字段 = 仍 CPU(场景字段赢)
+    - 渲染负载分档,由用户当下指令决定,默认降载:挂机/无人用桌面时全速;
+      用户正在用桌面时先设 scene.cycles.pixel_size = 2 再 Popen(渲完无需
+      还原,该字段不持久)。全速 OptiX 满载会挤垮同卡桌面合成器(实测
+      打字卡顿、Chromium 系 app 闪退),pixel_size=2 留出桌面所需的 GPU 余量
     - 新贴图先拷进 `assets/<name>/textures/` 再以 `//` 相对路径引用,禁止绝对路径
     - scenes/ 只 link 引用组装(GEO-/MAT-/COL-/LGT- 前缀命名);资产本体回
       assets/ 改,单处修改全场景同步;可复用资产精修后进 ~/Projects/3d/library/

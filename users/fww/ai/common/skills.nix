@@ -42,11 +42,19 @@ in
     entryFile = "SKILL.md";
   };
   # 本地 skill(仓库内,非 flake input): pdf-inspector CLI + SKILL.md
-  # package 绑 pkgs.pdf-inspector → pdf2md/detect-pdf 进 skill 上下文 PATH
+  # package 绑 pdf-inspector + poppler-utils → pdf2md/detect-pdf/pdftoppm 进
+  # skill 上下文 PATH(pdftoppm 供 scanned 页渲染后视觉 OCR,见 SKILL.md
+  # "Scanned pages" 段)
   "pdf-inspector" = {
     source = ../skills/pdf-inspector;
     entryFile = "SKILL.md";
-    package = pkgs.pdf-inspector;
+    package = pkgs.symlinkJoin {
+      name = "pdf-inspector-skill-env";
+      paths = [
+        pkgs.pdf-inspector
+        pkgs.poppler-utils
+      ];
+    };
   };
   # 本地 skill: MiniMax Token Plan 官方 CLI
   # SKILL.md vendored 自 MiniMax-AI/cli v1.0.19(仅改 Prerequisites 段为 nix 安装说明)

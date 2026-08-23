@@ -61,10 +61,17 @@
   # 按名引用(同上 npx 条目先例,PATH 解析):bin/blender-mcp 只随 desktop/
   # blender.nix 的 N 卡门控部署,这里不插值 store path——非 N 卡主机的 HM 闭包
   # 不会被牵进 CUDA 构建。前置:Blender 已启动且 N 面板 Start MCP Server
+  #
+  # autoApproveAll:codex 侧渲染为 server 级 default_tools_approval_mode="approve"
+  # (枚举 auto/prompt/writes/approve,0.147 serde 报错实证)。上游工具全无
+  # readOnlyHint → codex 默认逐调用审批,exec/桌面 app 等非交互上下文直接
+  # "user cancelled MCP tool call"。server 级优于逐工具清单:上游 bump 新
+  # 工具自动覆盖,无清单同步负担(2026-08 桌面端实测踩坑后由逐工具清单泛化)
   "blender-mcp" = {
     local = {
       command = "blender-mcp";
     };
+    autoApproveAll = true;
   };
 
   # Blender Lab 官方 MCP:文档检索与场景分析(捆绑 bpy API/手册 rst,主打
@@ -76,5 +83,6 @@
       command = "blender-lab-mcp";
       env.BLENDER_MCP_PORT = "9877";
     };
+    autoApproveAll = true;
   };
 }

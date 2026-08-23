@@ -102,8 +102,12 @@ let
             inherit (m.local) command;
             args = m.local.args or [ ];
           };
-      # 中立层 autoApproveTools → codex per-tool approval_mode="approve"
-      # (无 readOnlyHint 的 MCP 工具默认要审批,exec 非交互下直接 Abort)
+      # 中立层审批旗标 → codex:
+      #   autoApproveAll → server 级 default_tools_approval_mode="approve"(枚举
+      #     auto/prompt/writes/approve,0.147 serde 报错实证;上游 bump 新工具
+      #     自动覆盖,首选)
+      #   autoApproveTools → per-tool approval_mode="approve"(无 readOnlyHint
+      #     的 MCP 工具默认要审批,exec 非交互下直接 Abort;保留作精细白名单)
       toolApprovals = lib.listToAttrs (
         map (
           t:
@@ -117,6 +121,7 @@ let
       enabled = m.defaultEnabled or false;
     }
     // transport
+    // (lib.optionalAttrs (m.autoApproveAll or false) { default_tools_approval_mode = "approve"; })
     // lib.optionalAttrs (plains != { }) { env = plains; }
     // lib.optionalAttrs (toolApprovals != { }) { tools = toolApprovals; };
 
@@ -160,9 +165,29 @@ let
         env_http_headers = lib.mapAttrs (_: secretToEnv) plainHeaders;
       });
 
-  codexMcp = lib.mapAttrs (name: m: if m ? local then toCodexLocal name m else toCodexRemote name m) (
-    lib.filterAttrs (n: _: !(builtins.elem n mcpExcluded)) common.mcp
-  );
+  codexMcp =
+    let
+      base = lib.mapAttrs (name: m: if m ? local then toCodexLocal name m else toCodexRemote name m) (
+        lib.filterAttrs (n: _: !(builtins.elem n mcpExcluded)) common.mcp
+      );
+    in
+    # blender 双 server 在 codex 全局启用(覆盖中立层 defaultEnabled=false 的
+    # 项目 opt-in 语义,opencode 侧不变):ChatGPT 桌面端 /mcp 面板读全局
+    # enabled,项目级 opt-in 在 app 形态(打开文件夹即干活)下永远显示
+    # "已禁用",误导用户放弃(asar 实证:面板标签 = 全局 config 的 enabled;
+    # 而 app 会话内项目层启用其实生效——06:13 app-server 曾实际 spawn 过
+    # blender-mcp)。注意 // 是整键替换非递归合并:保留原条目再覆盖 enabled,
+    # 否则 transport/approval_mode 全丢(踩过:approval_mode 计数归零)。
+    # 代价:每个 codex 会话多两个空闲 stdio server(Blender 未运行时空转)
+    base
+    // {
+      "blender-mcp" = base."blender-mcp" // {
+        enabled = true;
+      };
+      "blender-lab" = base."blender-lab" // {
+        enabled = true;
+      };
+    };
 
   # ── 远程 MCP 的 secret env(所有远程 server 的 bearer/命名 header,lib.unique 去重)──
   remoteSecretEnvs = lib.concatLists (
