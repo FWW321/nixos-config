@@ -1,6 +1,6 @@
 ---
 name: pdf-inspector
-description: Fast local PDF text extraction and classification via the pdf-inspector Rust CLI (pdf2md / detect-pdf). Converts text-based PDFs to clean Markdown in milliseconds with NO OCR, NO model downloads, NO network, and NO cache writes. Use this skill whenever the user asks to read, parse, extract text from, summarize, convert, inspect, or ask about the contents of ANY .pdf file — trigger even when they don't name a tool ("what's in this PDF", "read this", "turn this into markdown", "is this scanned"). Classifies a PDF as text-based / scanned / image-based / mixed, extracts text instantly from text-based pages, and reports exactly which pages need OCR for scanned documents (does not perform OCR itself). Handles multi-column layouts, tables, and position-aware extraction. For pure speed on text-based PDFs this beats any OCR pipeline; for scanned/image-only PDFs it reports and stops rather than pretending to extract.
+description: Fast local PDF text extraction and classification via the pdf-inspector Rust CLI (pdf2md / detect-pdf). Converts text-based PDFs to clean Markdown in milliseconds with NO OCR, NO model downloads, NO network, and NO cache writes. Use this skill whenever the user asks to read, parse, extract text from, summarize, convert, inspect, or ask about the contents of ANY .pdf file — trigger even when they don't name a tool ("what's in this PDF", "read this", "turn this into markdown", "is this scanned"). Classifies a PDF as text-based / scanned / image-based / mixed, extracts text instantly from text-based pages, and reports exactly which pages need OCR for scanned documents (does not perform OCR itself). Handles multi-column layouts, tables, and position-aware extraction. For pure speed on text-based PDFs this beats any OCR pipeline; for scanned/image-only PDFs it reports exactly which pages need a vision read, so you render only those pages instead of running a full OCR pipeline.
 ---
 
 # pdf-inspector
@@ -30,12 +30,25 @@ Run `detect-pdf` first. It is cheap (10–50 ms) and tells you what kind of docu
 1. detect-pdf <file> --json        → read pdf_type from the JSON
 2. branch on pdf_type:
    text_based   → pdf2md <file> --raw              (full clean Markdown to stdout)
-   mixed        → pdf2md <file> --raw              (partial text) + report pages_needing_ocr
-   scanned      → DO NOT extract. Report pages_needing_ocr to the user, stop.
+   mixed        → pdf2md <file> --raw              (partial text) + handle pages_needing_ocr per "Scanned pages" below
+   scanned      → DO NOT run pdf2md (it exits 2). Route pages_needing_ocr per "Scanned pages" below.
    image_based  → same as scanned
 ```
 
-The `pdf_type` field is the single source of truth. `ocr_recommended: true` means stop extracting and surface `pages_needing_ocr` instead — those pages have no text layer and pdf-inspector cannot help with them.
+The `pdf_type` field is the single source of truth. `ocr_recommended: true` means this tool is done — those pages have no text layer — but the task isn't; see the next section for how to actually read them.
+
+## Scanned pages — route by whether YOU can see
+
+`pdf2md` cannot read a page with no text layer, but a vision-capable reader can. Route `pages_needing_ocr` by what you are:
+
+- **You have vision** (your read tool can display images): you are the OCR. Render exactly those pages, then view each PNG and transcribe:
+  ```bash
+  pdftoppm -png -r 150 -f 3 -l 5 <file> /tmp/page   # → /tmp/page-3.png … /tmp/page-5.png
+  ```
+  150 DPI suffices for clean scans; use 300 for small print. Render only `pages_needing_ocr` — rendering every page "to be safe" wastes image tokens.
+- **You have no vision**: hand the file path + `pages_needing_ocr` + the question to a vision-capable subagent if one exists, and let it render + transcribe. Only when no vision path exists at all, report `pages_needing_ocr` and tell the user an external OCR tool (MinerU, Marker, Tesseract) is required.
+
+Either way: never re-run `pdf2md` on scanned pages (it exits 2 again), and never claim text you didn't actually see.
 
 ## Commands
 
@@ -95,12 +108,12 @@ The unifying principle: a PDF is a haystack, the user's need is the needle — d
 ## Constraints — important
 
 - **Default to stdout.** `pdf2md <file> --raw` prints to stdout. Only write a file when the user gives you a path — never invent output locations.
-- **This skill does not perform OCR.** When `pdf_type` is `scanned` or `image_based`, report `pages_needing_ocr` and stop. Tell the user an OCR tool (MinerU, Marker, Tesseract) is needed for those pages. Do not claim to have extracted text you don't have.
+- **This tool does not perform OCR — the reader might.** `pdf2md` stops at scanned pages; the text for `pages_needing_ocr` must come from vision (yours or a subagent's, see "Scanned pages") or an external OCR tool (MinerU, Marker, Tesseract). Do not claim to have extracted text you don't have.
 - **No environment side effects.** pdf-inspector writes no cache, downloads no model, and makes no network calls. The only disk write happens when you explicitly pass an output filename. Respect that — don't wrap it in scripts that scatter temp files.
 - **Encrypted PDFs** need `--password <pw>`. If `detect-pdf` or `pdf2md` exits 1 with an encryption error, ask the user for the password rather than guessing.
 
 ## When NOT to use this skill
 
-- The PDF is scanned or image-only and the user wants the actual text → they need an OCR tool, not this skill. Detect, report, stop.
+- The PDF is scanned or image-only and the user wants the actual text → this skill's part ends at `detect-pdf`; the text comes from vision (yours or a subagent's, see "Scanned pages") or an external OCR tool.
 - The user wants to edit, sign, merge, or split a PDF → pdf-inspector is read-only; use a different tool.
 - The user wants layout-perfect reproduction (exact fonts, images) → pdf-inspector gives clean Markdown, not a pixel-faithful render.

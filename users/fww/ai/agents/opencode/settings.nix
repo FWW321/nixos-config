@@ -62,6 +62,20 @@ in
       # v2 字段兼容保留(暂不启动 LSP,后续版本生效)
       lsp = true;
       snapshots = false;
+
+      # ── 上下文机制(v2 与 codex 完全不同,2026-08 调研;全部不设吃默认)──
+      # 窗口来源:models.dev 目录内置 limit.context(glm-5.3 走 zhipuai-coding-plan
+      # 目录条目;providers.nix 的 contextWindow=1000000 仅喂 codex 静态目录,本侧
+      # 不消费)。目录错值/自定义模型可覆盖:providers.<id>.models.<mid>.limit.context
+      # 自动压缩触发 = 估算 tokens > limit.context − max(请求 output, buffer);
+      # 估算 = 请求 JSON 序列化字节/4,粗略。provider 报 context overflow 时还有
+      # 一次性压缩重试兜底(auto=false 也生效,最多一次防循环)
+      # 可调项(compaction.*):auto=true / keep.tokens=15000(压缩时逐字保留的最近
+      # 上下文预算,tool 输出截 2000 字符)/ buffer=20000(触发前预留余量,调大
+      # 即更早压缩)。无绝对阈值字段(codex 的 model_auto_compact_token_limit
+      # 等价物不存在,anomalyco/opencode#27706 在要 trigger_at;提前触发只能加大
+      # buffer,或调小 providers.models.limit.context 的覆盖值)
+
       # websearch 引导(Exa/Firecrawl/Parallel/Tavily)的答案持久化在 opencode.json,
       # 而 opencode.json 是只读 store symlink —— TUI 写下的答案会被 rebuild 抹掉,
       # 引导反复弹出(孤儿 opencode.json.backup 即其残骸)。声明式写死一劳永逸;

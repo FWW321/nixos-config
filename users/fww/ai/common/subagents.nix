@@ -16,8 +16,10 @@
 {
   # 识图子 agent:MiniMax M3 原生视觉(GLM 无视觉)
   # 消费端:opencode(frontmatter)、zcode(结构化定义)
+  # description 注入所有会话含视觉主模型 → 路由指令按调用者能力分叉,
+  # 勿写"一律委托"(有视觉的模型会照办绕道,2026-08 实测)
   vision = {
-    description = "识图专用视觉 agent:OCR 转录、报错截图诊断、UI 审查与设计稿对比、图表读数、架构图解读。主模型无视觉,凡图像/截图理解一律委托本 agent";
+    description = "识图专用视觉 agent:OCR 转录、报错截图诊断、UI 审查与设计稿对比、图表读数、架构图解读。仅当你自身无视觉能力(读不了图)时才委托本 agent;你自己能看图就直接读,勿绕道";
     model = {
       provider = "minimax";
       model = "MiniMax-M3";
