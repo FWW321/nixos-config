@@ -8,7 +8,7 @@
 #
 # 新增包:建 by-name/<sh>/<name>/package.nix + 下方一行 callPackage。
 { inputs }:
-final: _prev:
+final: prev:
 let
   # OpenDesign 专用 pnpm 钉版(packageManager 锁步,见 pnpm.nix 头注释)
   odPnpm = final.callPackage ./by-name/op/open-design/pnpm.nix { };
@@ -24,6 +24,32 @@ in
   # unified ChatGPT/Codex 桌面端(Linux):抄自 PR #551713 待合并,见包内头注释
   # codexPackage 与 home-manager programs.codex 复用 nixpkgs codex 同一二进制
   chatgpt = final.callPackage ./by-name/ch/chatgpt/package.nix { codexPackage = final.codex; };
+
+  # ⏳ 临时 override(2026-09-06):codex 上顶 0.153.4 —— Astra(gpt-6-astra)最低
+  # 要求 CLI ≥0.153.0,模型目录按 client_version 下发,0.151 实测目录无 astra;
+  # nixos-unstable channel 未含 nixpkgs PR #559991(仅 master,channel 滞后 1-2 天)。
+  # hash 直取自该 PR(其 diff 仅 version/src/cargoHash 三行)。
+  # ⚠ 不能只 overrideAttrs cargoHash:buildRustPackage 的 cargoDeps 里 hash 取
+  # args.cargoHash(原始入参,不随 overrideAttrs 传播;src/version 走 finalAttrs
+  # 会跟随)→ 必须显式重建 cargoDeps(fetchCargoVendor 镜像内部 getOptionalAttrs
+  # 取的 pname/version/src/sourceRoot;FOD hash 只依赖内容,patches 为空可省)。
+  # 删除条件:nix flake update 后 nix eval ...codex.version ≥ 0.153.4 即整段删除,
+  # chatgpt(codexPackage=final.codex)与 programs.codex 会自动回落 nixpkgs 版。
+  codex = prev.codex.overrideAttrs (
+    finalAttrs: _prevAttrs: {
+      version = "0.153.4";
+      src = final.fetchFromGitHub {
+        owner = "openai";
+        repo = "codex";
+        tag = "rust-v0.153.4";
+        hash = "sha256-lHiDj5SodaM3mh8goMm6esfejeAT+Y3JJWrRnyj6sJo=";
+      };
+      cargoDeps = final.rustPlatform.fetchCargoVendor {
+        inherit (finalAttrs) pname version src sourceRoot;
+        hash = "sha256-GG6kOXmCdq+bZLU2ul0DIVL8lDuweayvZvXn6+bcUZw=";
+      };
+    }
+  );
 
   # h3-models 已移除(2026-08-25):模型下载与部署整体迁 AutoDL 实例(见 users/fww/cloud.nix)
 

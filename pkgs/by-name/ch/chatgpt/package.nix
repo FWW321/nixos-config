@@ -86,6 +86,7 @@
 }:
 let
   inherit (stdenvNoCC.hostPlatform) isLinux isDarwin system;
+  inherit (stdenvNoCC.hostPlatform.node) arch platform;
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "chatgpt";
@@ -166,11 +167,16 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     # Remove the unused Qt 5 fallback shim.
     rm -f "$out/lib/chatgpt/libqt5_shim.so"
 
-    # This glibc desktop package uses neither musl nor Android variants.
-    rm -f \
-      "$out/lib/chatgpt/resources/app.asar.unpacked/node_modules/@worklouder/device-kit-oai/node_modules/@worklouder/wl-device-kit/node_modules/serialport/node_modules/@serialport/bindings-cpp/prebuilds/"{linux-*/node.napi.musl.node,android-*/node.napi.*.node} \
-      "$out/lib/chatgpt/resources/app.asar.unpacked/node_modules/@worklouder/device-kit-oai/node_modules/@worklouder/wl-device-kit/node_modules/node-hid/prebuilds/"{HID,HID_hidraw}-linux-*-musl/node-napi-v4.node \
-      "$out/lib/chatgpt/resources/plugins/openai-bundled/plugins/"{browser,chrome}"/scripts/node_modules/classic-level/prebuilds/"{linux-*/classic-level.musl.node,android-*/classic-level.*.node}
+    # Keep only the native prebuild for this platform and architecture
+    # (26.901 起 cua_node 内新增 classic-level 等 prebuilds,musl/android 变体
+    # 逐一列举跟不上,对齐上游 PR 的通用清法)。
+    resources="$out/lib/chatgpt/resources"
+    find "$resources" -type d -name prebuilds -print0 | while IFS= read -r -d "" prebuildsPath; do
+      find "$prebuildsPath" -mindepth 1 -maxdepth 1 \
+        ! -name "*${platform}-${arch}" \
+        -exec rm -rf -- {} +
+    done
+    find "$resources" -type f -name '*.musl.node' -delete
 
     ln -sf ${lib.getExe tectonic-unwrapped} "$out/lib/chatgpt/resources/plugins/openai-bundled/plugins/latex/bin/tectonic"
     ln -sf ${lib.getExe ripgrep} "$out/lib/chatgpt/resources/rg"
