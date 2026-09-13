@@ -210,6 +210,24 @@
             open-design-web
             pdf-inspector
             ;
+
+          # push 前本地预演 CI(check.yml 四步的本地镜像;hook 已拦锁脱节,
+          # 这里拦"push 后才红"的其余三类:全 outputs 求值/fmt/selftest)
+          ci-local = pkgs.writeShellApplication {
+            name = "ci-local";
+            runtimeInputs = [ pkgs.git ];
+            text = ''
+              cd "$(git rev-parse --show-toplevel)"
+              echo "── [1/3] flake check(全 outputs 求值)──"
+              nix flake check --no-build
+              echo "── [2/3] fmt(RFC 166/deadnix/statix)──"
+              nix fmt
+              git diff --exit-code
+              echo "── [3/3] install.sh selftest ──"
+              ./install.sh --selftest
+              echo "✓ ci-local 全过"
+            '';
+          };
         };
 
       # 格式化三件套:nixfmt(RFC 166)+ deadnix(死代码)+ statix(惯用法)。

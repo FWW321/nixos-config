@@ -12,6 +12,11 @@
 # 新增源:在下方 inputs 加一行即可,主 flake.nix 无需改动。
 # (flake.nix 求值器只吃字面 attrset,无法在主文件内 mapAttrs 去重
 #  —— 结构外移是唯一消音路径)
+#
+# 锁操作纪律(2026-09-13 事故沉淀,详见仓库根 AGENTS.md):
+#   - 加/删 pin:nix flake update sources/<name>(只动目标条目+补缺失引用)
+#   - 禁 nix flake lock / nix flake update sources 裸跑:全表刷未钉 ref 的 pin
+#   - ⚠ 锁与 flake.nix 不一致时 nix eval 会静默重写 flake.lock
 {
   description = "源码引脚登记表(flake=false source registry)";
   inputs = {
