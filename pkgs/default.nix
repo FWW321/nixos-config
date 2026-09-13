@@ -45,7 +45,12 @@ in
         hash = "sha256-lHiDj5SodaM3mh8goMm6esfejeAT+Y3JJWrRnyj6sJo=";
       };
       cargoDeps = final.rustPlatform.fetchCargoVendor {
-        inherit (finalAttrs) pname version src sourceRoot;
+        inherit (finalAttrs)
+          pname
+          version
+          src
+          sourceRoot
+          ;
         hash = "sha256-GG6kOXmCdq+bZLU2ul0DIVL8lDuweayvZvXn6+bcUZw=";
       };
     }

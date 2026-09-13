@@ -49,7 +49,7 @@ let
         # 中立侧可选 timeout(ms):v2 里同时是 connectTimeout(缺省 30s)与
         # 工具调用超时,慢握手 server(od mcp 等)用它防误入 failed 缓存
       }
-      // (lib.optionalAttrs (s ? timeout) { timeout = s.timeout; });
+      // (lib.optionalAttrs (s ? timeout) { inherit (s) timeout; });
 in
 {
   # ── opencode 核心(v2 包,nixpkgs 未收录,走 pkgs/opencode2) ──
