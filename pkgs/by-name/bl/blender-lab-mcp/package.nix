@@ -10,7 +10,7 @@
 #
 # 源码:Gitea archive 直链被 Cloudflare 挑战页拦(403);api/v1 archive 端点
 # 可过(nix 默认 UA 实测 200),nixpkgs 无此包,fetchurl 直取。
-# tag v1.0.0 = 首个发布版,要求 Blender 5.1+(本机 5.2 ✓)
+# tag v1.0.3(首个发布版 v1.0.0,要求 Blender 5.1+,本机 5.2 ✓)
 {
   lib,
   fetchurl,
@@ -19,12 +19,12 @@
 
 python3Packages.buildPythonPackage rec {
   pname = "blender-lab-mcp";
-  version = "1.0.0";
+  version = "1.0.3";
   pyproject = true;
 
   src = fetchurl {
     url = "https://projects.blender.org/api/v1/repos/lab/blender_mcp/archive/v${version}.tar.gz";
-    hash = "sha256-DNBNtUVgTfYB65hopmWzmWcyUwNz7/d+huA61r3a+aM=";
+    hash = "sha256-jcHddDN1WFe9KuNUIPjPT1nNxhhG0adUFmWcNP0XyXI=";
   };
   # server 在 mcp/ 子目录;addon 留在同级 ../addon 供 postInstall 收集
   sourceRoot = "blender_mcp/mcp";
@@ -57,7 +57,7 @@ python3Packages.buildPythonPackage rec {
         "bl_info = {",
         "    \"name\": \"MCP (Blender Lab)\",",
         "    \"author\": \"Blender Lab\",",
-        "    \"version\": (1, 0, 0),",
+        "    \"version\": (1, 0, 3),",
         "    \"blender\": (5, 1, 0),",
         "    \"location\": \"Preferences > Add-ons\",",
         "    \"description\": \"MCP socket bridge-server add-on (legacy packaging for declarative scripts tree)\",",
