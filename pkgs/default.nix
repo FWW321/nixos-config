@@ -8,7 +8,7 @@
 #
 # 新增包:建 by-name/<sh>/<name>/package.nix + 下方一行 callPackage。
 { inputs }:
-final: _prev:
+final: prev:
 let
   # OpenDesign 专用 pnpm 钉版(packageManager 锁步,见 pnpm.nix 头注释)
   odPnpm = final.callPackage ./by-name/op/open-design/pnpm.nix { };
@@ -28,6 +28,30 @@ in
   # codex 临时 override 已拆除(2026-09-13):nixpkgs PR #559991(0.153.4)已进
   # unstable 且被后续推进,锁 nixpkgs 前进(8/22→9/11)后 final.codex ≥ 0.154,
   # chatgpt(codexPackage)与 programs.codex 自动回落 nixpkgs 版
+
+  # lean4 临时垫片(2026-09-13):4.30.0 × cmake ≥4.4 构建断裂。
+  # 根因:上游顶层 CMakeLists.txt 遍历 cache vars 的 HELPSTRING 判定"命令行
+  # 变量"进 CL_ARGS(转发 stage1/stage2 自举);cmake 4.3.4→4.4.2(nixpkgs
+  # 8/22→9/11)使 CMAKE_INSTALL_PREFIX 路由掉进只喂 stage0 的 PLATFORM_ARGS
+  # 分支 → stage1 以默认 /usr/local configure → install 阶段
+  # "cannot make directory /usr/local/include" 被沙箱拒;hydra 未建过该
+  # 工具链组合(cache miss),本地构建必现。
+  # 修法:显式把 prefix 追加进 CL_ARGS(单引号防 shell 展开,进文件的是
+  # 字面 ${CMAKE_INSTALL_PREFIX},cmake 求值期展开)。已全量构建验证。
+  # ⚠ 必须走 overlay 而非消费侧:home.packages(development/lean.nix)与
+  # nixvim plugins.lean(lsp.nix,经 neovim extraPackages)两处引用都要
+  # 吃到,消费侧单点 override 实测漏过一次(2026-09-13 nvim 侧仍炸)。
+  # 拆除条件:上游 lean4 修 CL_ARGS 收集,或 nixpkgs lean-modules 重写
+  # 打包落地(PR #537536/#545312 系)后删除本条目
+  lean4 = prev.lean4.overrideAttrs (
+    _finalAttrs: prevAttrs: {
+      postPatch = prevAttrs.postPatch + ''
+        substituteInPlace CMakeLists.txt \
+          --replace-fail 'list(APPEND EXTRA_DEPENDS mimalloc)' 'list(APPEND EXTRA_DEPENDS mimalloc)
+        list(APPEND CL_ARGS "-DCMAKE_INSTALL_PREFIX=''${CMAKE_INSTALL_PREFIX}")'
+      '';
+    }
+  );
 
   # h3-models 已移除(2026-08-25):模型下载与部署整体迁 AutoDL 实例(见 users/fww/cloud.nix)
 

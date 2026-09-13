@@ -386,4 +386,10 @@ in
       };
     };
   };
+
+  # lean4 二进制显式指回宿主 pkgs(带本仓 overlay 的 cmake≥4.4 垫片):
+  # nixvim 子模块默认自建 nixpkgs 实例(useGlobalPackages=false),
+  # 不吃宿主 overlay —— 不指回则 nvim 侧拉裸 lean4,本地构建必炸
+  # (2026-09-13 实测,垫片详见 pkgs/default.nix lean4 条目)
+  programs.nixvim.dependencies.lean.package = pkgs.lean4;
 }
