@@ -67,7 +67,7 @@
     # dsh-runtime 三消费方共用此 pin —— 协议代际原子性 by construction;
     # 更新 = nix flake update sources/open-design + 包目录 update.sh
     open-design = {
-      url = "github:nexu-io/open-design/open-design-v0.21.1";
+      url = "github:nexu-io/open-design/open-design-v0.22.2";
       flake = false;
     }; # OD daemon/web/dsh-runtime (→ pkgs/by-name/op/*)
 

@@ -45,8 +45,10 @@ let
     "packages/plugin-runtime"
     "packages/sidecar-proto"
     "packages/launcher-proto"
-    "packages/sidecar"
+    # platform 须先于 sidecar/daemon 构建:v0.22 起两者 import 其
+    # dist/index.d.ts(构建产物类型),顺序反了即 TS2307
     "packages/platform"
+    "packages/sidecar"
     "packages/diagnostics"
     "apps/daemon"
   ];

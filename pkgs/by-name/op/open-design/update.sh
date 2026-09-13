@@ -19,7 +19,7 @@ root="$(git -C "$here" rev-parse --show-toplevel)"
 FAKE="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 
 # ── 1. pnpm 钉版联动 ─────────────────────────────────────────────
-rev="$(jq -r '.nodes.open-design.locked.rev' "$root/flake.lock")"
+rev="$(jq -r '.nodes["open-design"].locked.rev' "$root/flake.lock")"
 want="$(curl -sf "https://raw.githubusercontent.com/nexu-io/open-design/$rev/package.json" | jq -r .packageManager)"
 want="${want#pnpm@}"
 cur="$(grep -oP 'version = "\K[^"]+' "$here/pnpm.nix")"

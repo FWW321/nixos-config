@@ -835,16 +835,16 @@
     "open-design": {
       "flake": false,
       "locked": {
-        "lastModified": 1788174182,
-        "narHash": "sha256-0aG4hyv+HnTQBcs3SxAgPJerDv6KJNQaZm3W8xd4lx8=",
+        "lastModified": 1789031054,
+        "narHash": "sha256-ByqzuKVcNJNiL0tNg9TZafyAc2kF3b15toqNLlQY7IY=",
         "owner": "nexu-io",
         "repo": "open-design",
-        "rev": "fbd4d48ebe21b20f4a2faaad0ad5e53aaeb1dc4b",
+        "rev": "73953213a6fec2c8092e8e77d229a3074aa828a9",
         "type": "github"
       },
       "original": {
         "owner": "nexu-io",
-        "ref": "open-design-v0.21.1",
+        "ref": "open-design-v0.22.2",
         "repo": "open-design",
         "type": "github"
       }
