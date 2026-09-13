@@ -41,6 +41,16 @@ in
     source = "${inputs.herdr}/skills/herdr";
     entryFile = "SKILL.md";
   };
+  # 受众自适应解释:按年龄/学历/职业/关系校准词汇/类比/语气/详略,
+  # 触发面宽(ELI5 / explain this to my manager / dumb it down / 给爸妈讲…);
+  # pinned 自 DreambigOu/ELI5(2026-09-13,1099★,eli5 生态断层第一;
+  # 纯 prompt 零依赖,skills/eli5/ 仅一个 SKILL.md,frontmatter 只用
+  # name+description → opencode/codex/zcode 原生识别,无需 vendor 适配)
+  # 与 humanizer-zh 分工:humanizer = 去 AI 腔(输出风格),eli5 = 降维解释(内容传达)
+  "eli5" = {
+    source = "${inputs.eli5}/skills/eli5";
+    entryFile = "SKILL.md";
+  };
   # 本地 skill(仓库内,非 flake input): pdf-inspector CLI + SKILL.md
   # package 绑 pdf-inspector + poppler-utils → pdf2md/detect-pdf/pdftoppm 进
   # skill 上下文 PATH(pdftoppm 供 scanned 页渲染后视觉 OCR,见 SKILL.md

@@ -40,6 +40,10 @@
       url = "github:op7418/Humanizer-zh";
       flake = false;
     }; # humanizer-zh
+    eli5 = {
+      url = "github:DreambigOu/ELI5";
+      flake = false;
+    }; # eli5
     makepad-skills = {
       url = "github:ZhangHanDong/makepad-skills";
       flake = false;
