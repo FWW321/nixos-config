@@ -1,5 +1,5 @@
 # mmx-cli: MiniMax Token Plan 官方 CLI(text/image/video/speech/music 全模态)
-# 源码: https://github.com/MiniMax-AI/cli  npm: mmx-cli@1.0.22 (tag v1.0.22)
+# 源码: https://github.com/MiniMax-AI/cli  npm: mmx-cli@1.0.25 (tag v1.0.25)
 #
 # 打包策略:直接消费 npm registry 成品 tarball(思路同 pkgs/pdf-inspector 的 fetchCrate)
 #   dist/mmx.mjs 为 bun 预构建 bundle,依赖均已内联,唯一外部静态 import 是 undici
@@ -29,12 +29,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "mmx-cli";
-  version = "1.0.22";
+  version = "1.0.25";
 
   # npm registry 成品(与 npm install -g mmx-cli 同源同物)
+  # 1.0.24 起上游换 GitHub Actions provenance 发布,新增 yaml/smol-toml/
+  # picocolors/jsonc-parser 依赖但均已内联进 bundle,外部 import 仍只有 undici
   src = fetchurl {
     url = "https://registry.npmjs.org/mmx-cli/-/mmx-cli-${finalAttrs.version}.tgz";
-    hash = "sha256-I3dwo0Xp0J5XvvUUAtMPRU8iD0epEMkGMMJ7YzrJv2Y=";
+    hash = "sha256-kQfX9aW6D/2g/mkeNbD4/UpFtmz4yi27k9Qh0xOkdEU=";
   };
 
   # 唯一运行时依赖(上游约束 ^6.21.1,取 6.x 最新)
