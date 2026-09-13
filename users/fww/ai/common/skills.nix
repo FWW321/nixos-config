@@ -96,6 +96,22 @@ in
     source = ../skills/nixos-managing;
   };
 
+  # 本地 skill: AutoDL 租赁实例档案(H3 实例软件栈/平台机制/网络现实/坑清单),
+  # 2026-08-25 全量部署实测沉淀(独立成档,换机/排障先读);
+  # 本机侧接入(ssh h3/autossh 隧道)声明在 users/fww/cloud.nix,skill 与其互引
+  "autodl" = {
+    source = ../skills/autodl;
+    entryFile = "SKILL.md";
+  };
+
+  # 本地 skill: MiniMax H3 提示词工程(官方 skills/h3-prompt-writing 骨架,
+  # 两份官方指南 base-en/ref-en 原文直读 + 本地出片路径:多合一组解禁表/CLI);
+  # 2026-08-25 重构: 动漫PV/multishot 等自研管线删除,以官方 skill 为唯一参考;
+  # 与 autodl skill 分工:本条=写提示词,autodl=实例操作;成稿喂 h3_多合一 或 h3.py
+  "h3" = {
+    source = ../skills/h3;
+  };
+
   # 目录 skill(整个目录递归)
   # (git-workflow 已移除 2026-08-19:上游无 frontmatter codex 拒载,内容与
   #  git-workflow skill 生态重叠度低,不再维护)

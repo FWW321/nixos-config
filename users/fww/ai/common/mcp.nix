@@ -31,7 +31,7 @@
   # mcpExcluded,加入 "zai-mcp-server")
   # - 唯一独占 analyze_video(≤8MB)随之退役:M3 视频输入未实测,需要时取消注释
   # - dsh 无 subagent 机制,识图回落 mmx vision describe;
-  #   zhipu_api_key 继续服务下方 web-search-prime/web-reader/zread
+  #   zhipu_api_key 原服务下方 web-search-prime/web-reader/zread,三者均已停用(2026-08)
   #
   # "zai-mcp-server" = {
   #   local = {
@@ -55,15 +55,16 @@
   #   };
   # };
 
-  "web-reader" = {
-    remote = {
-      url = "https://open.bigmodel.cn/api/mcp/web_reader/mcp";
-      secretHeaders.Authorization = {
-        prefix = "Bearer ";
-        secretFile = "/run/secrets/zhipu_api_key";
-      };
-    };
-  };
+  # 2026-08 暂停启用:与内置 webfetch 能力重叠,减少常驻连接
+  # "web-reader" = {
+  #   remote = {
+  #     url = "https://open.bigmodel.cn/api/mcp/web_reader/mcp";
+  #     secretHeaders.Authorization = {
+  #       prefix = "Bearer ";
+  #       secretFile = "/run/secrets/zhipu_api_key";
+  #     };
+  #   };
+  # };
 
   # 2026-08 暂停启用:zread 上游快照滞后(曾给过 ahujasid 1.5.5 旧版),
   # GitHub 理解改用 context7 + 内置 webfetch;恢复时连 codex.nix 一起解注

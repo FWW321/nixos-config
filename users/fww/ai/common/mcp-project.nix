@@ -44,6 +44,12 @@
   # Open Design stdio MCP → 本机 daemon(设计项目里操作 OD 项目/制品/需求简报)
   # 启动规范与上游 buildMcpInstallPayload 一致:od mcp --daemon-url <url>
   # command/端口/数据目录全部从 services.open-design 派生,与 daemon 配置永不漂移
+  # timeout(2026-09-07):opencode v2 connectTimeout 吃 mcp.timeout,缺省 30s;
+  # od mcp 冷启动先做 daemon 健康探测 + 首次调用建观测会话,daemon 忙时
+  # (设计 run 进行中)握手可拖过 30s → 客户端记 "failed: Connection closed"。
+  # v2 的 failed 状态缓存在常驻服务的项目实例里不自愈(仅配置内容变更或
+  # service restart 重连),拉长到 120s 避免误入;同时是工具调用超时,
+  # start_run/get_run 轮询本身分钟级,放宽无害(codex 侧 startup_timeout_sec 先例)
   open-design = {
     local = {
       command = lib.getExe config.services.open-design.package;
@@ -54,6 +60,7 @@
       ];
       env.OD_DATA_DIR = toString config.services.open-design.dataDir;
     };
+    timeout = 120000;
   };
 
   # Blender MCP:AI 建模(opencode ↔ blender-mcp server ↔ Blender 内 addon,TCP 9876)
@@ -82,6 +89,23 @@
     local = {
       command = "blender-lab-mcp";
       env.BLENDER_MCP_PORT = "9877";
+    };
+    autoApproveAll = true;
+  };
+
+  # Godot MCP(Coding-Solo,nixpkgs 收编):AI 游戏开发闭环 —— run_project
+  # (-d 调试运行)→ get_debug_output 回流运行时报错 → 修复重跑;场景 CRUD
+  # 走 headless GDScript 桥(每操作独立 spawn godot,无编辑器内 addon/端口,
+  # 与 blender 双套的 TCP 依赖完全不同源,不存在串行纪律)。文档检索由全局
+  # context7 覆盖(godotengine 文档在列),不另设 server —— 对位 blender-lab
+  # 的"写代码前现查权威文档"角色。GODOT_PATH 不设:上游探测顺序 PATH 裸名
+  # godot 排第一,desktop/godot.nix 同 profile 部署即中(彩排夹具除外,
+  # 按名引用避免夹具闭包牵连 1GB 模板,同 blender-mcp 先例)。autoApproveAll
+  # 同 blender 双套理由:上游工具无 readOnlyHint,codex 非交互上下文会逐调用
+  # 审批直接 "user cancelled"。脚手架 game-init 见 desktop/godot.nix
+  "godot-mcp" = {
+    local = {
+      command = "godot-mcp";
     };
     autoApproveAll = true;
   };

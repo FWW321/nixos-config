@@ -26,13 +26,44 @@ let
     openai = "openai-compatible";
     responses = "openai";
   };
+  # zcode 的 OAuth 槽位与目录模型词汇(2026-08-26 实测:v2/config.json 的
+  # builtin:bigmodel-coding-plan.enabled=true + app.asar decodeCustomModelValue):
+  # agent model 引用格式 = custom:<enc(providerId)>:<enc(modelId)>,providerId
+  # 可为 builtin:*;OAuth 目录 id 是大写显示名,与 API 小写 id 不同词
+  oauthZhipu = {
+    slot = "builtin:bigmodel-coding-plan"; # 编程套餐槽(GUI 已启用)
+    modelIds = {
+      "glm-5.3" = "GLM-5.3";
+      "glm-5.3-flash" = "GLM-5.3-Flash";
+      "glm-5-turbo" = "GLM-5-Turbo";
+      "glm-5.2" = "GLM-5.2";
+    };
+  };
+
+  # 中立层 {provider, model} → zcode 引用串:zhipu 走 OAuth builtin 槽位,
+  # 其余供应商走 custom 注入条目(下方 eligible)。未收录的 zhipu 模型
+  # 显式炸在 eval(静默漂移无报错的对账原则,幽灵引用宁可编译期死)
+  toZcodeModel =
+    prov: mid:
+    if prov == "zhipu" then
+      let
+        oid =
+          oauthZhipu.modelIds.${mid}
+            or (throw "zcode agents: ${prov}/${mid} 不在 oauthZhipu.modelIds(OAuth 目录词汇见 v2/config.json)");
+      in
+      "custom:" + lib.strings.escapeURL oauthZhipu.slot + ":" + lib.strings.escapeURL oid
+    else
+      "custom:" + lib.strings.escapeURL "custom:${prov}" + ":${mid}";
+
   # 每供应商选哪个端点键(默认 anthropic,如 minimax 主动缓存端点)
   endpointByProvider = {
     zhipu = "openai"; # coding key 须走 chat completions 消耗编程套餐
   };
 
-  # zhipu 主用 BigModel oauth(编程套餐)不注入;恢复 API-key 模式:
-  # 删掉下面的 zhipu 排除条件,custom:zhipu 条目随下次 switch 自动重建
+  # zhipu 主用 BigModel oauth(编程套餐)不注入 —— OAuth 原生目录已含
+  # GLM-5.3/GLM-5.3-Flash,subagents 的 zhipu 引用由 toZcodeModel 翻译成
+  # builtin 槽位引用,不经 custom:*;恢复 API-key 模式:删掉下面的
+  # zhipu 排除条件,custom:zhipu 条目随下次 switch 自动重建
   # schema 后键恒在:models 未声明 = {},apiKey 未声明 = null
   # (旧 `?` 存在性探测会恒真)
   eligible = lib.filterAttrs (
@@ -102,9 +133,9 @@ in
     inherit providers skills;
     mcp.servers = mcpServers;
 
-    # 识图子 agent:核心定义在 common/subagents.nix(与 zcode 同源);
-    # model 意图 → zcode 引用格式 custom:<urlencoded custom:provider>:<model>
-    # (url 编码实证:custom%3A = "custom:" 的 %3A,勿手拼易错)
+    # 识图子 agent:核心定义在 common/subagents.nix(与 opencode 同源);
+    # model 意图 → zcode 引用格式见 toZcodeModel(zhipu 走 OAuth builtin 槽,
+    # 其余走 custom:<urlencoded>)
     # tools 硬白名单是 zcode 端能力(自定义 tools 连 MCP/技能工具一并禁),
     # 对齐"只读分析者"职责:prompt 约束只是软边界,截图可能携带注入,
     # 不给 Bash/Edit/Write 等可写工具
@@ -113,10 +144,7 @@ in
     # token 成本与注意力噪声(zcode v3.7.1 起默认注入,显式关)
     agents.vision = {
       inherit (common.subagents.vision) description prompt;
-      model =
-        "custom:"
-        + lib.strings.escapeURL "custom:${common.subagents.vision.model.provider}"
-        + ":${common.subagents.vision.model.model}";
+      model = toZcodeModel common.subagents.vision.model.provider common.subagents.vision.model.model;
       injectAgentsMd = false;
       tools = [
         "Read" # 读取图像文件

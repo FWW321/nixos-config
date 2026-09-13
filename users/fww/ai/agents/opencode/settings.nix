@@ -46,7 +46,10 @@ let
         environment = lib.mapAttrs (_: v: if v ? secretFile then "{file:${v.secretFile}}" else v) (
           s.local.env or { }
         );
-      };
+        # 中立侧可选 timeout(ms):v2 里同时是 connectTimeout(缺省 30s)与
+        # 工具调用超时,慢握手 server(od mcp 等)用它防误入 failed 缓存
+      }
+      // (lib.optionalAttrs (s ? timeout) { timeout = s.timeout; });
 in
 {
   # ── opencode 核心(v2 包,nixpkgs 未收录,走 pkgs/opencode2) ──
@@ -62,6 +65,29 @@ in
       # v2 字段兼容保留(暂不启动 LSP,后续版本生效)
       lsp = true;
       snapshots = false;
+
+      # ── 权限:放行 /tmp 外部目录(2026-08-30) ──
+      # v2 permissions 为有序规则数组,last match wins,未匹配默认 ask。
+      # /tmp 在项目 Location 之外 → external_directory 边界默认 ask,agent 每次
+      # 读写 /tmp 都弹审批;底层 read/edit 默认本就 allow,只补边界层这一条。
+      # 全局规则追加于 agent 默认之后,对 build/plan/explore/子 agent 全体生效。
+      # /tmp/* 的 * 含 / 但全值匹配不覆盖 /tmp 自身,故两条;显式外部路径先
+      # canonicalize 再匹配,/tmp 下指向敏感位置的软链会解析回真实路径落回
+      # ask,不被此规则绕过(shell 命令内嵌路径不归本层管,仅 best-effort 警告)。
+      # 注:上游自管临时目录 /tmp/opencode 本就豁免,这里放行的是通用 /tmp;
+      # 生效需 opencode2 service restart(常驻服务启动读一次配置)
+      permissions = [
+        {
+          action = "external_directory";
+          resource = "/tmp";
+          effect = "allow";
+        }
+        {
+          action = "external_directory";
+          resource = "/tmp/*";
+          effect = "allow";
+        }
+      ];
 
       # ── 上下文机制(v2 与 codex 完全不同,2026-08 调研;全部不设吃默认)──
       # 窗口来源:models.dev 目录内置 limit.context(glm-5.3 走 zhipuai-coding-plan
@@ -85,7 +111,33 @@ in
       mcp.servers = lib.mapAttrs toOpenCodeMcp common.mcp;
       # glm-5-5.3 已收录 models.dev 目录,仅注入 apiKey,模型元数据用目录内置值
       # v2:provider→providers,options→settings;{file:...} 密钥语法 v2 保留
-      providers."zhipuai-coding-plan".settings.apiKey = "{file:${p.apiKey.secretFile}}";
+      providers."zhipuai-coding-plan" = {
+        settings.apiKey = "{file:${p.apiKey.secretFile}}";
+        # glm-5.3-flash(2026-08-26 发布)models.dev 目录尚未收录(beta-18286
+        # 当日缓存仍无此条目)→ 本地补模型元数据:/models 可选 + limit.context
+        # 供自动压缩触发(缺省 = context 0,压缩永不触发,长会话静默溢出)。
+        # 字段为 v2 config schema 模型条目的合法闭集(additionalProperties
+        # false);目录收录后本块删除,与 glm-5.3 同策略(仅留 apiKey)
+        models."glm-5.3-flash" = {
+          name = "GLM-5.3-Flash";
+          attachment = true; # 多模态输入开关(对齐目录里 glm-5v-turbo 的标法)
+          reasoning = true; # 思考常开(端点强制,目录里 glm-5.3 同为 true)
+          tool_call = true;
+          modalities = {
+            input = [
+              "text"
+              "image"
+              "video"
+              "pdf"
+            ];
+            output = [ "text" ];
+          };
+          limit = {
+            context = 1000000;
+            output = 131072;
+          };
+        };
+      };
       # MiniMax Token Plan 同理:内置目录 minimax-cn-coding-plan(minimaxi.com 国内
       # 订阅版,勿混国际版 minimax-coding-plan);/model 切换用,默认仍是 glm
       providers."minimax-cn-coding-plan".settings.apiKey =

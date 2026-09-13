@@ -14,15 +14,17 @@
 # 无任何报错,两端各自正常只是行为渐偏 —— 必须同源。
 # codex 不消费本层:主模型自带多模态,无识图委派需求(客户端能力,决策在适配器)。
 {
-  # 识图子 agent:MiniMax M3 原生视觉(GLM 无视觉)
+  # 识图子 agent:glm-5.3-flash 原生多模态(GLM-5 系首个视觉模型,
+  # 2026-08-26 发布;此前 GLM 无视觉由 MiniMax M3 承担),Coding Plan 额度
+  # 是 glm-5.3 的 3 倍,识图属轻任务正合适
   # 消费端:opencode(frontmatter)、zcode(结构化定义)
   # description 注入所有会话含视觉主模型 → 路由指令按调用者能力分叉,
   # 勿写"一律委托"(有视觉的模型会照办绕道,2026-08 实测)
   vision = {
     description = "识图专用视觉 agent:OCR 转录、报错截图诊断、UI 审查与设计稿对比、图表读数、架构图解读。仅当你自身无视觉能力(读不了图)时才委托本 agent;你自己能看图就直接读,勿绕道";
     model = {
-      provider = "minimax";
-      model = "MiniMax-M3";
+      provider = "zhipu";
+      model = "glm-5.3-flash";
     };
     prompt = ''
       你是视觉分析专家。

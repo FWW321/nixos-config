@@ -74,7 +74,7 @@ let
   # minimax MCP 已移除,搜索走 codex 原生 web_search,媒体生成放弃,见 mcp.nix 注释)
   mcpExcluded = [
     "context7" # 远程 HTTP,慢启动受害者(同下)
-    "web-reader" # 智谱端点 npx 桥
+    # "web-reader" # 已在 mcp.nix 注释停用(2026-08)
     # "web-search-prime" # 已在 mcp.nix 注释停用(2026-08)
     # "zread" # 同上
   ];
@@ -223,7 +223,7 @@ in
       # 模型目录从 ChatGPT 后端动态拉取(后端序列:gpt-5.6-sol/terra/luna/5.5/...),
       # 无 env_key 依赖;不设 model_catalog_json(硬替换会屏蔽后端动态目录,
       # picker 只剩静态模型、desktop 模型面板空白,2026-08 实测)
-      model = "gpt-5.6-sol";
+      model = "gpt-6-astra";
       model_provider = "openai";
       # gpt 系 reasoning 最高档是 xhigh
       model_reasoning_effort = "xhigh";

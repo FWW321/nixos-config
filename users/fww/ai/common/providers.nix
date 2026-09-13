@@ -8,52 +8,117 @@
       responses = "https://open.bigmodel.cn/api/v1"; # codex 等(responses API,见 docs.bigmodel.cn/cn/coding-plan/tool/codex)
     };
     apiKey.secretFile = "/run/secrets/zhipu_api_key";
-    models = {
-      "glm-5.3" = {
-        contextWindow = 1000000;
-        maxOutput = 131072;
-        supportsVision = false;
-        # 思考控制(按端点独立;default = 省略参数时端点行为,官方文档+实测):
-        # anthropic(Claude Code 通路): wire = thinking.type=adaptive +
-        #   output_config.effort,实档仅 low/high/max;medium→high、xhigh→max
-        #   官方自动转换不单列;GLM-5.3 强制思考,disabled 被端点转 low(无法真关)
-        #   (2026-08-21 差分实测:low→0 思考块/high 1491 字/max 2333 字)
-        # openai(coding paas): wire = thinking.type=enabled + reasoning_effort
-        #   (官方 API 文档;2026-08-21 mainland 端点差分实测生效:
-        #   low→0 reasoning tokens/max→322,推翻 6 月 z.ai 国际端"无效"
-        #   的 glm-for-copilot#7 结论 —— 那是不同端点且可能已修);
-        #   GLM-5.3 仅 low/high/max(none/minimal 是 5.2 语义),无 off
-        # responses(/api/v1): wire = reasoning.effort(Responses API);
-        #   档位同 openai,来源 = 官方 codex 接入文档(codex.nix 同源消费)
-        thinking = {
-          anthropic = {
-            default = "max";
-            levels = {
-              off = "disabled"; # 端点转 low 轻思考(5.3 不能真关)
-              low = "low";
-              high = "high";
-              max = "max";
+    models =
+      let
+        # glm-5.3 与 glm-5.3-highspeed 共体:Highspeed 是高速档变体(同家族
+        # 另有 glm-5.2-highspeed),能力与 glm-5.3 完全一致 —— 引用同一
+        # attrset,数据永不漂移
+        glm53 = {
+          contextWindow = 1000000;
+          maxOutput = 131072;
+          supportsVision = false;
+          # 思考控制(按端点独立;default = 省略参数时端点行为,官方文档+实测):
+          # anthropic(Claude Code 通路): wire = thinking.type=adaptive +
+          #   output_config.effort,实档仅 low/high/max;medium→high、xhigh→max
+          #   官方自动转换不单列;GLM-5.3 强制思考,disabled 被端点转 low(无法真关)
+          #   (2026-08-21 差分实测:low→0 思考块/high 1491 字/max 2333 字)
+          # openai(coding paas): wire = thinking.type=enabled + reasoning_effort
+          #   (官方 API 文档;2026-08-21 mainland 端点差分实测生效:
+          #   low→0 reasoning tokens/max→322,推翻 6 月 z.ai 国际端"无效"
+          #   的 glm-for-copilot#7 结论 —— 那是不同端点且可能已修);
+          #   GLM-5.3 仅 low/high/max(none/minimal 是 5.2 语义),无 off
+          # responses(/api/v1): wire = reasoning.effort(Responses API);
+          #   档位同 openai,来源 = 官方 codex 接入文档(codex.nix 同源消费)
+          thinking = {
+            anthropic = {
+              default = "max";
+              levels = {
+                off = "disabled"; # 端点转 low 轻思考(5.3 不能真关)
+                low = "low";
+                high = "high";
+                max = "max";
+              };
+            };
+            openai = {
+              default = "max";
+              levels = {
+                low = "low";
+                high = "high";
+                max = "max";
+              };
+            };
+            responses = {
+              default = "max";
+              levels = {
+                low = "low";
+                high = "high";
+                max = "max";
+              };
             };
           };
-          openai = {
-            default = "max";
-            levels = {
-              low = "low";
-              high = "high";
-              max = "max";
+        };
+      in
+      {
+        "glm-5.3" = glm53;
+
+        # GLM-5.3 Highspeed:glm-5.3 的高速档(models.dev 与 opencode2
+        # beta-18684 内置目录均已收录,标 text-only/1M/131072/思考常开
+        # low-high-max,逐字段同 glm-5.3),同端点同套餐;思考 wire 未
+        # 独立实测,沿 5.3 侧结论
+        "glm-5.3-highspeed" = glm53;
+
+        # GLM-5.3-Flash(2026-08-26 发布)≈ 8/20-27 stealth 预览"Ox Alpha"真身
+        # (OpenRouter stealth/ox-alpha / OpenCode Zen x-preview-f-free;tokenizer
+        #  指纹恒 +75 偏移、[1210] 错误码契约、视频编码器三参数、泄露的
+        #  com.wd.paas 堆栈四处证据指向 Z.ai,Z.ai 8/26 向 Bloomberg 确认 GLM 系)
+        # 架构:总参 320B/激活 18B/45 层(对比 glm-4.5:355B/32B/92 层),首个
+        #  稀疏+线性注意力混合架构的开源前沿模型(IndexPool 4 缓存向量压 1
+        #  + mHC);较 glm-5.3 注意力计算量 ↓3.01x、KV 缓存 ↓4.44x;
+        #  国产芯片集群 + EPD 分离式推理(端到端较基线 3x)
+        # 能力:GLM-5 系首个原生多模态(图/视频/文件输入),视觉进 coding 闭环
+        #  (前端/游戏/Blender/CAD 复刻-渲染-检查迭代;BUA/CUA),Office 成品
+        #  交付(PPTX/PDF/DOCX/XLSX 带渲染自检),金融/法律工作流,视频理解剪辑
+        # 套餐:已全量进 Coding Plan,额度 = glm-5.3 的 3 倍(新版积分制,非高峰
+        #  时段仅耗 50% 积分)—— 轻任务/高并发首选,重活仍走 glm-5.3
+        # 官方推荐参数:temperature 1 / top_p 0.95 / reasoning_effort max /
+        #  clear_thinking false / stream+tool_stream 同开
+        "glm-5.3-flash" = {
+          contextWindow = 1000000; # 官方文档:文本参数与 glm-5.3 一致,支持 1M
+          maxOutput = 131072;
+          supportsVision = true;
+          # 思考常开:thinking.type 仅 enabled 不能关(ox 期发 disabled/none 即
+          # [1210] 拒绝);档位仅 low/high/max,同 glm-5.3。
+          # 三端点 wire 与 glm-5.3 同源(同端点设施),anthropic disabled 端点
+          # 转 low 的行为沿 5.3 侧 2026-08-21 实测结论,flash 未独立复测
+          thinking = {
+            anthropic = {
+              default = "max";
+              levels = {
+                off = "disabled"; # 端点转 low 轻思考(flash 同 5.3 不能真关)
+                low = "low";
+                high = "high";
+                max = "max";
+              };
             };
-          };
-          responses = {
-            default = "max";
-            levels = {
-              low = "low";
-              high = "high";
-              max = "max";
+            openai = {
+              default = "max";
+              levels = {
+                low = "low";
+                high = "high";
+                max = "max";
+              };
+            };
+            responses = {
+              default = "max";
+              levels = {
+                low = "low";
+                high = "high";
+                max = "max";
+              };
             };
           };
         };
       };
-    };
     defaultModel = "glm-5.3";
     smallModel = "glm-5.3"; # opencode 标题生成等轻任务用(与 defaultModel 同款,5.2 已下线)
   };

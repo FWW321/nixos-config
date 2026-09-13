@@ -34,6 +34,7 @@
     # dsh 模块经 flake.nix sharedModules 挂载(inputs.nixdsh.homeManagerModules.dsh)
     ./development
     ./docs.nix
+    ./cloud.nix
   ];
   # 常用工具(nh 由系统级 programs.nh 提供 NH_FLAKE,见 modules/nixos/nix.nix)
   home.packages = with pkgs; [
@@ -57,15 +58,5 @@
 
   # Git/Jujutsu 配置迁至 ./vcs/(见上方 imports)
 
-  # SSH 配置(forge host 块迁至 ./vcs/forge.nix,数据驱动与 insteadOf/username 同源)
-  programs.ssh = {
-    enable = true;
-    enableDefaultConfig = false;
-    # 全局兜底:所有 ssh 连接统一用 id_ed25519 一把身份钥(forge 认证/jj 签名/手动连机同源)
-    # 不再为任何用途单独造钥;known_hosts 钉死见 modules/nixos/ssh.nix
-    settings."*" = {
-      identityFile = osConfig.sops.secrets.ssh_key.path;
-      identitiesOnly = true;
-    };
-  };
+  # 云租赁实例(SSH 接入+常驻隧道)迁至 ./cloud.nix;SSH 全局兜底也在彼处统一声明
 }

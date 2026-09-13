@@ -26,6 +26,7 @@ let
 
   # common provider 名 → opencode provider id(内置目录名,settings.nix 同源约定)
   providerId = {
+    zhipu = "zhipuai-coding-plan";
     minimax = "minimax-cn-coding-plan";
   };
 
@@ -56,6 +57,23 @@ let
           action = "*";
           resource = "*";
           effect = "deny";
+        }
+        # /tmp 边界放行(2026-08-31):识图委托的常态是主 agent 把截图丢 /tmp
+        # 再让本 agent 读。external_directory 是独立于 read/glob/grep 的边界
+        # action,上面的 deny-all 会把它一起盖掉(实测 Glob "*.png" in
+        # /tmp/opencode 即被此拦截);settings.nix 全局层的 /tmp 放行也救不了
+        # ——agent 层规则追加在全局层之后,后匹配胜出,必须在同层补例外。
+        # 边界闸门为只读三件共享,无法按工具拆分;但动作层仍无 shell/edit,
+        # 放行边界后 vision 依旧只能读
+        {
+          action = "external_directory";
+          resource = "/tmp";
+          effect = "allow";
+        }
+        {
+          action = "external_directory";
+          resource = "/tmp/*";
+          effect = "allow";
         }
         {
           action = "read";
