@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/pkgs/open-design-dsh-runtime/default.nix
+# filepath: ~/nixos-config/pkgs/open-design-dsh-runtime/package.nix
 # @open-design/dsh-runtime — OpenDesign 的 dsh profile 适配器 bundle
 #
 # 让 OD daemon 能驾驶本机 dsh:JSONL stdio 协议 + 冷恢复桥(dsh 官方
@@ -9,7 +9,8 @@
 # 版本耦合(刻意不走 nixdsh registry 独立版本化):
 #   OD spec 要求 daemon↔runtime 协议代际原子同步(probe frame 校验
 #   protocol generation),src 与 services.open-design 共用同一
-#   inputs.open-design pin —— flake.lock 一把锁,升级 OD 即升级本包。
+#   sources 登记表 pin(上游 #7644 退役 Nix 分发后由登记表供给)——
+#   flake.lock 一把锁,升级 OD 即升级本包。
 #
 # 构建(上游 esbuild.config.ts 的等价 CLI 翻译):
 #   3 入口 bundle,packages=external → dist 运行时 import 依赖包;
@@ -28,7 +29,7 @@
   esbuild,
   fetchurl,
   dshPlugins,
-  odDshRuntimeSrc, # flake.nix inline overlay 注入 = inputs.open-design
+  odDshRuntimeSrc, # pkgs/default.nix callPackage 注入 = sources 登记表 pin
 }:
 
 let
@@ -45,12 +46,14 @@ let
     };
 
   # 依赖版本钉在上游 package.json;hash 钉 npm registry integrity —— 两处
-  # 事实源,上游 bump 依赖时这里 fetchurl 报 hash mismatch(fail-loud)
+  # 事实源,上游 bump 依赖(或 rc 版重发布)时这里 fetchurl 报 hash mismatch
+  # (fail-loud)。dsh-cmdline@0.1.1-rc.2 曾被上游重发(integrity 漂移),以
+  # registry 当前值为准
   dshCmdline = npmTarball {
     url = "https://registry.npmjs.org/@deepseek-ai/dsh-cmdline/-/dsh-cmdline-${
       manifest.dependencies."@deepseek-ai/dsh-cmdline"
     }.tgz";
-    integrity = "sha512-dqRHF+kIlTBwt+fio/34ttp6B7Lrpm31A+EOoEwBuwaziiHTEAWVl50hS53dPFmPyVBRINavBdx7Fa7UT2/2iw==";
+    integrity = "sha512-0/dEVUm7Xy0aBo0DBqC5F3kxC5ahzKcmHOF+Q6E1lBqTwN2xytGYTh0TSfj+6rS31jDqxeIvWxy35bLl83n/Sg==";
   };
   commander = npmTarball {
     url = "https://registry.npmjs.org/commander/-/commander-${manifest.dependencies.commander}.tgz";
@@ -101,10 +104,10 @@ stdenv.mkDerivation {
     dshBundlePatch = manifest.dsh.bundle.patch or null;
   };
 
-  meta = with lib; {
+  meta = {
     description = "OpenDesign profile runtime bundle for DeepSeek Harness (dsh plugin)";
     homepage = "https://github.com/nexu-io/open-design/tree/main/packages/dsh-runtime";
-    license = licenses.asl20;
-    platforms = platforms.unix;
+    license = lib.licenses.asl20;
+    platforms = lib.platforms.unix;
   };
 }

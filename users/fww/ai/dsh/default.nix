@@ -23,7 +23,7 @@
     # 非交互/headless 调用(dsh "task")需要 profile;web/plugin 子命令自动排除
     defaultProfile = "headless";
 
-    # 常驻 Web UI(open-design 同形态):127.0.0.1:3080,开机自启
+    # 常驻 Web UI:127.0.0.1:3080,开机自启
     web = {
       enable = true;
       autoStart = true;

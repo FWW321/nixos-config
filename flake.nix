@@ -80,10 +80,8 @@
       url = "github:FWW321/koharu-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    open-design = {
-      url = "github:nexu-io/open-design";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # OpenDesign 输入已移除(2026-09-03):上游 #7644 退役官方 Nix 分发
+    # (flake/HM 模块/daemon 包全删),本地集成随之整体退场
     # 终端复用器/agent 运行时(2026-08 上游迁官方 org herdrdev,旧 ogulcancelik/
     # 仅为重定向;crates.io 仍指旧名,以 GitHub 为准)
     herdr = {
@@ -165,7 +163,9 @@
                   inputs = inputs';
                 };
                 sharedModules = [
-                  inputs.open-design.homeManagerModules.default
+                  # OpenDesign 瘦身 HM 模块(上游 #7644 退役 Nix 分发后本仓自持;
+                  # option 面与上游逐字兼容,见文件头)
+                  ./modules/home/open-design.nix
                   inputs.nixdsh.homeManagerModules.dsh
                 ];
                 users.fww = import ./users/fww/default.nix;
@@ -177,7 +177,9 @@
     {
       # 全部 overlay 的唯一出口:rust 工具链/cachyos 内核与 Proton/nixdsh/
       # 本仓 by-name 自建包(组装见 overlays/default.nix)
-      overlays.default = import ./overlays { inherit inputs; };
+      # 摊平 inputs'(含 sources 登记表 pins)传给 overlay —— by-name 包侧
+      # 与模块侧同名消费登记表源码树(如 inputs.open-design)
+      overlays.default = import ./overlays { inputs = inputs'; };
 
       # 自建包同时以 packages 暴露(nix build .#opencode2 / nix run 直取),
       # 与 overlay 双出口 —— nixpkgs flake 自身同款做法。
@@ -190,6 +192,8 @@
             # chatgpt(deb 解包)unfree;与 nix.nix 的 nixpkgs.config 同规则
             config.allowUnfree = true;
           };
+          # videoforge 系产物已摘除(2026-09-01 单仓化:环境与权重包定义迁往
+          # ~/code/FWW321/videoforge pkgs/,系统侧 env/CUDA 档退役)
         in
         {
           inherit (pkgs)
@@ -199,8 +203,10 @@
             mdbook-svgbob
             mmx-cli
             opencode2
+            open-design
             open-design-daemon-bsq13
             open-design-dsh-runtime
+            open-design-web
             pdf-inspector
             ;
         };

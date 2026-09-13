@@ -1,4 +1,4 @@
-# filepath: ~/nixos-config/pkgs/open-design-daemon-bsq13/default.nix
+# filepath: ~/nixos-config/pkgs/by-name/op/open-design-daemon-bsq13/package.nix
 # open-design daemon × better-sqlite3 13.x graft
 #
 # 崩溃链:node 24.x ObjectWrap cleanup hooks 回归(nodejs/node#63642/
@@ -8,7 +8,7 @@
 #
 # 13.0.0 起整个重构到 node-addon-api(N-API):不再继承 node::ObjectWrap,
 # 断言链结构性消失;且预编译二进制直接随 npm 包分发(prebuilds/linux-x64.node,
-# N-API ABI 稳定,跨 node 版本可用)——零编译,fetchurl + patchelf rpath 即成。
+# N-API ABI 稳定,跨 node 版本可用)—— 零编译,fetchurl + patchelf rpath 即成。
 #
 # graft 方式:整树复制 daemon 包,替换
 # .pnpm/better-sqlite3@12.10.0/node_modules/better-sqlite3 内容为 13.0.3。
@@ -20,18 +20,16 @@
 # 拆除条件:open-design 把 better-sqlite3 bump 到 ≥13(查法见下)
 #
 # ── 上游修复后的清理清单(3 处,按序)──────────────────────────────
-# 前置确认(nix flake update open-design 后):
-#   grep '"better-sqlite3"' <(nix build .#nixosConfigurations.FWW-Desktop.pkgs.open-design-daemon-bsq13 --no-link --print-out-paths 2>/dev/null | xargs -I{} jq -r .dependencies.better-sqlite3 {}/../apps/daemon/package.json) 2>/dev/null
-#   —— 更简单:直接看上游 https://github.com/nexu-io/open-design/blob/main/apps/daemon/package.json
-#   或 curl -s https://raw.githubusercontent.com/nexu-io/open-design/main/apps/daemon/package.json | jq .dependencies.better-sqlite3
+# 前置确认(nix flake update sources/open-design 后):
+#   curl -s https://raw.githubusercontent.com/nexu-io/open-design/main/apps/daemon/package.json | jq .dependencies.better-sqlite3
 #   版本 ≥13 即可动手;graft 包自带 fail-loud(树上找不到 12.10.0 目录即构建报错,
 #   上游真 bump 后本包会自己炸出来提醒你,不会静默产出坏包)
 #
 #   1. users/fww/ai/open-design.nix:删除文件头「better-sqlite3 13 graft」整段
 #      注释 + let 块(odDaemonFixed)+ services.open-design.package 行(还原默认)
-#   2. flake.nix:删除 overlay 里 open-design-daemon-bsq13 条目(注意保留
-#      同一 overlay 块中的 open-design-dsh-runtime,勿整块删)
-#   3. git rm -r pkgs/open-design-daemon-bsq13/
+#   2. pkgs/default.nix:删除 open-design-daemon-bsq13 条目(注意保留同一
+#      overlay 块中的 open-design / open-design-web / open-design-dsh-runtime)
+#   3. git rm -r pkgs/by-name/op/open-design-daemon-bsq13/
 #   然后 nh os switch . 验证:journalctl --user -u open-design 无断言崩溃,
 #   OD UI 本地 Agent 扫描正常。
 #
@@ -42,7 +40,7 @@
   stdenv,
   patchelf,
   fetchurl,
-  daemonPkg, # flake.nix inline overlay 注入 = inputs.open-design daemon
+  daemonPkg, # pkgs/default.nix callPackage 注入 = 本仓 open-design 包(vendor 版)
 }:
 
 let
@@ -64,13 +62,13 @@ stdenv.mkDerivation {
     cp -a --reflink=auto ${daemonPkg}/. "$out"
     chmod -R u+w "$out"
 
-    # 复制来的 bin/od wrapper exec 原包路径的 cli.js,会把 graft 旁路掉
-    # ——所有原包引用重定向到本包
-    if [ -f "$out/bin/od" ]; then
-      substituteInPlace "$out/bin/od" \
+    # 复制来的 bin/open-design wrapper exec 原包路径的 cli.js,会把 graft
+    # 旁路掉 ——所有原包引用重定向到本包
+    if [ -f "$out/bin/open-design" ]; then
+      substituteInPlace "$out/bin/open-design" \
         --replace-fail "${daemonPkg}" "$out"
     else
-      echo "bsq13 graft: bin/od not found in daemon package" >&2
+      echo "bsq13 graft: bin/open-design not found in daemon package" >&2
       exit 1
     fi
 
@@ -91,17 +89,14 @@ stdenv.mkDerivation {
     patchelf --set-rpath "${stdenv.cc.cc.lib}/lib" "$_bsq/prebuilds/linux-x64.node" \
       || { echo "bsq13 graft: patchelf failed on linux-x64.node" >&2; exit 1; }
 
-    # dsh 版本白名单扩容:上游钉 0.1.0-rc.6,本机 dsh 为 rc.8(nixdsh)。探测/
-    # 模型/stdio 协议实测兼容(probe protocol v1 通过,peers 已按 rc.8 宿主回链),
-    # 白名单仅是版本诊断的比对源,扩容消掉 UI 的"不支持的版本"警告
-    substituteInPlace "$out/lib/open-design/apps/daemon/dist/runtimes/defs/deepseek-harness.js" \
-      --replace-fail "supportedVersions: ['0.1.0-rc.6']" "supportedVersions: ['0.1.0-rc.6', '0.1.0-rc.8']"
+    # 注:v0.21.1 起 dist 内 dsh 白名单已是 rc.8(与本机 nixdsh 一致),
+    # 旧版"supportedVersions 扩容"substituteInPlace 已移除
   '';
 
   meta = {
-    # HM 模块 ExecStart/MCP 派生经 lib.getExe 取 bin/od(二进制名与包名
-    # 不一致,必须显式声明,否则走弃用的同名假设并告警)
-    mainProgram = "od";
+    # HM 模块 ExecStart/MCP 派生经 lib.getExe 取 bin/open-design(二进制名
+    # 与包名不一致,必须显式声明,否则走弃用的同名假设并告警)
+    mainProgram = "open-design";
     description = "open-design daemon with better-sqlite3 13.x grafted (nodejs#63642 crash fix)";
     platforms = lib.platforms.unix;
   };

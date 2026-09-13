@@ -52,6 +52,16 @@
       url = "git+https://github.com/motiondivision/ai-kit.git";
       flake = false;
     }; # motion skill (→ skills-project.nix)
+    # OpenDesign 纯源码钉(上游 #7644 于 2026-08-31 退役官方 Nix 分发:flake/
+    # nix 树/HM 模块全删,本仓 vendor 其 nix/ 树自持,见 pkgs/by-name/op/
+    # open-design/)。tag 命名带前缀 open-design-vX.Y.Z;daemon/web/
+    # dsh-runtime 三消费方共用此 pin —— 协议代际原子性 by construction;
+    # 更新 = nix flake update sources/open-design + 包目录 update.sh
+    open-design = {
+      url = "github:nexu-io/open-design/open-design-v0.21.1";
+      flake = false;
+    }; # OD daemon/web/dsh-runtime (→ pkgs/by-name/op/*)
+
     # 工具/编辑器
     multicursor-nvim = {
       url = "github:jake-stewart/multicursor.nvim";

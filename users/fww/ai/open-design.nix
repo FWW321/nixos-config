@@ -1,8 +1,14 @@
 # filepath: ~/nixos-config/users/fww/ai/open-design.nix
 # Open Design — 本地优先的开源 Claude Design 替代品
 #
-# 通过 Home Manager 模块运行：daemon（od CLI，:7457）+ 内置 Caddy 提供 Web SPA（:5174）。
-# 数据落在 ~/.od/。daemon 自动扫描 PATH 发现 agent CLI（opencode 等）。
+# 通过 Home Manager 模块运行：daemon（open-design CLI，:7457）+ 内置 Caddy 提供 Web SPA（:5174）。
+# 数据落在 ~/.od/。daemon 自动扫描 PATH 发现 agent CLI（opencode2/dsh 等）。
+#
+# ── 分发形态(2026-09-04 起)──────────────────────────────────────
+# 上游 #7644(2026-08-31)退役官方 Nix 分发:flake/HM 模块/包全删。
+# 本仓自持:sources 登记表钉源码 tag,pkgs/by-name/op/open-design/ vendor
+# 上游 nix/ 树,modules/home/open-design.nix 为瘦身 HM 模块。更新走
+# `nix flake update sources/open-design` + 包目录 update.sh。
 #
 # ── better-sqlite3 13 graft(崩溃根治,第二版补丁)──────────────────────
 # nodejs 24.x ObjectWrap cleanup hooks 回归(#63642/#63923,修复 #63985 未
@@ -13,11 +19,11 @@
 # 零编译)——node 版本无关,跟随主 nixpkgs。
 #
 # 拆除条件:open-design lockfile bump 到 better-sqlite3 ≥13
-# 届时删除本 let 块 + package 行 + flake.nix 的 overlay 行 + 包目录。
+# 届时按 bsq13 包内清单拆除(删本 let 块 + package 行 + overlay 行 + 包目录)。
 #
-# 密钥说明：OD 不直接调 LLM，而是 spawn PATH 里的 agent CLI（你的 opencode）
+# 密钥说明：OD 不直接调 LLM，而是 spawn PATH 里的 agent CLI（你的 opencode2）
 # 来跑设计任务，模型 key 由 opencode 自己的配置负责 —— 默认无需在 OD 填任何 key。
-# 媒体调度器（/api/tools/media/generate，od media generate）走四层注入：
+# 媒体调度器（/api/tools/media/generate，open-design media generate）走四层注入：
 #   1. OD_MINIMAX_API_KEY     — sops 模板（environmentFile），key 不落盘
 #   2. OD_MINIMAX_IMAGE_BASE_URL — extraEnv；image 渲染器只认此 env，
 #      刻意忽略 credentials.baseUrl（见 daemon media/index.js 注释）。
@@ -37,13 +43,12 @@
   osConfig,
   pkgs,
   lib,
-  inputs,
   ...
 }:
 
 let
-  # better-sqlite3 13 graft 包(flake.nix inline overlay 提供;
-  # daemon 源与 dsh-runtime 同一 inputs.open-design pin)
+  # better-sqlite3 13 graft 包(pkgs/default.nix callPackage 提供;
+  # daemon 源与 dsh-runtime 同一 sources 登记表 pin)
   odDaemonFixed = pkgs.open-design-daemon-bsq13;
 in
 {
@@ -58,6 +63,11 @@ in
     webFrontend.enable = true; # 起内置 Caddy，提供同源 SPA + /api 反代
     environmentFile = osConfig.sops.templates.open-design-env.path;
     extraEnv = {
+      # 看门狗放宽(默认 600s):GLM-5.3-flash 在 ~25 万 token 上下文上单次
+      # 模型调用实测 ~8 分钟(冷前缀预填充),贴着默认红线会误杀健康 run
+      # (2026-09-04 排障实证:服务侧 succeeded、daemon 侧超时击杀)。
+      # 30 分钟 ≈ 3.75× 实测最差间隔;daemon 侧硬上限 24h 会自行钳制
+      OD_CHAT_RUN_INACTIVITY_TIMEOUT_MS = "1800000";
       # dsh profile 探测前置检查(OD daemon hasOpenDesignProfile)读进程 env 的
       # DSH_HOME,缺省回退 ~/.dsh(与 nixdsh 物化位置不一致→误判"profile 缺失"
       # →弹"安装连接组件"窗)。

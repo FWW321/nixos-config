@@ -1,0 +1,407 @@
+--- a/apps/daemon/src/connectionTest.ts
++++ b/apps/daemon/src/connectionTest.ts
+@@ -98,6 +98,7 @@
+   BYOK_OPENCODE_PROVIDER_ID,
+   buildOpenCodeByokProviderConfig,
+ } from './runtimes/byok-opencode.js';
++import { resolveOpenCodeConnectionApprovalFlag } from './runtimes/opencode-permissions.js';
+ 
+ export { validateBaseUrl } from '@open-design/contracts/api/connectionTest';
+ 
+@@ -2087,7 +2088,7 @@
+ }
+ 
+ const OPENCODE_OUTDATED_CLI_DETAIL =
+-  'OpenCode CLI appears to be outdated or incompatible with this connection test. Update it with `npm i -g opencode-ai@latest`, then retry the OpenCode connection test.';
++  'OpenCode CLI appears to be outdated or incompatible with this connection test. Update it with to the latest `opencode2` release, then retry the OpenCode connection test.';
+ const OPENCODE_PROVIDER_CONNECTIVITY_DETAIL_MAX_LENGTH = 240;
+ 
+ function openCodeOutdatedCliDetail(output: string): string | null {
+@@ -2592,11 +2593,17 @@
+             : {}),
+         },
+       );
+-      // Connection tests should validate the adapter's core CLI path, not
+-      // fail on unrelated user-installed OpenCode plugins. `opencode run
+-      // --pure` keeps the smoke test isolated while regular chat runs retain
+-      // the user's full plugin environment.
+-      if ((input.agentId === 'opencode' || input.agentId === 'mimo') && !args.includes('--pure')) {
++      // Preserve plugin-isolated smoke tests on legacy OpenCode while using
++      // the current non-interactive approval path on opencode2.
++      if (input.agentId === 'opencode') {
++        const approvalFlag = resolveOpenCodeConnectionApprovalFlag(
++          input.agentId,
++          executableResolution.launchPath,
++        );
++        if (approvalFlag && !args.includes(approvalFlag)) {
++          args.push(approvalFlag);
++        }
++      } else if (input.agentId === 'mimo' && !args.includes('--pure')) {
+         args.push('--pure');
+       }
+       if ((input.agentId === 'opencode' || input.agentId === 'mimo') && !args.includes('--title')) {
+--- a/apps/daemon/src/runtimes/defs/byok-opencode.ts
++++ b/apps/daemon/src/runtimes/defs/byok-opencode.ts
+@@ -2,6 +2,7 @@
+ import {
+   OPENCODE_PERMISSION_CAPABILITY,
+   appendOpenCodePermissionBypass,
++  appendOpenCodeWorkspaceDir,
+ } from '../opencode-permissions.js';
+ import { DEFAULT_MODEL_OPTION } from './shared.js';
+ import type { RuntimeAgentDef } from '../types.js';
+@@ -9,22 +10,17 @@
+ export const byokOpenCodeAgentDef = {
+   id: 'byok-opencode',
+   name: 'BYOK OpenCode',
+-  bin: 'opencode-cli',
+-  fallbackBins: ['opencode'],
++  bin: 'opencode2',
++  fallbackBins: ['opencode-cli', 'opencode'],
+   versionArgs: ['--version'],
+   ...OPENCODE_PERMISSION_CAPABILITY,
+   fallbackModels: [DEFAULT_MODEL_OPTION],
+   buildArgs: (_prompt, _imagePaths, _extra, options = {}, runtimeContext = {}) => {
+-    const args = ['run', '--format', 'json'];
+-    if (typeof runtimeContext.cwd === 'string' && runtimeContext.cwd.length > 0) {
+-      // OpenCode promotes nested directories to the enclosing Git worktree
+-      // unless its own directory flag is explicit. Managed OpenDesign
+-      // projects live under the development repository in local runs, so
+-      // relying on spawn({ cwd }) alone can make Write/Edit target the repo
+-      // root instead of the selected project.
+-      args.push('--dir', runtimeContext.cwd);
+-    }
++    // 同 opencode def:--standalone 内联私有服务,规避后台服务事件订阅在长回合
++    // 中静默掉线(详见 opencode def 注释)
++    const args = ['run', '--standalone', '--format', 'json'];
+     appendOpenCodePermissionBypass(args, 'byok-opencode');
++    appendOpenCodeWorkspaceDir(args, 'byok-opencode', runtimeContext);
+     const model = opencodeByokModelId(options.model);
+     if (model) args.push('-m', model);
+     return args;
+--- a/apps/daemon/src/runtimes/defs/opencode.ts
++++ b/apps/daemon/src/runtimes/defs/opencode.ts
+@@ -100,7 +100,7 @@
+   modelId: string | null | undefined,
+   variant: string | null | undefined,
+ ): variant is string {
+-  if (!modelId || modelId === 'default' || !variant || variant === 'default') return false;
++  if (!modelId || !variant || variant === 'default') return false;
+   const live = getRememberedLiveModels('opencode').find((model) => model.id === modelId);
+   return Boolean(live?.reasoningOptions?.some((option) => option.id === variant));
+ }
+@@ -108,18 +108,21 @@
+ export const opencodeAgentDef = {
+     id: 'opencode',
+     name: 'OpenCode',
+-    bin: 'opencode-cli',
+-    fallbackBins: ['opencode'],
++    // opencode2 (OpenCode v2) first: distinct binary name from v1, and this
++    // tree's buildArgs/permission surface targets the v2 CLI. v1 names stay
++    // as fallbacks so a mixed machine still detects something.
++    bin: 'opencode2',
++    fallbackBins: ['opencode-cli', 'opencode'],
+     versionArgs: ['--version'],
+     ...OPENCODE_PERMISSION_CAPABILITY,
+-    // `opencode models` prints `provider/model` per line. Real-world
+-    // `opencode models` calls can take >8s (network round-trip to the
+-    // provider registry), so the previous 8s budget timed out and fell back
+-    // to the hardcoded `fallbackModels`, hiding the user's actual catalog.
+-    // 15s matches the listModels budget the rest of the agent defs use
+-    // (devin, hermes, kiro, kilo, kimi, trae-cli, vibe, reasonix).
++    // v2 has no `--verbose` on `models` — unknown flags make the CLI print
++    // its help text and exit without a parsable model list. v2 emits plain
++    // one-id-per-line output, which parseOpenCodeModels already accepts via
++    // its compatibility fallback path. Reasoning variants are therefore
++    // absent from the catalog until v2 grows a metadata mode; the fallback
++    // list below covers a catalog outage.
+     listModels: {
+-      args: ['models', '--verbose'],
++      args: ['models'],
+       parse: parseOpenCodeModels,
+       timeoutMs: 15_000,
+     },
+@@ -136,19 +139,29 @@
+     // structured stream. A literal `-` is parsed as a positional message by
+     // OpenCode 1.14.x and can surface as "Session not found".
+     buildArgs: (_prompt, _imagePaths, _extra, options = {}, runtimeContext = {}) => {
++      // `--standalone` pins a private in-process server: the cross-process
++      // event subscription against the user's background service silently
++      // drops mid-turn on long multi-step runs (relay stops forwarding while
++      // the service keeps working; the CLI then waits forever and the
++      // daemon's inactivity watchdog kills a healthy run). In-process relay
++      // cannot desync, and the process exits when the turn ends — no zombie
++      // waits. Sessions are therefore per-turn only; see the resume flags
++      // below.
+       const args = [
+         'run',
++        '--standalone',
+         '--format',
+         'json',
+       ];
+       appendOpenCodePermissionBypass(args, 'opencode');
+-      appendOpenCodeWorkspaceDir(args, runtimeContext.cwd);
++      appendOpenCodeWorkspaceDir(args, 'opencode', runtimeContext);
+       // Capture-style resume: OpenCode mints its own session id (reported on
+       // the stream as `sessionID`, e.g. `ses_...`). On a follow-up turn the
+-      // daemon continues that session with `-s <id>` instead of re-sending the
+-      // flattened transcript, so the first upstream call reuses the warm prefix
+-      // cache. `-s` continues an EXISTING session (the create turn passes no id
+-      // and we capture the one OpenCode generated), mirroring codex.
++      // daemon continues that session with `-s <id>` instead of re-sending
++      // the flattened transcript, so the first upstream call reuses the warm
++      // prefix cache. `-s` continues an EXISTING session (the create turn
++      // passes no id and we capture the one OpenCode generated), mirroring
++      // codex.
+       const resumeSessionId =
+         typeof runtimeContext.resumeSessionId === 'string' &&
+         runtimeContext.resumeSessionId.length > 0
+@@ -158,20 +171,25 @@
+         args.push('-s', resumeSessionId);
+       }
+       if (options.model && options.model !== 'default') {
+-        args.push('-m', options.model);
+-      }
+-      if (supportsOpenCodeVariant(options.model, options.reasoning)) {
+-        args.push('--variant', options.reasoning);
++        // v2 folds the variant into the model id (`provider/model#variant`);
++        // the v1 `--variant` flag no longer exists. Absent/unknown variant
++        // falls back to the bare id and v2 picks the provider's default
++        // variant.
++        const variant = supportsOpenCodeVariant(options.model, options.reasoning)
++          ? `#${options.reasoning}`
++          : '';
++        args.push('-m', `${options.model}${variant}`);
+       }
+       return args;
+     },
+     promptViaStdin: true,
+-    // OpenCode's CLI carries its own session across spawns: on a follow-up turn
+-    // the daemon resumes the captured session id (`-s <id>`) instead of
+-    // re-flattening the transcript. Capture-style — the resume handle is the
+-    // `sessionID` captured from the stream, not a daemon-minted id.
+-    resumesSessionViaCli: true,
+-    capturesSessionIdFromStream: true,
++    // Session capture/resume is DISABLED under `--standalone`: the private
++    // server dies with the CLI process, so a captured id is dead on the next
++    // turn and `run -s <dead-id>` fails with "Session not found". The daemon
++    // falls back to re-sending the flattened transcript each turn — correct,
++    // at the cost of losing the warm prefix cache across turns.
++    resumesSessionViaCli: false,
++    capturesSessionIdFromStream: false,
+     streamFormat: 'json-event-stream',
+     eventParser: 'opencode',
+     // OpenCode reads MCP servers from its layered config (global ~/.config
+@@ -179,6 +197,6 @@
+     // + OPENCODE_CONFIG_CONTENT). The env-var form lets the daemon hand
+     // user-configured external MCP servers to a single `opencode run`
+     // invocation without polluting the user's saved config files. See
+-    // <https://opencode.ai/docs/config> and issue #2142.
++    // <https://opencode.ai/v2/docs/config> and issue #2142.
+     externalMcpInjection: 'opencode-env-content',
+ } satisfies RuntimeAgentDef;
+--- a/apps/daemon/src/runtimes/executables.ts
++++ b/apps/daemon/src/runtimes/executables.ts
+@@ -242,7 +242,7 @@
+       if (bundled) return bundled;
+     }
+   }
+-  return resolveOnPath('opencode-cli') ?? resolveOnPath('opencode');
++  return resolveOnPath('opencode2') ?? resolveOnPath('opencode-cli') ?? resolveOnPath('opencode');
+ }
+ 
+ // `tools/pack/tests/resources.test.ts` ships the AMR OpenCode companion as a
+--- a/apps/daemon/src/runtimes/json-event-stream.ts
++++ b/apps/daemon/src/runtimes/json-event-stream.ts
+@@ -181,7 +181,10 @@
+   if (status !== 'completed' && status !== 'error' && status !== 'failed') return null;
+ 
+   const metadata = isRecord(statePart.metadata) ? statePart.metadata : {};
+-  const exitCodes = [statePart.exit, statePart.exitCode, metadata.exit];
++  // v2 nests the shell exit status one level deeper (state.metadata.metadata.exit);
++  // keep the legacy positions and add the v2 one.
++  const nestedMetadata = isRecord(metadata.metadata) ? metadata.metadata : {};
++  const exitCodes = [statePart.exit, statePart.exitCode, metadata.exit, nestedMetadata.exit];
+   const hasNonZeroExit = exitCodes.some(
+     (exitCode) => typeof exitCode === 'number' && Number.isFinite(exitCode) && exitCode !== 0,
+   );
+@@ -224,14 +227,23 @@
+     return true;
+   }
+ 
+-  if (obj.type === 'tool_use' && typeof part.tool === 'string' && typeof part.callID === 'string') {
++  // v2 renamed the tool-call id field from `callID` to `id` (the part's own
++  // handle moved to `partID`). Accept both: legacy frames keep `callID`,
++  // v2 frames carry `id` shaped like `call_<hex>`.
++  const callId =
++    typeof part.callID === 'string' && part.callID.length > 0
++      ? part.callID
++      : typeof part.id === 'string' && part.id.length > 0
++        ? part.id
++        : null;
++  if (obj.type === 'tool_use' && typeof part.tool === 'string' && callId !== null) {
+     const statePart = isRecord(part.state) ? part.state : null;
+-    const key = `${obj.sessionID || 'session'}:${part.callID}`;
++    const key = `${obj.sessionID || 'session'}:${callId}`;
+     if (!state.openCodeToolUses.has(key)) {
+       state.openCodeToolUses.add(key);
+       onEvent({
+         type: 'tool_use',
+-        id: part.callID,
++        id: callId,
+         name: part.tool,
+         input: safeParseJson(statePart?.input) ?? statePart?.input ?? null,
+       });
+@@ -241,7 +253,7 @@
+       state.openCodeToolResults.add(key);
+       onEvent({
+         type: 'tool_result',
+-        toolUseId: part.callID,
++        toolUseId: callId,
+         content: result.content,
+         isError: result.isError,
+       });
+--- a/apps/daemon/src/runtimes/metadata.ts
++++ b/apps/daemon/src/runtimes/metadata.ts
+@@ -24,8 +24,8 @@
+     docsUrl: 'https://docs.devin.ai',
+   },
+   opencode: {
+-    installUrl: 'https://opencode.ai/docs',
+-    docsUrl: 'https://github.com/sst/opencode',
++    installUrl: 'https://opencode.ai/v2/docs/',
++    docsUrl: 'https://opencode.ai/v2/docs/',
+   },
+   hermes: {
+     installUrl: 'https://github.com/nexu-io/open-design/blob/main/docs/agent-adapters.md',
+--- a/apps/daemon/src/runtimes/opencode-permissions.ts
++++ b/apps/daemon/src/runtimes/opencode-permissions.ts
+@@ -1,47 +1,110 @@
++import path from 'node:path';
+ import { agentCapabilities } from './capabilities.js';
+-import type { RuntimeAgentDef } from './types.js';
++import type { RuntimeAgentDef, RuntimeContext } from './types.js';
+ 
+ export const OPENCODE_SKIP_PERMISSIONS_FLAG = '--dangerously-skip-permissions';
+ export const OPENCODE_WORKSPACE_DIR_FLAG = '--dir';
++export const OPENCODE_AUTO_APPROVE_FLAG = '--auto';
++export const OPENCODE_PURE_FLAG = '--pure';
+ 
+ export const OPENCODE_PERMISSION_CAPABILITY = {
+   helpArgs: ['run', '--help'],
+   capabilityFlags: {
+     [OPENCODE_SKIP_PERMISSIONS_FLAG]: 'skipPermissions',
++    [OPENCODE_WORKSPACE_DIR_FLAG]: 'workspaceDir',
++    [OPENCODE_AUTO_APPROVE_FLAG]: 'autoApprove',
++    [OPENCODE_PURE_FLAG]: 'pureMode',
+   },
+ } satisfies Pick<RuntimeAgentDef, 'helpArgs' | 'capabilityFlags'>;
+ 
+ export function appendOpenCodePermissionBypass(args: string[], agentId: string): void {
+-  if (agentCapabilities.get(agentId)?.skipPermissions) {
++  const caps = agentCapabilities.get(agentId);
++  if (caps?.skipPermissions) {
+     args.push(OPENCODE_SKIP_PERMISSIONS_FLAG);
++    return;
+   }
++  if (caps?.autoApprove) {
++    args.push(OPENCODE_AUTO_APPROVE_FLAG);
++    return;
++  }
++  if (caps?.pureMode) {
++    args.push(OPENCODE_PURE_FLAG);
++    return;
++  }
++  // No capability probe has run yet (before the first connection test).
++  // Default to the v2 flag: this tree drives opencode2 first and v2's
++  // `run --help` advertises `--auto`. Once a probe populates
++  // agentCapabilities, the branches above take over.
++  args.push(OPENCODE_AUTO_APPROVE_FLAG);
+ }
+ 
+ /**
+  * Pin OpenCode's workspace to the resolved project directory.
+  *
+- * OpenCode does not treat its process cwd as the project: it walks up to the
+- * nearest enclosing git root and adopts THAT as the worktree (verified with
+- * `opencode debug scrap`, whose every registered project is a git root). A
+- * managed project directory is not a git repository, and a development install
+- * keeps the daemon data directory under the repository root — so OpenCode walks
+- * past the project and adopts the whole Open Design checkout.
++ * Legacy OpenCode does not treat its process cwd as the project: it walks up
++ * to the nearest enclosing git root and adopts THAT as the worktree (verified
++ * with `opencode debug scrap`, whose every registered project is a git root).
++ * A managed project directory is not a git repository, and a development
++ * install keeps the daemon data directory under the repository root — so
++ * OpenCode walks past the project and adopts the whole Open Design checkout.
+  *
+  * The consequences are all silent: the agent names the repository root as its
+  * workspace and writes the deliverable there, the project directory stays
+- * empty, `snapshotProjectArtifactsAsync(cwd)` sees nothing, and the Run reports
+- * `no_artifact`. `permission.external_directory` cannot catch it either — once
+- * the repository is the worktree, writing inside it is an in-project write.
++ * empty, `snapshotProjectArtifactsAsync(cwd)` sees nothing, and the Run
++ * reports `no_artifact`. `permission.external_directory` cannot catch it
++ * either — once the repository is the worktree, writing inside it is an
++ * in-project write.
+  *
+- * Sent unconditionally, matching the BYOK OpenCode definition that already
+- * carried this workaround. Gating it on the `--help` capability probe would
+- * turn a missing flag back into the silent data-loss bug; an OpenCode build
+- * without `--dir` should fail loudly at spawn instead.
++ * opencode2 has no `--dir` flag on `run` (verified against beta builds) and
++ * treats the spawn cwd as the project root, so the flag is only sent when a
++ * capability probe proves the installed CLI advertises it. Skipping the flag
++ * on an unknown probe outcome is the v2-correct default; a legacy binary
++ * regains the pinned flag after its first connection test.
+  */
+ export function appendOpenCodeWorkspaceDir(
+   args: string[],
+-  cwd: string | null | undefined,
++  agentId: string,
++  runtimeContext: RuntimeContext = {},
+ ): void {
+-  if (typeof cwd !== 'string' || cwd.length === 0) return;
+-  args.push(OPENCODE_WORKSPACE_DIR_FLAG, cwd);
++  const cwd =
++    typeof runtimeContext.cwd === 'string' && runtimeContext.cwd.length > 0
++      ? runtimeContext.cwd
++      : null;
++  if (!cwd) return;
++  const caps = agentCapabilities.get(agentId);
++  if (caps?.workspaceDir) {
++    args.push(OPENCODE_WORKSPACE_DIR_FLAG, cwd);
++    return;
++  }
++  if (caps && caps.workspaceDir === false) {
++    return;
++  }
++}
++
++type OpenCodeExecutableFamily = 'opencode2' | 'legacy' | 'unknown';
++
++function openCodeExecutableFamily(executablePath?: string | null): OpenCodeExecutableFamily {
++  if (!executablePath) return 'unknown';
++  const ext = path.extname(executablePath);
++  const base = path.basename(executablePath, ext).toLowerCase();
++  if (base === 'opencode2') return 'opencode2';
++  if (base === 'opencode' || base === 'opencode-cli') return 'legacy';
++  return 'unknown';
++}
++
++export function resolveOpenCodeConnectionApprovalFlag(
++  agentId: string,
++  executablePath?: string | null,
++): string | null {
++  const caps = agentCapabilities.get(agentId);
++  if (caps?.pureMode) return OPENCODE_PURE_FLAG;
++  if (caps?.autoApprove) return OPENCODE_AUTO_APPROVE_FLAG;
++  switch (openCodeExecutableFamily(executablePath)) {
++    case 'legacy':
++      return OPENCODE_PURE_FLAG;
++    case 'opencode2':
++      return OPENCODE_AUTO_APPROVE_FLAG;
++    default:
++      return null;
++  }
+ }
