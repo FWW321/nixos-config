@@ -8,7 +8,6 @@
     ./agents/zcode
     ./agents/codex.nix
     ./open-design.nix
-    ./dsh
     ./cli.nix
     ./koharu.nix
     # ComfyUI 本地栈已移除(2026-08-25):H3 生成迁 AutoDL RTX PRO 6000 96G 实例,

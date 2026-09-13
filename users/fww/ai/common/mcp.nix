@@ -30,8 +30,7 @@
   # 本条按量计费,且 codex 侧因 bunx 冷启动排除(恢复时须同步改 codex.nix
   # mcpExcluded,加入 "zai-mcp-server")
   # - 唯一独占 analyze_video(≤8MB)随之退役:M3 视频输入未实测,需要时取消注释
-  # - dsh 无 subagent 机制,识图回落 mmx vision describe;
-  #   zhipu_api_key 原服务下方 web-search-prime/web-reader/zread,三者均已停用(2026-08)
+  # - zhipu_api_key 原服务下方 web-search-prime/web-reader/zread,三者均已停用(2026-08)
   #
   # "zai-mcp-server" = {
   #   local = {

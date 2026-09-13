@@ -4,9 +4,9 @@
 # 官方 Nix 分发后自持;原文见 tag)。
 #
 # 瘦身边界:Linux-only(砍 launchd/NixOS 变体/autoStart 断言/文档字符串),
-# 但 option 名逐字保留 —— 三个消费方(users/fww/ai/open-design.nix、
-# dsh/profiles.nix、common/mcp-project.nix)对 services.open-design.* 的
-# 派生引用是硬契约,改名即断;上游模块新增 option 时按需抄名。
+# 但 option 名逐字保留 —— 消费方(users/fww/ai/open-design.nix、
+# common/mcp-project.nix)对 services.open-design.* 的派生引用是硬契约,
+# 改名即断;上游模块新增 option 时按需抄名。
 #
 # 架构:daemon(open-design CLI,:7457,JSON API)+ 可选 caddy(:5174,静态 SPA +
 # /api、/artifacts、/frames 三段反代,SSE 安全)。数据落 dataDir(SQLite +

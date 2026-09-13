@@ -2,7 +2,7 @@
 # Koharu — ML 漫画翻译桌面应用(Tauri + CEF,本地推理)
 #
 # 包与 HM 模块在独立仓库 koharu-nix(github:FWW321/koharu-nix,
-# 同 nixdsh/zcode-nix 模式):flake input overlay 提供 pkgs.koharu,
+# 同 zcode-nix 模式):flake input overlay 提供 pkgs.koharu,
 # 此处只挂模块 + 声明个人配置。模块语义(settings 对账/cacheDir/
 # apiKeys keyutils 注入/卸载回收)见 koharu-nix/modules/koharu.nix 头注释。
 #

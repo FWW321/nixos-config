@@ -17,9 +17,7 @@ lib.foldl' lib.composeExtensions (_: _: { }) [
   inputs.proton-cachyos-nix.overlays.default
 
   # 独立仓库包集
-  # dsh:插件系统消费 pkgs.dshPlugins 命名空间,overlay 是承重接口
   # (zcode/koharu 不在此:包经各自 homeManagerModules 自带,不走 overlay)
-  inputs.nixdsh.overlays.default
 
   # 本仓自建包(by-name 布局)
   (import ../pkgs { inherit inputs; })

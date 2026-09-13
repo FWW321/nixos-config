@@ -64,11 +64,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # ── AI agent 工具 ──
-    # dsh 打包 + nixvim 式声明配置(独立仓库)
-    nixdsh = {
-      url = "github:FWW321/nixdsh";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     # ZCode(智谱 GLM ADE)打包 + programs.zcode HM 模块(独立仓库)
     zcode-nix = {
       url = "github:FWW321/zcode-nix";
@@ -165,7 +160,6 @@
                   # OpenDesign 瘦身 HM 模块(上游 #7644 退役 Nix 分发后本仓自持;
                   # option 面与上游逐字兼容,见文件头)
                   ./modules/home/open-design.nix
-                  inputs.nixdsh.homeManagerModules.dsh
                 ];
                 users.fww = import ./users/fww/default.nix;
               };
@@ -205,7 +199,6 @@
             opencode2
             open-design
             open-design-daemon-bsq13
-            open-design-dsh-runtime
             open-design-web
             pdf-inspector
             ;
@@ -259,11 +252,7 @@
           '';
         };
 
-      # dsh 的 checks/updater 已随 pkgs/dsh 迁至独立仓库 nixdsh
-      # (nix flake check github:FWW321/nixdsh / nix run …#dsh-plugins-update)
-
-      # 中立 provider 层 schema 守护(动机/断言见 providers-schema-check.nix;
-      # 与 nixdsh 的 checks 同一验证入口)
+      # 中立 provider 层 schema 守护(动机/断言见 providers-schema-check.nix)
       checks.x86_64-linux.providers-schema =
         import ./users/fww/ai/common/providers-schema-check.nix checkPkgs
           nixpkgs.lib;

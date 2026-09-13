@@ -1,5 +1,5 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/opencode/default.nix
-# opencode agent — 目录聚合(dsh 同构拆分)
+# opencode agent — 目录聚合
 #
 # 原 agents/opencode.nix 单文件拆为:
 #   settings.nix  — programs.opencode 核心(model/provider/mcp/websearch)

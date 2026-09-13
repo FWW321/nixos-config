@@ -28,13 +28,13 @@
 #   1. users/fww/ai/open-design.nix:删除文件头「better-sqlite3 13 graft」整段
 #      注释 + let 块(odDaemonFixed)+ services.open-design.package 行(还原默认)
 #   2. pkgs/default.nix:删除 open-design-daemon-bsq13 条目(注意保留同一
-#      overlay 块中的 open-design / open-design-web / open-design-dsh-runtime)
+#      overlay 块中的 open-design / open-design-web)
 #   3. git rm -r pkgs/by-name/op/open-design-daemon-bsq13/
 #   然后 nh os switch . 验证:journalctl --user -u open-design 无断言崩溃,
 #   OD UI 本地 Agent 扫描正常。
 #
-# 注:dsh-runtime(open-design-dsh-runtime 包)与此补丁无关,是 OD↔dsh 的
-# profile 适配器,清理本补丁时不要动它。
+# 注:OD↔dsh 的 profile 适配器(open-design-dsh-runtime)已于 2026-09-13
+# 随 dsh 退场整体移除。
 {
   lib,
   stdenv,
@@ -89,8 +89,8 @@ stdenv.mkDerivation {
     patchelf --set-rpath "${stdenv.cc.cc.lib}/lib" "$_bsq/prebuilds/linux-x64.node" \
       || { echo "bsq13 graft: patchelf failed on linux-x64.node" >&2; exit 1; }
 
-    # 注:v0.21.1 起 dist 内 dsh 白名单已是 rc.8(与本机 nixdsh 一致),
-    # 旧版"supportedVersions 扩容"substituteInPlace 已移除
+    # 注:dist 内 dsh 白名单自 v0.21.1 起为 rc.8(OD↔dsh 适配已随 dsh 退场,
+    # 此条仅历史留档)
   '';
 
   meta = {

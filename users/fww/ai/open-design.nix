@@ -2,7 +2,7 @@
 # Open Design — 本地优先的开源 Claude Design 替代品
 #
 # 通过 Home Manager 模块运行：daemon（open-design CLI，:7457）+ 内置 Caddy 提供 Web SPA（:5174）。
-# 数据落在 ~/.od/。daemon 自动扫描 PATH 发现 agent CLI（opencode2/dsh 等）。
+# 数据落在 ~/.od/。daemon 自动扫描 PATH 发现 agent CLI（opencode2 等）。
 #
 # ── 分发形态(2026-09-04 起)──────────────────────────────────────
 # 上游 #7644(2026-08-31)退役官方 Nix 分发:flake/HM 模块/包全删。
@@ -47,8 +47,7 @@
 }:
 
 let
-  # better-sqlite3 13 graft 包(pkgs/default.nix callPackage 提供;
-  # daemon 源与 dsh-runtime 同一 sources 登记表 pin)
+  # better-sqlite3 13 graft 包(pkgs/default.nix callPackage 提供)
   odDaemonFixed = pkgs.open-design-daemon-bsq13;
 in
 {
@@ -68,13 +67,7 @@ in
       # (2026-09-04 排障实证:服务侧 succeeded、daemon 侧超时击杀)。
       # 30 分钟 ≈ 3.75× 实测最差间隔;daemon 侧硬上限 24h 会自行钳制
       OD_CHAT_RUN_INACTIVITY_TIMEOUT_MS = "1800000";
-      # dsh profile 探测前置检查(OD daemon hasOpenDesignProfile)读进程 env 的
-      # DSH_HOME,缺省回退 ~/.dsh(与 nixdsh 物化位置不一致→误判"profile 缺失"
-      # →弹"安装连接组件"窗)。
-      # 注意:不能直接用 programs.dsh.dshHome 的值($HOME 字面量)——nixdsh 的
-      # $HOME 约定靠 bash wrapper 展开,OD 的 systemd Environment= 不展开,
-      # daemon 会把 $HOME 当相对路径。此处求值期替换为绝对路径,同一事实源
-      DSH_HOME = lib.replaceStrings [ "$HOME" ] [ config.home.homeDirectory ] config.programs.dsh.dshHome;
+      # dsh 集成已随 dsh 退场移除(原 DSH_HOME 探测前置检查)
       OD_MINIMAX_IMAGE_BASE_URL = "https://api.minimaxi.com";
       # TTS 模型升级：daemon 硬编码 speech-02-turbo(2024 代)，经 #1277 别名
       # 机制覆写为 speech-2.8-hd(见文件头注释第 4 点)。JSON 原文进 env，

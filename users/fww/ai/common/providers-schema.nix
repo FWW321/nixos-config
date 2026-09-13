@@ -4,8 +4,8 @@
 # 三步缺一不可:evalModules(形状)→ 一致性(跨字段)→ deepSeq(全量严格化)。
 # 设计原则(2026-08-21 grilling 定稿):
 #   - 校验不变形:输出 ≡ 输入 + 类型默认值,本文件不是第五个 adapter
-#   - 闭集用 option:端点名 = 消费者的协议词汇表(dsh 只说 anthropic、
-#     codex 只说 responses),拼错即报全路径;开集用 attrsOf:供应商/
+#   - 闭集用 option:端点名 = 消费者的协议词汇表(codex 只说 responses),
+#     拼错即报全路径;开集用 attrsOf:供应商/
 #     模型/档名 = 现实世界自由命名(off/on/none/low/high/max...),不 enum
 #   - 一致性检查每条绑定一个真实失败模式,不防御性编程
 #   - 结构约束写这里;wire 语义/实测数据写 providers.nix(单一事实源)

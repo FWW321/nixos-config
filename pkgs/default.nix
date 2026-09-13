@@ -66,11 +66,8 @@ in
     daemonPkg = final.open-design;
   };
 
-  # @open-design/dsh-runtime:src 与 services.open-design 同一 sources 登记表 pin
-  # (OD daemon↔runtime 协议代际原子耦合,详见包内头注释)
-  open-design-dsh-runtime = final.callPackage ./by-name/op/open-design-dsh-runtime/package.nix {
-    odDshRuntimeSrc = inputs.open-design;
-  };
+  # open-design-dsh-runtime 已移除(2026-09-13):dsh 整体退场,OD 侧
+  # DSH_HOME 探测/open-design profile 挂载随之删除(nixdsh 仓库自身保留)
 
   opencode2 = final.callPackage ./by-name/op/opencode2/package.nix { };
 
@@ -79,6 +76,7 @@ in
   # videoforge 系包定义已摘除(2026-09-01 单仓化迁往 ~/code/FWW321/videoforge
   # pkgs/;仓内 devenv shell 为唯一权威执行环境)
 
-  # 已迁独立仓库:dsh/dshPlugins → nixdsh(overlay 见 overlays/default.nix);
-  # koharu → koharu-nix、zcode → zcode-nix(包经各自 HM 模块自带)
+  # 已迁独立仓库:koharu → koharu-nix、zcode → zcode-nix(包经各自 HM 模块
+  # 自带;dsh/nixdsh 集成已于 2026-09-13 整体退场,仓库 github:FWW321/nixdsh
+  # 自身保留)
 }
