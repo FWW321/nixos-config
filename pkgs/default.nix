@@ -53,7 +53,15 @@ in
 
   # h3-models 已移除(2026-08-25):模型下载与部署整体迁 AutoDL 实例(见 users/fww/cloud.nix)
 
+  # EPUB 后端。覆盖 nixpkgs 的 0.4.37(mdbook 0.4 协议,与 0.5 不兼容)为 0.5.4,
+  # 选型与遮蔽理由见包内头注释
+  mdbook-epub = final.callPackage ./by-name/md/mdbook-epub/package.nix { };
+
   mdbook-svgbob = final.callPackage ./by-name/md/mdbook-svgbob/package.nix { };
+
+  # mdbook-typst-pdf 已移除(2026-09-03):真实书上与 pandoc+typst 同死于标题
+  # 上下标字符(f₂/n²,typst label 语法拒收),PDF 路线定稿 mdbook-pdf(chromium)。
+  # 复活路径:git log 找本注释前一版,或 crates.io mdbook-typst-pdf
 
   # MiniMax Token Plan 官方 CLI(npm 成品 bundle + undici,见包内头注释)
   mmx-cli = final.callPackage ./by-name/mm/mmx-cli/package.nix { };

@@ -200,6 +200,7 @@
             blender-cuda
             blender-lab-mcp
             chatgpt
+            mdbook-epub
             mdbook-svgbob
             mmx-cli
             opencode2
