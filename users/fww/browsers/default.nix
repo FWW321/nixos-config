@@ -3,6 +3,6 @@
 {
   imports = [
     ./zen.nix
-    ./brave.nix
+    ./chrome.nix
   ];
 }

@@ -31,7 +31,7 @@ in
     source = "${inputs.agent-browser-skill}/skills/agent-browser";
     entryFile = "SKILL.md";
     package = pkgs.agent-browser;
-    env.AGENT_BROWSER_EXECUTABLE_PATH = "brave";
+    env.AGENT_BROWSER_EXECUTABLE_PATH = "google-chrome-stable";
   };
   "humanizer-zh" = {
     source = inputs.humanizer-zh;

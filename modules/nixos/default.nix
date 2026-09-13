@@ -7,6 +7,7 @@
   imports = [
     ./audio.nix
     ./boot.nix
+    ./chrome.nix
     ./containers.nix
     ./desktop.nix
     ./gaming.nix
