@@ -44,7 +44,6 @@
       url = "github:sodiboo/niri-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    noctalia.url = "github:noctalia-dev/noctalia-shell";
     noctalia-greeter.url = "github:noctalia-dev/noctalia-greeter";
     stylix = {
       url = "github:danth/stylix";

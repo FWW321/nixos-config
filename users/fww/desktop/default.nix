@@ -10,7 +10,9 @@
 {
   imports = [
     inputs.niri.homeModules.niri
-    inputs.noctalia.homeModules.default
+    # programs.noctalia 改用 home-manager 内置模块(HM fdc36b1 起收录,
+    # 与 noctalia-shell flake 的 nix/home-module.nix 逐字同源;双加载即
+    # option 重复声明,inputs.noctalia 已退场)
     ./noctalia.nix
     ./niri.nix
     ./hyprland.nix
