@@ -13,8 +13,11 @@ let
   ezaOpts = "--icons=always --git --group-directories-first --header";
 in
 {
-  # Herdr - AI agent 终端复用器
-  home.packages = [ inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+  # Herdr - AI agent 终端复用器;sshpass - 非交互 ssh 密码认证(脚本/agent 场景)
+  home.packages = [
+    inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.default
+    pkgs.sshpass
+  ];
 
   # Foot 终端
   programs.foot = {

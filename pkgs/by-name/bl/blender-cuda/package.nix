@@ -1,10 +1,11 @@
 # filepath: ~/nixos-config/pkgs/by-name/bl/blender-cuda/package.nix
 # blender-cuda:CUDA Blender + 双 MCP(addon 与 server 一体化组装件)
 #
-# 第一套 ahujasid/blender-mcp 1.8.3(PyPI sdist),两个半边出自同一 derivation:
-#   - MCP server:buildPythonPackage → bin/blender-mcp。上游 1.8.3 依赖已收敛为
+# 第一套 ahujasid/blender-mcp 1.9.1(PyPI sdist),两个半边出自同一 derivation:
+#   - MCP server:buildPythonPackage → bin/blender-mcp。上游依赖已收敛为
 #     mcp(>=1.9,<2)+ httpx(telemetry 走 httpx 直连 REST,1.5.x 的 supabase/
-#     tomli 已移除);consent_prompt 直接 import pydantic,显式声明。sdist 完整
+#     tomli 已移除);consent_prompt 直接 import pydantic,显式声明。1.9.1 起
+#     sdist 改 src/ 布局(安装后 sitePackages 路径不变)。sdist 完整
 #     自洽(含 config.py;git HEAD 是未发布重构中间态,勿改钉 git)
 #   - Blender addon:上游以 package-data 内嵌 bundled/addon.py,从 server 的
 #     site-packages 提取 → BLENDER_SYSTEM_SCRIPTS 脚本树(Blender 官方部署机制,
@@ -36,12 +37,12 @@
 let
   server = python3Packages.buildPythonPackage rec {
     pname = "blender-mcp";
-    version = "1.8.3";
+    version = "1.9.1";
     pyproject = true;
 
     src = fetchurl {
-      url = "https://files.pythonhosted.org/packages/77/60/1f98ca777a08d6461d71f1634c87baaa2ecac105acd4bddd3237223d8f63/blender_mcp-${version}.tar.gz";
-      hash = "sha256-hj5rqbzsPTCGghuGzgu/y07VtYQkgBenW0WWb3NDQCM=";
+      url = "https://files.pythonhosted.org/packages/74/55/3decde917af78edb7d952e2c7d5e18a1f889426a9ab97af509937deee8fc/blender_mcp-${version}.tar.gz";
+      hash = "sha256-EIu5TXRUllajUtl+m+54TPgQ2J526c7YdPM3KQHx3hU=";
     };
 
     build-system = [ python3Packages.setuptools ];

@@ -8,9 +8,13 @@
     mpv
     # 终端媒体:chafa/timg 经 foot 的 sixel 全像素渲染,
     # ffmpeg 解锁 yazi 内置视频抽帧预览(video.lua 依赖 ffmpeg+ffprobe)
+    # yt-dlp 供 mpv 播放在线视频(mpv 依赖 PATH 中的 yt-dlp)
     chafa
     timg
     ffmpeg
+    yt-dlp
+    # v4l-utils:摄像头/采集卡调参诊断(v4l2-ctl,FineCam 4K 对焦/锐度等)
+    v4l-utils
   ];
 
   xdg.mimeApps = {

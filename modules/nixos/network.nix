@@ -153,6 +153,14 @@
             # AI 域名拒 AAAA：dae 对 tcp4/tcp6 分栈选节点，双栈会话 = 同时两个
             # 出口 IP，触发 OpenAI/Anthropic 风控掐长连接。只留 A → 单栈单出口
             qtype(28) && qname(geosite:openai, geosite:anthropic, suffix: claude.ai) -> reject
+            # Steam 域名踩中与 MiniMax 同款的问题:fallback googledns(走 Linode 出口)
+            # 让 Akamai GSLB 返回面向海外出口的边缘节点(store.steampowered.com →
+            # 23.63.226.116),而这些域名流量走直连,国内直连那些边缘 TCP 443 被丢包
+            # (2026-09-07 实测:ICMP 通 ~220ms 但 TCP SYN 反复重发无应答,商店页面
+            # 卡死)。直连域名必须配国内解析,保持 DNS 出口与流量出口一致。
+            # steampowered/steamstatic 已改走代理不受影响,此规则主要救
+            # steamcontent.com 下载 CDN 和 steamserver.net(CM)
+            qname(geosite:steam) -> alidns
             # MiniMax 国内域名未被 geosite:cn 收录,曾 fallback googledns(走 Linode
             # 出口)拿到面向海外的 CDN 边缘(filecdn.minimax.chat → 128.1.157.x);
             # 指到 alidns 才能解析到国内节点(123.6.x/180.130.x),配合下方直连规则
@@ -212,8 +220,14 @@
         # （BT 本质，无解；要匿名只能切 BT 友好的 VPN 并绑 wg0 接口）
         pname(qbittorrent-nox) -> direct
         domain(geosite:category-games@cn) -> direct
-        # Steam 创意工坊/社区走代理（steamcommunity.com 国内被墙），其余走直连
-        domain(suffix: steamcommunity.com) -> proxy
+        # Steam 商店/API/静态资源/社区走代理:这些域名被 fallback googledns(走
+        # Linode 出口)解析到面向海外出口的 Akamai 边缘,国内直连 443 黑洞(详见
+        # dns 段 qname(geosite:steam) 注释),必须跟随 DNS 出口一起走代理才通;
+        # 网页流量小,不占下载带宽。steamstatic.com 是商店 UI 的 js/css/图片资源
+        domain(suffix: steamcommunity.com, suffix: steampowered.com, suffix: steamstatic.com) -> proxy
+        # 其余 steam 域名直连:steamcontent.com 下载 CDN、steamserver.net(CM)。
+        # dns 段已让 geosite:steam 走 alidns,直连拿到国内可达的下载节点,
+        # 游戏下载不占代理带宽
         domain(geosite:steam) -> direct
 
         domain(geosite:apple@cn) -> direct

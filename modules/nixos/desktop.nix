@@ -19,6 +19,28 @@
     config.common.default = "*";
   };
 
+  # OBS Studio:录制/推流(FineCam 4K 经 UVC 即插即用,添加"视频采集设备"即可)
+  programs.obs-studio = {
+    enable = true;
+    # 虚拟摄像头(v4l2loopback):OBS 合成画面输出成 /dev/video 设备,
+    # 会议软件里选"OBS Virtual Camera"即可吃到 OBS 处理后的画面
+    enableVirtualCamera = true;
+    plugins = [
+      # nixpkgs 打包遗漏修复(零文件载体包):obs-nvenc-test 探测助手的
+      # RUNPATH 缺 /run/opengl-driver/lib → dlopen 不到 libnvidia-encode →
+      # OBS 里 NVENC 编码器全消失(日志:"Test process failed: nvenc_lib")。
+      # 经 wrapOBS 的 obsWrapperArguments 扩展点给 OBS 注入 LD_LIBRARY_PATH,
+      # 子进程继承后即可加载(实测 nvenc_supported=true,Ada/AV1 8K)。
+      # 注意:助手路径由 /proc/self/exe 解析回原始包,patch 副本无效,
+      # 环境继承是唯一样本外修复路径。上游修复后删除本项。
+      (pkgs.runCommand "obs-nvenc-driver-ldpath" {
+        passthru.obsWrapperArguments = [
+          "--prefix LD_LIBRARY_PATH : /run/opengl-driver/lib"
+        ];
+      } "mkdir -p $out")
+    ];
+  };
+
   # 登录管理器：Noctalia Greeter（配合 greetd）
   services.greetd = {
     enable = true;

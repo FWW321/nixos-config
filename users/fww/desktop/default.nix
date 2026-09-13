@@ -16,6 +16,7 @@
     ./hyprland.nix
     ./drawy.nix
     ./blender.nix
+    ./godot.nix
     ./media.nix
     ./input-method.nix
     ./xdg-user-dirs.nix

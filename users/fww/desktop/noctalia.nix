@@ -168,6 +168,7 @@ in
           "workspaces"
         ];
         end = [
+          "privacy"
           "tray"
           "notifications"
           "network"

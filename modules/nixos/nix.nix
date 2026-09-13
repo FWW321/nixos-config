@@ -34,6 +34,10 @@
         "https://hyprland.cachix.org"
         "https://nix-community.cachix.org"
         "https://noctalia.cachix.org"
+        # nixpkgs cuda-maintainers 官方 Hydra(2025-11 自 cuda-maintainers.cachix.org
+        # 迁址):cudaSupport 包(torch/ctranslate2 等,cache.nixos.org 因 unfree 不存)
+        # 的预构建二进制;sm_89 为覆盖主力,blender-cuda 等命中即免本机编译
+        "https://cache.nixos-cuda.org"
       ];
       trusted-public-keys = [
         "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc="
@@ -41,6 +45,7 @@
         "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
         "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+        "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
       ];
     };
 
