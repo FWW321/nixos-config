@@ -74,7 +74,7 @@ let
   # minimax MCP 已移除,搜索走 codex 原生 web_search,媒体生成放弃,见 mcp.nix 注释)
   mcpExcluded = [
     "context7" # 远程 HTTP,慢启动受害者(同下)
-    "exa" # npx 冷启动(同 context7 形态);原生 web_search 已覆盖
+    # "exa" # 已在 mcp.nix 注释停用(2026-09)
     # "web-reader" # 已在 mcp.nix 注释停用(2026-08)
     # "web-search-prime" # 已在 mcp.nix 注释停用(2026-08)
     # "zread" # 同上

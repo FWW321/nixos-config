@@ -22,24 +22,23 @@
     };
   };
 
-  # Exa 搜索 MCP(exa-mcp-server,npx stdio,工具 web_search_exa/web_fetch_exa):
-  # 与 context7 同款 npx 桥 —— 官方 remote https://mcp.exa.ai/mcp 虽免冷启动,
-  # 但 opencode2 内嵌 Bun 的 fetch 对部分远程端点必现 TLS 证书错误
-  # (mcp.context7.com 实锤,见上注释),本地 stdio 不走它的网络栈,稳。
-  # EXA_API_KEY 与 websearch.provider="exa"(agents/opencode/settings.nix)
-  # 共用同一 secret:内置 websearch 供模型自主轻量搜索,MCP 是显式可控工具,
-  # 同一额度池按量计费。codex 侧排除(agents/codex.nix mcpExcluded):
-  # npx 冷启动 + 原生 web_search 已覆盖
-  exa = {
-    local = {
-      command = "npx";
-      args = [
-        "-y"
-        "exa-mcp-server"
-      ];
-      env.EXA_API_KEY.secretFile = "/run/secrets/exa_api_key";
-    };
-  };
+  # Exa 搜索 MCP(exa-mcp-server,npx stdio,工具 web_search_exa/web_fetch_exa)
+  # 已停用(2026-09,条目注释保留待恢复):
+  # - opencode 内置 websearch.provider="exa"(agents/opencode/settings.nix,
+  #   EXA_API_KEY 由 skills.nix bash.initExtra 注入,实测生效)+ codex 原生
+  #   web_search 双覆盖,恢复仅当需要 MCP 形态的显式搜索工具
+  # - zcode 无排除机制,留活会全量吃下 npx 冷启动条目
+  # - 恢复时同步解注 codex.nix mcpExcluded 的 exa 行(npx 冷启动仍须排除)
+  # exa = {
+  #   local = {
+  #     command = "npx";
+  #     args = [
+  #       "-y"
+  #       "exa-mcp-server"
+  #     ];
+  #     env.EXA_API_KEY.secretFile = "/run/secrets/exa_api_key";
+  #   };
+  # };
 
   # 智谱识图 MCP(@z_ai/mcp-server)已停用(2026-08,条目注释保留待恢复):
   # 8 个工具 = GLM 视觉模型 + 场景化 prompt 模板,静态识图已双覆盖 ——
