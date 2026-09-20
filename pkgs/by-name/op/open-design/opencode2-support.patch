@@ -225,11 +225,12 @@
    const hasNonZeroExit = exitCodes.some(
      (exitCode) => typeof exitCode === 'number' && Number.isFinite(exitCode) && exitCode !== 0,
    );
-@@ -224,14 +227,23 @@
+@@ -232,15 +235,24 @@
      return true;
    }
  
 -  if (obj.type === 'tool_use' && typeof part.tool === 'string' && typeof part.callID === 'string') {
+-    state.openCodeToolEvents.complete(part.callID);
 +  // v2 renamed the tool-call id field from `callID` to `id` (the part's own
 +  // handle moved to `partID`). Accept both: legacy frames keep `callID`,
 +  // v2 frames carry `id` shaped like `call_<hex>`.
@@ -240,6 +241,7 @@
 +        ? part.id
 +        : null;
 +  if (obj.type === 'tool_use' && typeof part.tool === 'string' && callId !== null) {
++    state.openCodeToolEvents.complete(callId);
      const statePart = isRecord(part.state) ? part.state : null;
 -    const key = `${obj.sessionID || 'session'}:${part.callID}`;
 +    const key = `${obj.sessionID || 'session'}:${callId}`;

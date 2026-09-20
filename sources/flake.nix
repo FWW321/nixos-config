@@ -66,7 +66,7 @@
     # open-design/)。tag 命名带前缀 open-design-vX.Y.Z;daemon/web 两消费方
     # 共用此 pin;更新 = nix flake update sources/open-design + 包目录 update.sh
     open-design = {
-      url = "github:nexu-io/open-design/open-design-v0.22.2";
+      url = "github:nexu-io/open-design/open-design-v0.23.0";
       flake = false;
     }; # OD daemon/web (→ pkgs/by-name/op/*)
 

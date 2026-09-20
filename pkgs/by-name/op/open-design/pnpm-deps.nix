@@ -8,6 +8,6 @@
   # 1. 把对应 hash 临时改为任意无效值(fakeHash)
   # 2. 跑 update.sh(或手动 nix build 对应目标)
   # 3. 把 Nix 报错的 "got: sha256-…" 抄回下方对应字段
-  daemonHash = "sha256-uV5CY0TP2n8pBVjxkanA29h6UEfr70a3nJUJ6TJkpbo=";
+  daemonHash = "sha256-s+o4o+SOy4/2nsGjWZGiFviciFaAQs7R/eoV15pDfwY=";
   webHash = "sha256-SIs+q91GnNvX8P4Vh/515YAXqWlvFV05HLZD1I9MDGw=";
 }
