@@ -16,15 +16,15 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "pdf-inspector";
-  version = "1.19.0";
+  version = "1.21.0";
 
   src = fetchCrate {
     inherit pname version;
-    hash = "sha256-0uRrDAK4sDeRUFVYm4MUgXPh8SWn0V+ktgpvU2gcMtA="; # crates.io 1.19.0
+    hash = "sha256-9l3RLxOdo/DuqDdaEaaf+Fv/t7cHpRz4G7lUlPRveeo="; # crates.io 1.21.0
   };
 
   # cargo 依赖 vendor FOD
-  cargoHash = "sha256-MYd2PofmMG/9Fs7ZcFZsHDT6O8vnK1UARtyuZEP/O6c=";
+  cargoHash = "sha256-JFO8gIVXyxwqnkaTpz06txkGmMvbD1uHShbXSy4hJHI=";
 
   # 上游 0.1.7 的 default feature 是 [](features: {"default":[],"python":["pyo3"]})
   # 显式置空,防止上游未来把 default 改成含 pyo3 而拉入 Python 扩展
