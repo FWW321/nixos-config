@@ -213,6 +213,18 @@ stdenv.mkDerivation (finalAttrs: {
 
     chmod +x $out/lib/open-design/apps/daemon/dist/cli.js
 
+    # 子进程卫生件(2026-09-21,根治「万能父进程」泄漏,各文件头有完整说明):
+    #   od-scope-exec  收养门 — shim 把异步 spawn 重定向到它,自收养进命名
+    #                   scope、成员性屏障后原位 exec,看门狗在命令退出时 sweep
+    #   od-scope-ctl   busctl/systemctl 封装(门与终端外壳的唯一 systemd 出口)
+    #   od-term-shell  集成终端外壳 — 经 SHELL env 注入(见 modules/home)
+    #   scope-shim.cjs NODE_OPTIONS 预加载 — 纯 argv 重定向,零进程执行
+    #                   (.cjs:OD 根 package.json 是 type:module)
+    install -Dm555 ${./od-scope-exec} $out/bin/od-scope-exec
+    install -Dm555 ${./od-scope-ctl} $out/bin/od-scope-ctl
+    install -Dm555 ${./od-term-shell} $out/bin/od-term-shell
+    install -Dm444 ${./scope-shim.cjs} $out/lib/open-design/scope-shim.cjs
+
     # 二进制名 open-design(非上游的 od):od 进 HM profile 会遮蔽 coreutils
     # od,脚本/调试场景的 od 必须保持 coreutils(2026-09-08 实测踩坑)
     makeWrapper ${nodejs}/bin/node $out/bin/open-design \

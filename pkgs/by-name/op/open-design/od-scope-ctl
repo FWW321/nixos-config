@@ -1,0 +1,43 @@
+#!/bin/sh
+# od-scope-ctl — OpenDesign 子进程卫生 helper(od-scope-exec/od-term-shell 调用)
+#
+# 用法(动态值经环境变量传入,argv 保持静态;本脚本内一律带引号位置参数):
+#   od-scope-ctl adopt   OD_SCOPE_NAME=<scope> OD_SCOPE_PID=<pid>  原位收养
+#   od-scope-ctl sweep   OD_SCOPE_NAME=<scope>                    scope 级 SIGTERM
+#
+# 机制:busctl --user StartTransientUnit 创建 transient scope 并把指定 pid
+# (连同其 cgroup 子树)并入;CollectMode=inactive-or-failed 使 scope 清空后
+# 自动回收。这是 systemd 的公开 API(systemd-run --scope 底层同一调用)。
+# 无 shell 拼接,所有插值均为带引号的变量展开。
+#
+# ⚠ 应答 ≠ 迁移落地:StartTransientUnit 的 dbus 应答先于 cgroup 写入完成,
+# 调用方(od-scope-exec)必须以 /proc/<pid>/cgroup 成员性轮询做屏障后再放行。
+set -u
+
+verb=${1:?usage: od-scope-ctl adopt|sweep}
+name=${OD_SCOPE_NAME:?OD_SCOPE_NAME required}
+
+case "$verb" in
+  adopt)
+    pid=${OD_SCOPE_PID:?OD_SCOPE_PID required}
+    exec busctl --user call \
+      org.freedesktop.systemd1 \
+      /org/freedesktop/systemd1 \
+      org.freedesktop.systemd1.Manager \
+      StartTransientUnit \
+      'ssa(sv)a(sa(sv))' \
+      "$name" \
+      fail \
+      2 \
+      PIDs au 1 "$pid" \
+      CollectMode s inactive-or-failed \
+      0
+    ;;
+  sweep)
+    exec systemctl --user kill "$name"
+    ;;
+  *)
+    echo "od-scope-ctl: unknown verb: $verb" >&2
+    exit 64
+    ;;
+esac

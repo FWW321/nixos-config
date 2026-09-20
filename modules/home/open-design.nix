@@ -85,6 +85,20 @@ let
     OD_PORT = toString cfg.port;
     OD_DATA_DIR = toString cfg.dataDir;
     PATH = lib.concatStringsSep ":" daemonPathEntries;
+    # ── 子进程卫生(2026-09-21,根治「万能父进程」泄漏)──────────────────
+    # 机制与证据链见 pkgs/by-name/op/open-design/ 各文件头注释。三件事:
+    #   1. daemon 的每个异步 spawn 经 NODE_OPTIONS 预加载 shim 重定向到
+    #      收养门(od-scope-exec):整棵子树落进 od-spawn-*.scope,命令退出
+    #      后看门狗 sweep 收割 daemonized 泄漏(容器/postgres/electron 类)
+    #   2. 集成终端经 SHELL 外壳(od-term-shell)进 od-term-*.scope,
+    #      终端关闭即整树清理
+    #   3. OD_SCOPE_ROLE=daemon 门禁:仅 daemon 本进程生效,子代环境被改写
+    #      为 child,agent CLI 的工具调用靠 cgroup 继承归入 run scope
+    # 临时关闭:systemctl --user edit open-design 清掉 NODE_OPTIONS 与 SHELL。
+    NODE_OPTIONS = "--require ${cfg.package}/lib/open-design/scope-shim.cjs";
+    OD_SCOPE_ROLE = "daemon";
+    SHELL = "${cfg.package}/bin/od-term-shell";
+    OD_REAL_SHELL = "${pkgs.bashInteractive}/bin/bash";
   }
   // lib.optionalAttrs cfg.webFrontend.enable {
     # 告知 daemon 同源白名单 caddy 端口,否则 SPA 的 PUT/POST 被
@@ -213,8 +227,14 @@ in
             Type = "simple";
             ExecStart = "${daemonExe} --port ${toString cfg.port} --no-open";
             Environment = envToList daemonEnv;
-            Restart = "on-failure";
+            # Restart=always:daemon 是任意退出都该复活的常驻编排器(原
+            # on-failure 会放过正常退出路径的意外终结)。配合 RuntimeMaxSec
+            # 构成卫生兜底:即使 scope 机制全部旁路,7 天一次的单元重启也会
+            # 清空 cgroup(KillMode=control-group 默认值),泄漏堆积有界
+            # (2026-09-20 考古:上一次清理前堆积 894 tasks/内存峰值 18.9G)
+            Restart = "always";
             RestartSec = 3;
+            RuntimeMaxSec = "7d";
           }
           // lib.optionalAttrs (cfg.environmentFile != null) {
             EnvironmentFile = toString cfg.environmentFile;

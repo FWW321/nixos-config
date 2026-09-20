@@ -1,0 +1,57 @@
+#!/bin/sh
+# od-scope-exec — 收养门(gate):OpenDesign 异步 spawn 的统一入口
+#
+# 由 spawn-scope-shim.js 以 argv 重定向方式注入(node 侧只改 spawnfile,
+# 不执行任何进程)。本脚本被 spawn 后做三件事:
+#
+#   1. 自收养:此刻本 shell 正在顺序执行(未 exec、未 fork 存活子进程),
+#      无竞态;dirname 的命令替换子进程即生即灭,不构成泄漏
+#   2. 成员性屏障:轮询 /proc/self/cgroup 直到 scope 名出现
+#      (StartTransientUnit 的 dbus 应答先于 cgroup 写入落地,见
+#      od-scope-ctl 头注释)——屏障通过后才允许 exec,杜绝「命令在迁移
+#      落地前 fork 出的子进程留在旧 cgroup」的漏网窗口
+#   3. 泄漏看门狗:后台子 shell 守本 pid,命令退出后 sweep 整个 scope
+#      (SIGTERM 收割 setsid/nohup 出走的孙进程;看门狗自身 trap 忽略
+#      TERM 以完成清扫后自灭)
+#
+# 之后原位 exec 真实命令:pid 不变(node 的退出检测/kill 语义完全保持),
+# stdio/cwd/env 原样继承,命令 fork 的一切都落在 scope 内。
+#
+# 失败降级:收养失败或屏障超时(2s)仍照常 exec——行为同无 shim,
+# 只是该次 spawn 不入 scope。
+#
+# 注意:exec 失败(命令不存在)以 exit 127 退出而非 node 原生的 spawn
+# 'error' 事件(ENOENT 形态变化);OD 的可执行解析在 spawn 前已完成
+# (executables.ts resolveOnPath),实际影响面极小。
+set -u
+
+name=${OD_SCOPE_NAME:?OD_SCOPE_NAME required}
+ctl=$(dirname "$0")/od-scope-ctl
+
+# 1) 自收养(失败不阻断)
+OD_SCOPE_NAME="$name" OD_SCOPE_PID="$$" "$ctl" adopt >/dev/null 2>&1 || true
+
+# 2) 成员性屏障(最多 ~2s;GNU sleep 支持小数)
+i=0
+while [ "$i" -lt 200 ]; do
+  case $(cat /proc/self/cgroup 2>/dev/null) in
+    *"$name"*) break ;;
+  esac
+  sleep 0.01
+  i=$((i + 1))
+done
+
+# 3) 泄漏看门狗(此刻已确认在 scope 内,看门狗出生即入 scope)。
+#    trap 必须含 HUP:终端场景下会话领袖(shell)退出时内核向前台进程组
+#    发 SIGHUP,只挡 TERM 的看门狗会先于锚进程死亡(2026-09-21 pty 实测);
+#    同时脱开 pty fd,避免看门狗拖住终端设备。
+(
+  trap '' HUP TERM INT
+  exec 0</dev/null 1>/dev/null 2>/dev/null
+  p=$$
+  while kill -0 "$p" 2>/dev/null; do sleep 1; done
+  OD_SCOPE_NAME="$name" "$ctl" sweep >/dev/null 2>&1 || true
+) &
+
+# 4) 原位 exec:argv 形如 <file> <args...>(node 的 spawnargs 自带 file 头)
+exec "$@"

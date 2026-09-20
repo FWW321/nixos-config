@@ -1,0 +1,21 @@
+#!/bin/sh
+# od-term-shell — OpenDesign 集成终端外壳(经 SHELL 环境变量注入)
+#
+# node-pty 在 Linux 上走裸 forkpty+execvp(spawn-helper 仅 macOS),JS 侧
+# 无法拦截;但 OD 的 resolveShell() 尊重 $SHELL —— 本外壳借这个零 patch
+# 切口,让每个终端成为 od-scope-exec 的一个实例:自收养进命名 scope
+# (od-term-*.scope)后原位 exec 真实 shell。
+#
+# 效果:pid 不变(node-pty 退出检测/kill 语义完全保持);终端内
+# setsid/nohup 出走的常驻进程留在 scope 里——具名、可见
+# (systemctl --user list-units 'od-term-*')、按名可杀;shell 退出后
+# 看门狗 sweep 收割(终端关闭即整树清理,这正是 2026-09-20 进程考古
+# 要根治的行为)。
+#
+# 失败降级:od-scope-exec 内部收养失败仍照常 exec 真实 shell。
+ctl=$(dirname "$0")/od-scope-exec
+real=${OD_REAL_SHELL:-/run/current-system/sw/bin/bash}
+
+name="od-term-$$-$(date +%s)"
+# 恢复真实 SHELL 供子进程探测;OD_SCOPE_ROLE=child 防嵌套 shim
+SHELL="$real" OD_SCOPE_ROLE=child OD_SCOPE_NAME="$name.scope" exec "$ctl" "$real" "$@"
