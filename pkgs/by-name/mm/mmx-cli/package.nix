@@ -29,14 +29,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "mmx-cli";
-  version = "1.0.25";
+  version = "1.0.26";
 
   # npm registry 成品(与 npm install -g mmx-cli 同源同物)
   # 1.0.24 起上游换 GitHub Actions provenance 发布,新增 yaml/smol-toml/
   # picocolors/jsonc-parser 依赖但均已内联进 bundle,外部 import 仍只有 undici
   src = fetchurl {
     url = "https://registry.npmjs.org/mmx-cli/-/mmx-cli-${finalAttrs.version}.tgz";
-    hash = "sha256-kQfX9aW6D/2g/mkeNbD4/UpFtmz4yi27k9Qh0xOkdEU=";
+    hash = "sha256-EZ4UTNHG3L9vjprZ6/yKBAV1b9EfnYOCAnPDFdXAb5I=";
   };
 
   # 唯一运行时依赖(上游约束 ^6.21.1,取 6.x 最新)
