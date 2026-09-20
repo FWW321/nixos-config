@@ -1,12 +1,15 @@
 # filepath: ~/nixos-config/pkgs/by-name/bl/blender-cuda/package.nix
 # blender-cuda:CUDA Blender + 双 MCP(addon 与 server 一体化组装件)
 #
-# 第一套 ahujasid/blender-mcp 1.9.1(PyPI sdist),两个半边出自同一 derivation:
-#   - MCP server:buildPythonPackage → bin/blender-mcp。上游依赖已收敛为
-#     mcp(>=1.9,<2)+ httpx(telemetry 走 httpx 直连 REST,1.5.x 的 supabase/
-#     tomli 已移除);consent_prompt 直接 import pydantic,显式声明。1.9.1 起
-#     sdist 改 src/ 布局(安装后 sitePackages 路径不变)。sdist 完整
-#     自洽(含 config.py;git HEAD 是未发布重构中间态,勿改钉 git)
+# 第一套 ahujasid mcp-for-blender 2.0.0(PyPI sdist,原 blender-mcp;2.0.0 起
+# 上游改名,旧名沦为装新包的兼容壳 —— 本仓直接钉真身),两个半边出自同一
+# derivation:
+#   - MCP server:buildPythonPackage → bin/mcp-for-blender(上游 bin 改名,
+#     组装层补旧名 blender-mcp symlink,下游 mcp-project/manifest 零改动)。
+#     依赖不变:mcp(>=1.9,<2)+ httpx;consent_prompt 直接 import pydantic,
+#     显式声明(上游 requires_dist 仍未列)。src/ 布局沿用 1.9.1;sdist 完整
+#     自洽(含 config.py)。重构后的命令分发仍走 addon 内 BlenderMCPServer.
+#     execute_command(bootstrap hook 点不变),TCP 9876 不变
 #   - Blender addon:上游以 package-data 内嵌 bundled/addon.py,从 server 的
 #     site-packages 提取 → BLENDER_SYSTEM_SCRIPTS 脚本树(Blender 官方部署机制,
 #     deploying_blender:$SYSTEM_SCRIPTS/addons/ 放插件 + startup/ 启动期启用)。
@@ -36,13 +39,13 @@
 
 let
   server = python3Packages.buildPythonPackage rec {
-    pname = "blender-mcp";
-    version = "1.9.1";
+    pname = "mcp-for-blender";
+    version = "2.0.0";
     pyproject = true;
 
     src = fetchurl {
-      url = "https://files.pythonhosted.org/packages/74/55/3decde917af78edb7d952e2c7d5e18a1f889426a9ab97af509937deee8fc/blender_mcp-${version}.tar.gz";
-      hash = "sha256-EIu5TXRUllajUtl+m+54TPgQ2J526c7YdPM3KQHx3hU=";
+      url = "https://files.pythonhosted.org/packages/f0/6d/eb915b4ed7c19e5ec6a1d0c7a757771be8f809ca85bf558d89b88d793db7/mcp_for_blender-2.0.0.tar.gz";
+      hash = "sha256-xB07CDrHc1GY3kahlcmSKdifoxT74i5yeWCPieJMFYw=";
     };
 
     build-system = [ python3Packages.setuptools ];
@@ -59,9 +62,9 @@ let
 
     meta = {
       description = "Blender integration through the Model Context Protocol";
-      homepage = "https://github.com/ahujasid/blender-mcp";
+      homepage = "https://github.com/ahujasid/mcp-for-blender";
       license = lib.licenses.mit;
-      mainProgram = "blender-mcp";
+      mainProgram = "mcp-for-blender";
     };
   };
 
@@ -347,7 +350,10 @@ runCommand "blender-cuda-${cudaBlender.version}"
     makeWrapper ${cudaBlender}/bin/blender $out/bin/blender \
       --set BLENDER_SYSTEM_SCRIPTS ${systemScripts} \
       --add-flags "--python ${systemScripts}/bootstrap.py"
-    # MCP server 半边直通(项目级 MCP 条目按名引用,见 common/mcp-project.nix)
-    ln -s ${server}/bin/blender-mcp $out/bin/blender-mcp
+    # MCP server 半边直通(项目级 MCP 条目按名引用,见 common/mcp-project.nix)。
+    # 旧名 blender-mcp symlink 必须保住:mcp-project.nix 的 command 与项目
+    # manifest.json 都按旧名 PATH 解析;新名并存,向前兼容
+    ln -s ${server}/bin/mcp-for-blender $out/bin/mcp-for-blender
+    ln -s ${server}/bin/mcp-for-blender $out/bin/blender-mcp
     ln -s ${blender-lab-mcp}/bin/blender-lab-mcp $out/bin/blender-lab-mcp
   ''
