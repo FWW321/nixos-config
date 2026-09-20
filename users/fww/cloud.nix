@@ -23,22 +23,9 @@ let
   # ── 实例档案(数据区) ──
   # port: AutoDL 中转端口,实例重建会变,换机时只改此文件
   # forwards: 本地端口转发(autossh -L),端口=实例服务端口
-  clouds = {
-    h3 = {
-      hostname = "connect.bjb1.seetacloud.com";
-      port = 44377;
-      user = "root";
-      # MiniMax H3 / ComfyUI(RTX PRO 6000 96GB, 2026-08 租用)
-      forwards = [
-        {
-          local = 8188;
-          remote = 8188; # ComfyUI WebUI
-          # 钉死 IPv4 回环:不指定时 ssh 重连后可能只绑 [::1](curl 会回退,python/脚本连 127.0.0.1 直接拒绝)
-          bind.address = "127.0.0.1";
-        }
-      ];
-    };
-  };
+  # 2026-09-21 h3/h3fix 两实例退租关机,档案移除(原文见 git 历史);
+  # 再租新机时按文件头说明补档案即可,matchBlock/隧道服务全部自动生成
+  clouds = { };
 in
 {
   # ── SSH 主机块(逻辑区,由档案驱动) ──
