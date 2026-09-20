@@ -131,8 +131,8 @@
 +      // the service keeps working; the CLI then waits forever and the
 +      // daemon's inactivity watchdog kills a healthy run). In-process relay
 +      // cannot desync, and the process exits when the turn ends — no zombie
-+      // waits. Sessions are therefore per-turn only; see the resume flags
-+      // below.
++      // waits. Sessions still persist to the shared v2 database, so the
++      // capture/resume flags below stay enabled.
        const args = [
          'run',
 +        '--standalone',
@@ -182,13 +182,13 @@
 -    // `sessionID` captured from the stream, not a daemon-minted id.
 -    resumesSessionViaCli: true,
 -    capturesSessionIdFromStream: true,
-+    // Session capture/resume is DISABLED under `--standalone`: the private
-+    // server dies with the CLI process, so a captured id is dead on the next
-+    // turn and `run -s <dead-id>` fails with "Session not found". The daemon
-+    // falls back to re-sending the flattened transcript each turn — correct,
-+    // at the cost of losing the warm prefix cache across turns.
-+    resumesSessionViaCli: false,
-+    capturesSessionIdFromStream: false,
++    // Session capture/resume RE-ENABLED under `--standalone`: v2 persists
++    // standalone sessions to the shared database (opencode.db, session_v2);
++    // verified 2026-09-21 against 2.0.11 — a fresh `run --standalone -s <id>`
++    // continues a dead standalone process's conversation fine (the "dead id"
++    // premise only held for beta). Warm prefix cache restored.
++    resumesSessionViaCli: true,
++    capturesSessionIdFromStream: true,
      streamFormat: 'json-event-stream',
      eventParser: 'opencode',
      // OpenCode reads MCP servers from its layered config (global ~/.config
