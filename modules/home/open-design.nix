@@ -95,7 +95,11 @@ let
     #   3. OD_SCOPE_ROLE=daemon 门禁:仅 daemon 本进程生效,子代环境被改写
     #      为 child,agent CLI 的工具调用靠 cgroup 继承归入 run scope
     # 临时关闭:systemctl --user edit open-design 清掉 NODE_OPTIONS 与 SHELL。
-    NODE_OPTIONS = "--require ${cfg.package}/lib/open-design/scope-shim.cjs";
+    # ⚠ 必须用 --require=<path> 等号形式:值含空格会被 systemd Environment=
+    # 切成两个赋值,NODE_OPTIONS 只剩光杆 --require,node 秒退 exit 9,
+    # Restart=always 下无限崩溃循环(2026-09-21 02:05 实测 180+ 次,
+    # 症状:UI 连接中断/项目列表空/代理未检测 —— daemon 从未起来)
+    NODE_OPTIONS = "--require=${cfg.package}/lib/open-design/scope-shim.cjs";
     OD_SCOPE_ROLE = "daemon";
     SHELL = "${cfg.package}/bin/od-term-shell";
     OD_REAL_SHELL = "${pkgs.bashInteractive}/bin/bash";
