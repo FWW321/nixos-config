@@ -1144,11 +1144,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787408839,
-        "narHash": "sha256-UtjdrgWFsRimsOxzAs6+5bJG88P3iIDt6XTTuLKl7Mo=",
+        "lastModified": 1790185460,
+        "narHash": "sha256-kUOTmCkc5Y7T7kv1Vp5shS+ah1Pt6kT6G/LVI7gGkc0=",
         "owner": "FWW321",
         "repo": "zcode-nix",
-        "rev": "46594809714e7cba24c13017bf162fe54ca38db4",
+        "rev": "1e8a5d5dedd0bef8e64dcb369f714ceff91b290d",
         "type": "github"
       },
       "original": {

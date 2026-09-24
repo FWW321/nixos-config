@@ -64,11 +64,41 @@ let
   # GLM-5.3/GLM-5.3-Flash,subagents 的 zhipu 引用由 toZcodeModel 翻译成
   # builtin 槽位引用,不经 custom:*;恢复 API-key 模式:删掉下面的
   # zhipu 排除条件,custom:zhipu 条目随下次 switch 自动重建
+  # minimax 曾因"内置模板 baseURL 一致"改走 GUI(2026-09-24),同日推翻:
+  # 上游 catalog 对 MiniMax 全系 8 模型 reasoning 全 null,内置路
+  # thoughtLevel 一样被吞(resolveRegistryThoughtLevel 静默忽略,源码
+  # 三级实证);zcode-nix 1e8a5d5 落地双通道 reasoning 注入后恢复
+  # custom —— apiKey 也回归 nix 接管,GUI 手填作废
+  # mimo 不走内置另有硬伤:xiaomi-mimo 模板是按量端点
+  # (api.xiaomimimo.com/anthropic ≠ token-plan-cn 域)且模型停在 v2.5 系,
+  # token plan 的 tp- key 在按量端点不通用(官方 FAQ),必须 custom
   # schema 后键恒在:models 未声明 = {},apiKey 未声明 = null
   # (旧 `?` 存在性探测会恒真)
   eligible = lib.filterAttrs (
     name: p: p.models != { } && p.apiKey.secretFile != null && name != "zhipu"
   ) common.providers;
+
+  # 中立思考档 → zcode CEL 方言(zcode-nix reasoning.map,agent 通道经
+  # provider_config.json personal 规则注入):受限 CEL(asar
+  # compileModelOptionMap 实证:三元/比较/对象字面量,返回值须为 JSON
+  # object,{} 合法 = 不发参数),变量 reasoningLevel = 档名。
+  # 值放 thinking.type 还是 output_config.effort 是端点协议方言,无法从
+  # providers.nix levels 机械推导,按供应商显式声明(与 endpointByProvider
+  # 同风格);新增供应商带思考档时必须同步补条目,缺失者 models 翻译处
+  # throw(静默漂移防线)
+  thoughtMapByProvider = {
+    # M3 anthropic 端点:off=不发参数、on=thinking.type adaptive,无
+    # effort 档(providers.nix 官方文档+实测)。曾建议先试 GLM 条
+    # (adaptive + output_config.effort)—— 那会把 effort:"off"/"on" 发给
+    # 不认 effort 的 M3 端点;若本条实测 400 再按需调整
+    minimax = ''reasoningLevel == "on" ? {"thinking":{"type":"adaptive"}} : {}'';
+    # v2.6 anthropic 端点纯开关:thinking.type enabled/disabled;off 档
+    # 显式发 disabled(官方支持,与 M3 的"不发参数"不同)
+    mimo = ''{"thinking":{"type":reasoningLevel == "on" ? "enabled" : "disabled"}}'';
+    # step-5-preview anthropic 端点三档:output_config.effort(官方
+    # Messages API 文档),档名与 wire 值恒等
+    stepfun = ''{"output_config":{"effort":reasoningLevel}}'';
+  };
 
   providers = lib.mapAttrs (
     name: p:
@@ -79,10 +109,26 @@ let
       kind = kindByEndpoint.${ep};
       baseURL = p.endpoints.${ep};
       apiKeyFile = p.apiKey.secretFile;
-      models = lib.mapAttrs (_: m: {
-        context = m.contextWindow;
-        output = m.maxOutput;
-      }) p.models;
+      models = lib.mapAttrs (
+        _: m:
+        let
+          t = m.thinking.${ep};
+        in
+        {
+          context = m.contextWindow;
+          output = m.maxOutput;
+        }
+        // (lib.optionalAttrs (t != null) {
+          # zcode-nix 语义:levels 末位 = 默认档(defaultLevel = values.at(-1)),
+          # 把 providers.nix 的 default 档挪到末位,其余保持声明序
+          reasoning = {
+            levels = lib.remove t.default (builtins.attrNames t.levels) ++ [ t.default ];
+            map =
+              thoughtMapByProvider.${name}
+                or (throw "zcode providers: ${name} 声明了 thinking.${ep} 但缺 CEL 方言(thoughtMapByProvider)");
+          };
+        })
+      ) p.models;
     }
   ) eligible;
 
@@ -136,6 +182,11 @@ in
     # 识图子 agent:核心定义在 common/subagents.nix(与 opencode 同源);
     # model 意图 → zcode 引用格式见 toZcodeModel(zhipu 走 OAuth builtin 槽,
     # 其余走 custom:<urlencoded>)
+    # thoughtLevel = 中立思考档透传:zcode 目录 variants(config.json glm
+    # low/max/high)与 providers.nix 中立档名同词,透传即正确;仅显式
+    # model 下生效(vision 已设)。custom 注入供应商的档位自 zcode-nix
+    # 1e8a5d5 起由 providers.<n>.models.<m>.reasoning 双通道注入支撑
+    # (GUI 侧 variants + agent 侧 CEL map,见上方 thoughtMapByProvider)
     # tools 硬白名单是 zcode 端能力(自定义 tools 连 MCP/技能工具一并禁),
     # 对齐"只读分析者"职责:prompt 约束只是软边界,截图可能携带注入,
     # 不给 Bash/Edit/Write 等可写工具
@@ -145,6 +196,7 @@ in
     agents.vision = {
       inherit (common.subagents.vision) description prompt;
       model = toZcodeModel common.subagents.vision.model.provider common.subagents.vision.model.model;
+      thoughtLevel = common.subagents.vision.thinking;
       injectAgentsMd = false;
       tools = [
         "Read" # 读取图像文件
