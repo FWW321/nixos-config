@@ -54,11 +54,52 @@ let
   skills = lib.throwIf (skillsViolations != [ ]) (
     "skill source 违约(common/skills*.nix):\n  " + lib.concatStringsSep "\n  " skillsViolations
   ) skillsRaw;
+
+  # providers 中立层(schema 校验后的形状,思考档对账同源取数)
+  providers = import ./providers-schema.nix lib (import ./providers.nix);
+
+  # subagents 思考档对账(与 skills 存在性断言同科:静默漂移防线):
+  # 档名必须是该模型全部声明端点 levels 键的**交集**成员 —— 交集语义 =
+  # 跨端一致的通用词汇,单端点专属档名(如 mimo responses 的 low=on 等价档)
+  # 不配进中立层;拼错的档名两端各自静默无效/报错不一,在此统一拦下
+  subagentsRaw = import ./subagents.nix;
+  subagentThinkingViolations = lib.concatLists (
+    lib.mapAttrsToList (
+      name: sa:
+      lib.optionals (sa ? thinking) (
+        let
+          m = providers.${sa.model.provider}.models.${sa.model.model};
+          levelSets = lib.mapAttrs (_: t: builtins.attrNames t.levels) (
+            lib.filterAttrs (_: t: t != null) m.thinking
+          );
+          sets = lib.attrValues levelSets;
+          common =
+            if sets == [ ] then
+              [ ] # 模型无任何思考控制声明
+            else
+              lib.foldl' lib.intersectLists (lib.head sets) (lib.tail sets);
+        in
+        if sets == [ ] then
+          [
+            "subagent \"${name}\": 设了 thinking \"${sa.thinking}\",但 ${sa.model.provider}/${sa.model.model} 未声明任何 thinking(思考不可控)"
+          ]
+        else
+          lib.optional (!(builtins.elem sa.thinking common))
+            "subagent \"${name}\": thinking \"${sa.thinking}\" 不在 ${sa.model.provider}/${sa.model.model} 各端点 levels 交集(${toString common})中"
+      )
+    ) subagentsRaw
+  );
+  subagents = lib.throwIf (subagentThinkingViolations != [ ]) (
+    "subagent 思考档违约(common/subagents.nix):\n  " + lib.concatStringsSep "\n  " subagentThinkingViolations
+  ) subagentsRaw;
 in
 {
-  inherit mcp skills;
-  providers = import ./providers-schema.nix lib (import ./providers.nix);
-  subagents = import ./subagents.nix;
+  inherit
+    mcp
+    skills
+    providers
+    subagents
+    ;
   rules = ./rules.md;
   project = import ./project.nix {
     inherit

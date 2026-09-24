@@ -24,6 +24,8 @@ in
       crates_token.owner = "fww";
       zhipu_api_key.owner = "fww";
       minimax_api_key.owner = "fww";
+      mimo_api_key.owner = "fww";
+      stepfun_api_key.owner = "fww";
       siliconflow_api_key.owner = "fww";
       context7_key.owner = "fww";
       # hf_token.owner = "fww";

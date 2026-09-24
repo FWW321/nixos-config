@@ -180,6 +180,115 @@
     defaultModel = "MiniMax-M3";
   };
 
+  # 小米 MiMo Token Plan(2026-09-24 接入,官方文档 mimo.mi.com llms.txt 全文核对):
+  # 订阅端点与按量端点不同域,两套 key 不通用 —— Token Plan key 前缀 tp-(团队 ttp-),
+  # 按量 sk-,官方 FAQ 明示互不可用;国内 cn 集群(另有 sgp/ams,域名同构替换)。
+  # 按量端点是 api.xiaomimimo.com,勿混 —— zcode 内置 xiaomi-mimo 模板即按量端点
+  # 且模型目录停在 v2.5 系,token plan key 打不通(见 agents/zcode eligible 注释)
+  # 鉴权 Bearer 与 api-key header 双轨皆可;responses 与 openai 同 base(/v1)不同路由
+  mimo = {
+    endpoints = {
+      anthropic = "https://token-plan-cn.xiaomimimo.com/anthropic"; # SDK 自动拼 /v1/messages
+      openai = "https://token-plan-cn.xiaomimimo.com/v1"; # opencode 等(chat completions)
+      responses = "https://token-plan-cn.xiaomimimo.com/v1"; # responses 路由,官方 curl 样例实测同 base
+    };
+    apiKey.secretFile = "/run/secrets/mimo_api_key";
+    models =
+      let
+        # pro 与 flash 官方模型表同一能力格(全模态/Deep Thinking/1M/128K),
+        # 限流同 RPM 100/TPM 10M,引用同一 attrset 防漂移;pro-ultraspeed 是
+        # 企业定制(限流"联系客服"),不收
+        v26 = {
+          contextWindow = 1000000;
+          maxOutput = 131072;
+          supportsVision = true; # 全模态:文本/图片/音频/视频输入,纯文本输出
+          # 思考控制是纯开关,无档位(与 glm 的 low/high/max 不同科):
+          # thinking.type 仅 enabled/disabled,v2.6 全系默认 enabled(官方
+          # deep-thinking 文档);思考中 temperature/top_p 强制 1.0/0.95
+          # (传了也无效,官方 hyperparameters 文档);多轮工具调用必须完整
+          # 回传 reasoning_content,缺失报 400
+          # responses(/v1): wire = reasoning.effort;none=关,其余任意档位
+          #   开启且行为完全一致不分深度(官方 responses 文档原文)—— 单开档
+          #   取 low(最弱语义不虚标),与 minimax responses 同款处理
+          thinking = {
+            anthropic = {
+              default = "on";
+              levels = {
+                off = "disabled";
+                on = "enabled";
+              };
+            };
+            openai = {
+              default = "on";
+              levels = {
+                off = "disabled";
+                on = "enabled";
+              };
+            };
+            responses = {
+              default = "low"; # 端点默认开(模型级 Deep Thinking 默认 enabled);low 即开启档
+              levels = {
+                off = "none";
+                low = "low"; # 任意开启值等价,low 语义最弱不虚标
+              };
+            };
+          };
+        };
+      in
+      {
+        "mimo-v2.6-pro" = v26; # 旗舰:复杂项目/长任务/高价值工作
+        "mimo-v2.6-flash" = v26; # 高频调用/大规模任务,轻任务档
+      };
+    defaultModel = "mimo-v2.6-pro";
+    smallModel = "mimo-v2.6-flash"; # 轻任务档(title 生成等)
+  };
+
+  # 阶跃星辰 Step Plan(2026-09-24 接入,官方文档 platform.stepfun.com llms.txt 核对):
+  # 订阅 Credit 月池(1M Credit = ¥1,月内灵活耗,月末清零),与按量同域不同路由
+  # (按量是 api.stepfun.com/v1,勿混;国际版 api.stepfun.ai 域名另算)。
+  # anthropic 端点不带 /v1:Anthropic SDK 自动拼 /v1/messages(官方 Warning 明示),
+  # 完整请求地址 = /step_plan/v1/messages;无 responses 路由(推理模型接入表
+  # 仅 chat completions + messages 两条,codex 类消费者不可用)
+  # 注意:models.dev 目录 stepfun-step-plan 的 output 标 1000000 是 INF 语义虚标,
+  # 官方模型页 64k,此处以官方为准
+  stepfun = {
+    endpoints = {
+      anthropic = "https://api.stepfun.com/step_plan"; # SDK 自动拼 /v1/messages
+      openai = "https://api.stepfun.com/step_plan/v1"; # opencode 等(chat completions)
+    };
+    apiKey.secretFile = "/run/secrets/stepfun_api_key";
+    models = {
+      "step-5-preview" = {
+        contextWindow = 1000000; # 官方规格速览:1M tokens(最大输入同 1M)
+        maxOutput = 65536; # 官方规格速览:64k(chat 侧 max_tokens 默认 INF 由模型自决)
+        supportsVision = true; # 文本/图片/视频输入(图片最多 60 张,视频 MP4<128MB),纯文本输出
+        # 思考控制三档,无关闭(与 mimo 纯开关、glm low/high/max 都不同科):
+        # openai wire = reasoning_effort,anthropic wire = output_config.effort,
+        # 值域 low/medium/high;官方最佳实践标 medium 为"默认推荐"档,
+        # 省略参数的端点行为官方未明示(default 记 medium,来源即推荐档)
+        thinking = {
+          anthropic = {
+            default = "medium";
+            levels = {
+              low = "low";
+              medium = "medium";
+              high = "high";
+            };
+          };
+          openai = {
+            default = "medium";
+            levels = {
+              low = "low";
+              medium = "medium";
+              high = "high";
+            };
+          };
+        };
+      };
+    };
+    defaultModel = "step-5-preview";
+  };
+
   # SiliconFlow(硅基流动):OpenAI 兼容平台,代金券抵扣
   # 唯一消费者 jcode 已移除(其 embedding backend 硬编码读 OPENAI_API_KEY),
   # 暂留数据与 key 待复用;长期无消费者则连同 secret 一并删

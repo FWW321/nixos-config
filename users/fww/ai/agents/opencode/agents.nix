@@ -28,6 +28,8 @@ let
   providerId = {
     zhipu = "zhipuai-coding-plan";
     minimax = "minimax-cn-coding-plan";
+    mimo = "xiaomi-token-plan-cn";
+    stepfun = "stepfun-step-plan";
   };
 
   # YAML 标量:字符串一律双引号(color 的 # 前缀、描述里的冒号都安全);
@@ -95,6 +97,12 @@ let
   };
 
   # 意图 → opencode frontmatter md
+  # 思考档 → model 引用的 #variant 后缀(官方 agents 文档唯一推理控制方式):
+  # variant 由目录 reasoning_options 生成(opencode.db 目录实证 glm =
+  # ["low","high","max"]),#low 落到请求侧 reasoningEffort 设置再按协议
+  # 翻 wire(openai-compatible → reasoning_effort 系;二进制 reasoning_effort
+  # 翻译链 14 处实证);词汇与 providers.nix 中立档名同词,透传即正确,
+  # 档名合法性由 common/default.nix 交集断言前置把关
   renderAgent =
     name: sa: e:
     let
@@ -110,7 +118,12 @@ let
       ---
       description: ${yamlScalar sa.description}
       mode: ${yamlScalar e.mode}
-      model: ${yamlScalar "${providerId.${sa.model.provider}}/${sa.model.model}"}
+      model: ${
+        yamlScalar (
+          "${providerId.${sa.model.provider}}/${sa.model.model}"
+          + lib.optionalString (sa ? thinking) "#${sa.thinking}"
+        )
+      }
       color: ${yamlScalar e.color}
       steps: ${toString e.steps}
       ${permBlock}---

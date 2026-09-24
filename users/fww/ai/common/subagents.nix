@@ -4,6 +4,12 @@
 #   description  委派路由信号,注入所有会话的 system prompt,多端必须逐字一致
 #   model        意图不拼写:{ provider = common.providers 键; model = 模型 id }
 #               各端翻译成自己的引用格式(zcode: custom:<urlencoded>;opencode: <provider-id>/<model>)
+#   thinking     可选,思考档位(中立档名 = providers.nix 该模型 levels 的键;
+#               交集语义,见 default.nix 对账断言)。两端词汇恰好同词:
+#               zcode thoughtLevel = 目录 variants(config.json glm low/max/high 实证),
+#               opencode #variant = 目录 reasoning_options values(opencode.db 目录
+#               glm ["low","high","max"] 实证)—— 同词是 providers.nix 中立层与
+#               两家目录各自对齐的结果,翻译层透传即正确
 #   prompt       正文,单一真源
 #
 # 端特有字段(mode/color/steps/tools 白名单等)不进本层:在适配器按 agent 名挂
@@ -26,6 +32,9 @@
       provider = "zhipu";
       model = "glm-5.3-flash";
     };
+    # 思考档位取最高档 max(2026-09-24 用户定夺:识图质量优先,复杂图表
+    # 读数/设计稿对比受益于深推理;glm 档位 low/high/max,max 即顶档)
+    thinking = "max";
     prompt = ''
       你是视觉分析专家。
 

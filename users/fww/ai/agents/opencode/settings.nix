@@ -142,6 +142,17 @@ in
       # 订阅版,勿混国际版 minimax-coding-plan);/model 切换用,默认仍是 glm
       providers."minimax-cn-coding-plan".settings.apiKey =
         "{file:${common.providers.minimax.apiKey.secretFile}}";
+      # MiMo Token Plan(国内 cn 集群):内置目录 xiaomi-token-plan-cn,baseURL
+      # token-plan-cn.xiaomimimo.com/v1 与 providers.nix 一致(opencode.db 目录
+      # 缓存核对,2026-09-24);与按量 xiaomi 条目(api.xiaomimimo.com)是两个
+      # provider,勿混;/model 切换用
+      providers."xiaomi-token-plan-cn".settings.apiKey =
+        "{file:${common.providers.mimo.apiKey.secretFile}}";
+      # StepFun Step Plan:内置目录 stepfun-step-plan,baseURL
+      # api.stepfun.com/step_plan/v1 与 providers.nix 一致(同上核对);
+      # 与按量 stepfun 条目同理勿混;/model 切换用
+      providers."stepfun-step-plan".settings.apiKey =
+        "{file:${common.providers.stepfun.apiKey.secretFile}}";
       # herdr 插件暂不启用(beta-17577 三坑:本地插件不能 import @opencode-ai/plugin、
       # v2 复数键 plugins 令 server 无声崩溃循环只能用 v1 单数键 plugin、
       # 自动发现不生效;且带 HERDR env 的 service 模式有 boot loop 疑似 bug)。
