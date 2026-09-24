@@ -3,6 +3,7 @@
 #
 # 原 agents/opencode.nix 单文件拆为:
 #   settings.nix  — programs.opencode 核心(model/provider/mcp/websearch)
+#   cli.nix       — CLI/TUI 偏好(cli.json:theme/keybinds/session/tps)
 #   mcp-hot-sync.nix — MCP 免重启热同步(activation 对账)
 #   skills.nix    — skill/AGENTS.md 链接 + 依赖包 + env
 #   agents.nix    — 子 agent 定义(~/.config/opencode/agents/*.md)
@@ -14,6 +15,7 @@
 {
   imports = [
     ./settings.nix
+    ./cli.nix
     ./skills.nix
     ./agents.nix
     ./renderer.nix
