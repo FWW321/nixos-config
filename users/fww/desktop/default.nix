@@ -39,15 +39,36 @@
   # 详见：https://github.com/nix-community/plasma-manager
 
   # 截图标注工具
+  # 字体(2026-09-23 排障):satty 文字工具的 femtovg/fontdb 不走 fontconfig,
+  # 只扫 XDG 数据目录 —— 系统字体(含 stylix 的 JetBrainsMono Nerd Font)全在
+  # store 经 fonts.conf 注册,fontdb 看不见,默认字体一直加载失败(此前挂
+  # noctalia 下 stderr 进 journal 不可见)。修法:普通 ttf 链入 fontdb 扫描区。
+  # 注意字段在 [font] 段(family/fallback),[general] 不收 font-family
+  # (satty 0.22 实测,写错段名 satty 直接拒启)。fallback 补 CJK:JetBrains
+  # 无汉字字形,中文标注回退霞鹜文楷(Noto CJK 的 VF.ttc fontdb 解析不动,
+  # 只能选普通 ttf 的中文字体)。
   programs.satty = {
     enable = true;
-    settings.general = {
-      fullscreen = true;
-      early-exit = true;
-      initial-tool = "arrow";
-      copy-command = "wl-copy";
+    settings = {
+      general = {
+        fullscreen = true;
+        early-exit = true;
+        initial-tool = "arrow";
+        copy-command = "wl-copy";
+      };
+      font = {
+        family = "JetBrainsMono Nerd Font";
+        fallback = [ "LXGW WenKai" ];
+      };
     };
   };
+  xdg.dataFile."fonts/JetBrainsMonoNerdFont-Regular.ttf".source =
+    "${pkgs.nerd-fonts.jetbrains-mono}/share/fonts/truetype/JetBrainsMonoNerdFont-Regular.ttf";
+  xdg.dataFile."fonts/LXGWWenKai-Regular.ttf".source =
+    "${pkgs.lxgw-wenkai}/share/fonts/truetype/LXGWWenKai-Regular.ttf";
+  # 置空的 GTK 样式覆盖:仅为消掉 satty 每次「overrides.css does not exist」
+  # 的启动提示(该文件可选,空 = 用内置样式)
+  xdg.configFile."satty/overrides.css".text = "/* managed by home-manager */\n";
 
   xresources.properties."Xft.dpi" = 144;
 
