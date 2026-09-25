@@ -8,6 +8,63 @@
   ...
 }:
 
+let
+  # ── dae kill switch(fail-closed,v4:单元内配对,单一写入者)────────────
+  # 设计排除记录(两次断网 + 一次险些上线的教训,勿重蹈):
+  # v1/inet output 常驻 drop(09-25 夜):本地应用包路径是 路由→OUTPUT→
+  #   WAN TC egress,dae 拦截点在 TC egress(源码 dae_lan_wan_egress_l2/l3)
+  #   —— OUTPUT 在拦截点上游,无法区分"dae 在位(包即将被拦)"与"不在位
+  #   (泄漏)",drop 一刀切 = dae 在位也全断(dae up 4.5 分钟连接数 0)。
+  # v3/netdev egress(09-26 评审时否决,未上线):内核 netfilter_netdev.h 明示
+  #   egress 方向 "netfilter runs first, then tc" —— netdev egress 钩子同样
+  #   在 TC 上游,与 v1 同因不可行。结论:拦截点上游的一切常驻过滤皆死,
+  #   下游只有 TC 内部(dae 自管 clsact qdisc,重建时会清掉别人的 filter)。
+  # v2/systemd 武装-拆装(09-26 02:44 二次事故):机制正确,败在存在第二
+  #   写入者 —— 开机武装单元在 activation 里晚于 sops restartUnits 触发的
+  #   dae 重启才启动(新单元引入时必现),before= 跨事务无效 → 已 active 的
+  #   dae 面前重复武装且无人拆除。教训:任何第二写入者(boot 单元、
+  #   nftables.service 默认装载)都会在某个 activation 顺序下踩到同款竞态。
+  # v4(当前):表只由 dae 自身单元的生命周期创建/销毁,单一写入者:
+  #   ExecStopPost(崩溃/失败启动/干净停止/重启间隙,一切退出路径)→ 装表;
+  #   ExecStartPost(仅成功启动)→ 拆表。装/拆在同一单元内严格配对,
+  #   结构上无跨事务可能 → 不需要任何守卫。代价:开机到 dae 启动完成的
+  #   窗口无表保护(数秒,fail-open;运行期崩溃/停机窗口全覆盖,fail-closed)。
+  # ⚠ 手动 systemctl stop dae 调试期间外网全断(LAN/路由器管理页不受影响),
+  #   属预期;紧急解锁:sudo nft delete table inet dae-killswitch
+  # 验证:dae 运行时 curl 海外通;stop dae 后 curl 超时、
+  #   sudo nft list table inet dae-killswitch 的 drop 规则计数在涨
+  daeKillswitchRules = pkgs.writeText "dae-killswitch.nft" ''
+    table inet dae-killswitch {
+      chain output {
+        type filter hook output priority filter; policy accept;
+
+        # 环回 + dae 内部通道(app→dae0 对端),不参与泄漏判定
+        oifname { "lo", "dae0" } accept
+        # NDP/RA/PMTU:v4/v6 协议栈运转必需,不携带应用数据
+        meta l4proto { icmp, icmpv6 } accept
+        # DHCP 租约维持(v4 67/68,v6 546/547)
+        udp dport { 67, 68, 546, 547 } accept
+        # LAN/ULA/链路本地/组播:dae 不在位也保留(路由器管理页、mDNS/Avahi)
+        ip daddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 255.255.255.255 } accept
+        ip6 daddr { fc00::/7, fe80::/10, ff00::/8 } accept
+        # 其余出站 TCP/UDP = dae 不在位时的直连泄漏,fail-closed
+        meta l4proto { tcp, udp } drop
+      }
+    }
+  '';
+
+  # 装表:先删旧表再加载,幂等 —— 失败启动后的 ExecStopPost 会与上一次
+  # 装表周期交叠(崩溃→武装→1s 重启循环);加载失败则整体失败(必须可见)
+  daeKillswitchArm = pkgs.writeShellScript "dae-killswitch-arm" ''
+    ${pkgs.nftables}/bin/nft delete table inet dae-killswitch 2>/dev/null || true
+    exec ${pkgs.nftables}/bin/nft -f ${daeKillswitchRules}
+  '';
+
+  # 拆表:表不在 = 本就没武装,静默即可
+  daeKillswitchDisarm = pkgs.writeShellScript "dae-killswitch-disarm" ''
+    ${pkgs.nftables}/bin/nft delete table inet dae-killswitch 2>/dev/null || true
+  '';
+in
 {
   networking.networkmanager = {
     enable = true;
@@ -42,8 +99,8 @@
   #     source = pkgs.writeShellScript "ipv6-accept-ra" ''
   #       case "$1:$2" in
   #         enp7s0:up|enp7s0:reapply)
-  #           ${lib.getExe' pkgs.procps "sysctl"} -w net.ipv6.conf."$1".accept_ra=2
-  #           ${lib.getExe' pkgs.procps "sysctl"} -w net.ipv6.conf."$1".addr_gen_mode=0
+  #           ${lib.getExe' pkgs.procs "sysctl"} -w net.ipv6.conf."$1".accept_ra=2
+  #           ${lib.getExe' pkgs.procs "sysctl"} -w net.ipv6.conf."$1".addr_gen_mode=0
   #           ;;
   #       esac
   #     '';
@@ -121,9 +178,13 @@
         log_level: info
         allow_insecure: false
         auto_config_kernel_parameter: true
-        # dae 给自身 UDP 打 mark（默认 0x100）防自劫持回环；显式写 0 消除每次
-        # 启动/reload 的 "so_mark_from_dae is unset" WARN，行为不变（官方示例同款）
-        so_mark_from_dae: 0
+        # dae 给自身出站 socket(direct+proxy 一切重发出流量)打 SO_MARK 防
+        # eBPF 自劫持回环;不设或设 0 时内部默认同为 0x100(dae 源码
+        # common/utils.go 的 EffectiveSoMarkFromDae)。显式钉成 256(=0x100)
+        # 与 0 行为完全等价、同样无 WARN。注意(v1 kill switch 事故勘误):
+        # 该标记是 eBPF 层防回环用的,不经 host 的 nft OUTPUT 链,nftables
+        # 规则不要指望匹配它
+        so_mark_from_dae: 256
         # 域名形式的 DNS 上游（alidns）需先解析；显式声明 bootstrap，免依赖
         # 内置默认（119.29.29.29→223.5.5.5）。国内域名国内解析，明文无污染风险
         bootstrap_resolver: '223.5.5.5:53'
@@ -154,7 +215,7 @@
             # 出口 IP，触发 OpenAI/Anthropic 风控掐长连接。只留 A → 单栈单出口
             qtype(28) && qname(geosite:openai, geosite:anthropic, suffix: claude.ai) -> reject
             # Steam 域名踩中与 MiniMax 同款的问题:fallback googledns(走 Linode 出口)
-            # 让 Akamai GSLB 返回面向海外出口的边缘节点(store.steampowered.com →
+            # 让 Akamai GSLB 返回面向海外边缘的节点(store.steampowered.com →
             # 23.63.226.116),而这些域名流量走直连,国内直连那些边缘 TCP 443 被丢包
             # (2026-09-07 实测:ICMP 通 ~220ms 但 TCP SYN 反复重发无应答,商店页面
             # 卡死)。直连域名必须配国内解析,保持 DNS 出口与流量出口一致。
@@ -282,4 +343,22 @@
     configFile = config.sops.templates."dae/config.dae".path;
     package = inputs.dae.packages.${pkgs.stdenv.hostPlatform.system}.dae-unstable;
   };
+
+  # kill switch 单元接线(v4):装/拆只存在于 dae 自身生命周期 —— 见文件头
+  # 注释。drop-in 形式必需:新 dae 模块(2026-09-25 起)的 unit 是包内静态
+  # 文件(lib/systemd/system/dae.service 软链),serviceConfig 直改会被旁路
+  # (v1 时代 RestartSec=1s 从未生效,实发包内默认 5s)
+  systemd.services.dae = {
+    overrideStrategy = "asDropinIfExists";
+    serviceConfig = {
+      RestartSec = lib.mkForce "1s";
+      ExecStopPost = [ "+${daeKillswitchArm}" ];
+      ExecStartPost = [ "+${daeKillswitchDisarm}" ];
+    };
+  };
+
+  # firewall 切 nft 后端(services.nix 开放端口规则自动翻译,行为等价);
+  # kill switch 表不在此处 —— 沙箱构建期 nft -c 无法验证设备相关规则,
+  # 且它本就是运行期生命周期表,由上方 dae 单元 hooks 装载/拆除
+  networking.nftables.enable = true;
 }
