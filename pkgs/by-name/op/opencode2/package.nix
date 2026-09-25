@@ -22,7 +22,7 @@
 
 let
   # v2 正式版走 @opencode/cli 的 latest tag
-  version = "2.0.11";
+  version = "2.0.16";
 
   # npm 平台子包名(fetchurl 直接拉 tarball,绕过 node 生态)
   platformPkg =
@@ -37,7 +37,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://registry.npmjs.org/${scopeDir}/${baseName}/-/${baseName}-${version}.tgz";
-    hash = "sha256-kCxnxGrJLwhfHP7WrssMRf329sGeQligdL80aulGZrs=";
+    hash = "sha256-CCIetqeBNU6b47ORirW32Rr/LyBznn4uCvgbzcCCLIo=";
   };
 
   nativeBuildInputs = [
