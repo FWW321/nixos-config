@@ -49,6 +49,12 @@ in
     ];
     profiles.default = {
       settings."browser.startup.page" = 3;
+      # WebRTC 整关：Firefox 系没有 disable_non_proxied_udp 等价物
+      # （media.peerconnection.ice.proxy_only_if_behind_proxy 无系统代理时无效；
+      # mDNS 掩护在页面拿到 mic/cam 权限后失效——恰是 host candidate 泄漏场景）。
+      # 代价：浏览器内语音/视频失效。逃生口：about:config 改回，当次会话有效，
+      # 下次启动被 user.js 覆盖。日常被咬到再退档（mDNS 默认掩护）
+      settings."media.peerconnection.enabled" = false;
       search = {
         force = true;
         default = "bing";

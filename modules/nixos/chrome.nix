@@ -26,4 +26,13 @@
       };
     };
   };
+
+  # WebRTC 防泄漏:本机持公网 IPv6(passthrough),授过 mic/cam 权限的页面可从
+  # ICE host candidate 读到真实地址——候选是信令层数据,dae 网络层拦不住。
+  # disable_non_proxied_udp 压制一切非代理 UDP 候选 → 只剩 TURN 中继
+  # (TURN over TCP 443 照走 dae fallback:proxy),通话保留、host 候选不再泄漏。
+  # "由贵单位管理"菜单提示与 extensions.json 相同,属固有副作用
+  environment.etc."opt/chrome/policies/managed/webrtc.json".text = builtins.toJSON {
+    WebRtcIPHandling = "disable_non_proxied_udp";
+  };
 }
