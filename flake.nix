@@ -257,6 +257,18 @@
         import ./users/fww/ai/common/providers-schema-check.nix checkPkgs
           nixpkgs.lib;
 
+      # opencode2 MCP 渲染守护:真二进制 × 真渲染配置(动机/断言见
+      # mcp-schema-check.nix;users/fww 渲染产物与主机无关,取字母序首台)
+      checks.x86_64-linux.opencode2-mcp = import ./users/fww/ai/agents/opencode/mcp-schema-check.nix {
+        pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          overlays = [ self.overlays.default ];
+        };
+        inherit (nixpkgs) lib;
+        renderedConfig =
+          self.nixosConfigurations.${builtins.head hostNames}.config.home-manager.users.fww.xdg.configFile."opencode/opencode.json".source;
+      };
+
       # 主机自动发现(hosts/<dir> 即 nixosConfigurations.<dir>,见上方 hostNames)
       nixosConfigurations = lib.genAttrs hostNames mkHost;
     };
