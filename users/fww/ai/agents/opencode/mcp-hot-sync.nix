@@ -1,8 +1,10 @@
 # filepath: ~/nixos-config/users/fww/ai/agents/opencode/mcp-hot-sync.nix
 # ── MCP 免重启热同步:activation 时对账 file 配置 → 运行中服务 ──
 # v2 服务启动时加载一次配置即不再读盘,新增 MCP 服务器对运行中服务不可见。
-# 热路径:PUT /api/mcp/{name}(实测:立即 connected,{file:} secret 语法生效,
-# 不写盘,会话零中断 —— 完整验证记录见 2026-08 会话)。
+# 热路径:PUT /api/experimental/mcp/{name}(2026-09-25 实测 204,enable 后
+# connect 成功;{file:} secret 语法沿用)。⚠ v2 正式版路由从 beta 的
+# /api/mcp/{name} 迁到了 /api/experimental/mcp/{name} —— 升级 2.0.11 时
+# 旧路由 404 被 `|| true` 吞掉,热同步静默失效数日(同场事故第三处断裂)。
 # 只热加不热删:runtime API 不区分全局/项目级注册,DELETE 会误伤项目级
 # mcp add 的条目;删除/同名定义变更场景留给 service restart(见 settings.nix 注释)
 {
@@ -31,7 +33,10 @@
         | while read -r name; do
             def=$("$jq" -c --arg n "$name" '.mcp.servers[$n]' "$cfg")
             body=$("$jq" -cn --argjson d "$def" '{config:$d}')
-            timeout 10 "$oc" api PUT "/api/mcp/$name" -d "$body" >/dev/null 2>&1 || true
+            # PUT 失败不吞:server 丢一条就少一条,activation 输出必须点名
+            # (2026-09-25 教训:beta→v2 路由迁移的 404 被吞,热同步静默失效)
+            err=$(timeout 10 "$oc" api PUT "/api/experimental/mcp/$name" -d "$body" 2>&1 >/dev/null) \
+              || echo "WARNING: opencode MCP 热同步 PUT $name 失败:$err"
           done
     }
     _sync_oc_mcp || echo "WARNING: opencode MCP 热同步失败,新增服务器需 service restart 生效"

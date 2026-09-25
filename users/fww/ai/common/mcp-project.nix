@@ -44,12 +44,14 @@
   # Open Design stdio MCP → 本机 daemon(设计项目里操作 OD 项目/制品/需求简报)
   # 启动规范与上游 buildMcpInstallPayload 一致:od mcp --daemon-url <url>
   # command/端口/数据目录全部从 services.open-design 派生,与 daemon 配置永不漂移
-  # timeout(2026-09-07):opencode v2 connectTimeout 吃 mcp.timeout,缺省 30s;
-  # od mcp 冷启动先做 daemon 健康探测 + 首次调用建观测会话,daemon 忙时
-  # (设计 run 进行中)握手可拖过 30s → 客户端记 "failed: Connection closed"。
-  # v2 的 failed 状态缓存在常驻服务的项目实例里不自愈(仅配置内容变更或
-  # service restart 重连),拉长到 120s 避免误入;同时是工具调用超时,
-  # start_run/get_run 轮询本身分钟级,放宽无害(codex 侧 startup_timeout_sec 先例)
+  #
+  # timeout 史(2026-09-07 加,2026-09-25 删):beta 时代 v2 认 mcp.servers.<n>.timeout
+  # (connectTimeout+调用超时,od mcp 冷握手防 30s 误判 failed);正式版 schema
+  # 起拒收此键且整条 server 静默丢弃 —— 2.0.11~2.0.16 逐版实测确认,dev 线
+  # schema 已重新收录(整数,请求级超时)。stable 恢复之日由 flake check
+  # opencode2-mcp 红灯提醒:恢复本 attr + settings.nix toOpenCodeMcp 的渲染合并。
+  # 期间 od mcp 握手吃版本缺省超时;daemon 忙时连接失败的旧症若复发,解法仍是
+  # service restart(failed 状态常驻不自愈),或届时推动升级恢复 timeout
   open-design = {
     local = {
       command = lib.getExe config.services.open-design.package;
@@ -60,7 +62,6 @@
       ];
       env.OD_DATA_DIR = toString config.services.open-design.dataDir;
     };
-    timeout = 120000;
   };
 
   # Blender MCP:AI 建模(opencode ↔ blender-mcp server ↔ Blender 内 addon,TCP 9876)

@@ -46,10 +46,11 @@ let
         environment = lib.mapAttrs (_: v: if v ? secretFile then "{file:${v.secretFile}}" else v) (
           s.local.env or { }
         );
-        # 中立侧可选 timeout(ms):v2 里同时是 connectTimeout(缺省 30s)与
-        # 工具调用超时,慢握手 server(od mcp 等)用它防误入 failed 缓存
-      }
-      // (lib.optionalAttrs (s ? timeout) { inherit (s) timeout; });
+        # 中立层的 timeout(ms)v2 stable 全系拒收(2.0.11~2.0.16 实测,带此键的
+        # server 整条被 schema 丢弃,2026-09-25 open-design MCP 静默失踪根因);
+        # dev 线 schema 已重新收录 —— stable 恢复时 opencode2-mcp 检查红灯提醒,
+        # 届时恢复渲染(见 common/mcp-project.nix open-design 注释)
+      };
 in
 {
   # ── opencode 核心(v2 包,nixpkgs 未收录,走 pkgs/opencode2) ──
