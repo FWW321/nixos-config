@@ -49,7 +49,8 @@
     };
   };
 
-  programs.noctalia-greeter = {
+  # 2026-09-25:上游模块改名 programs.noctalia-greeter → 此处(eval 警告溯源)
+  services.displayManager.noctalia-greeter = {
     enable = true;
     greeter-args = "--session niri";
   };
